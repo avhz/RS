@@ -2,6 +2,8 @@
 
 Classes for R.
 
+The name `RS` is a combination of R and S (R's predecessor), and is the file extension and top-level domain (`.rs`) used for Rust files and websites, respectively. 
+
 ## Examples
 
 ```R
