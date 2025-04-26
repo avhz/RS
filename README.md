@@ -2,7 +2,67 @@
 
 Classes for R.
 
-## Example
+## Examples
+
+```R
+
+Class(
+    "Foo",
+    # Fields
+    a = is.integer,
+    b = is.double,
+    c = is.character,
+
+    # Methods
+    bar = function(.self, x) {
+        cat("Arg 'x' is", x, "\n")
+        cat("Field 'a' is", .self@a, "\n")
+
+        .self@c <- "new value"
+
+        .self@baz(1, 2)
+    },
+
+    # Static methods
+    baz = function(a, b, c = data.frame(x = 1:5)) {
+        cat("Arg 'a' is", a, "\n")
+        cat("Arg 'b' is", b, "\n")
+        print(c)
+    }
+)
+```
+
+```R
+> foo <- Foo(a = 1L, b = 2.0, c = "xxx")
+> foo@a
+[1] 1
+> foo@b
+[1] 2
+> foo@c
+[1] "xxx"
+> foo@bar(1)
+Arg 'x' is 1 
+Field 'a' is 1 
+Arg 'a' is 1 
+Arg 'b' is 2 
+  x
+1 1
+2 2
+3 3
+4 4
+5 5
+> foo@baz(1, 2)
+Arg 'a' is 1 
+Arg 'b' is 2 
+  x
+1 1
+2 2
+3 3
+4 4
+5 5
+> foo@c
+[1] "new value"
+```
 
 ```R
 Class(
