@@ -4,6 +4,18 @@ Classes for R.
 
 The name `RS` is a combination of R and S (R's predecessor), and is the file extension and top-level domain (`.rs`) used for Rust files and websites, respectively. 
 
+## Install
+
+Anything of the following should work:
+
+```R
+pak::pak("avhz/RS")
+## or
+devtools::install_github("avhz/RS")
+## or
+renv::install("avhz/RS")
+```
+
 ## Examples
 
 ```R
