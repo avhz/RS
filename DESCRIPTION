@@ -1,6 +1,7 @@
-Package: containers
-Title: Fast container objects for R (vec, hashmap, dequeue, etc)
-Description: Fast container objects for R (vec, hashmap, dequeue, etc)
+Package: RS
+Title: Classes for R. 
+Description: Classes for R.
+Depends: R (>= 4.1.0)
 Version: 0.0.0.9000
 Maintainer: Amando Z <RustQuantContact@gmail.com>
 Author: Amando Z [aut, cre]
@@ -10,6 +11,5 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Config/rextendr/version: 0.3.1
 VignetteBuilder: quarto
-Suggests: 
-    testthat (>= 3.0.0)
+Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3

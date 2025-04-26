@@ -4,10 +4,10 @@
 
 #
 # This file was created with the following call:
-#   .Call("wrap__make_containers_wrappers", use_symbols = TRUE, package_name = "containers")
+#   .Call("wrap__make_RS_wrappers", use_symbols = TRUE, package_name = "RS")
 
 #' @usage NULL
-#' @useDynLib containers, .registration = TRUE
+#' @useDynLib RS, .registration = TRUE
 NULL
 
 `__new_class__` <- function(name, definition_args, instance_args, methods) .Call(wrap____new_class__, name, definition_args, instance_args, methods)

@@ -262,7 +262,7 @@ fn __new_class__(name: String, definition_args: List, instance_args: List, metho
 // See corresponding C code in `entrypoint.c`.
 extendr_module! {
     // Module name.
-    mod containers;
+    mod RS;
 
     // ClassMap implementation.
     impl ClassMap;
