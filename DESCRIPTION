@@ -1,0 +1,15 @@
+Package: containers
+Title: Fast container objects for R (vec, hashmap, dequeue, etc)
+Description: Fast container objects for R (vec, hashmap, dequeue, etc)
+Version: 0.0.0.9000
+Maintainer: Amando Z <RustQuantContact@gmail.com>
+Author: Amando Z [aut, cre]
+License: MIT
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Config/rextendr/version: 0.3.1
+VignetteBuilder: quarto
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
