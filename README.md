@@ -23,9 +23,9 @@ renv::install("avhz/RS")
 Class(
     "Foo",
     # Fields
-    a = is.integer,
-    b = is.double,
-    c = is.character,
+    a = t_int,
+    b = t_dbl,
+    c = t_char,
 
     # Methods
     bar = function(.self, x) {
@@ -83,11 +83,11 @@ Class(
     "Black76",
 
     ## Fields
-    F = is.double,
-    K = is.double,
-    T = is.double,
-    r = is.double,
-    v = is.double,
+    F = t_dbl,
+    K = t_dbl,
+    T = t_dbl,
+    r = t_dbl,
+    v = t_dbl,
 
     ## Methods
     call = function(.self) {
@@ -123,11 +123,11 @@ Or create from a `data.frame`:
 Class("Asset",
 
     # FIELDS
-    id = is.character,
-    company = is.character,
-    type = is.character,
-    price = is.double,
-    quantity = is.integer,
+    id = t_char,
+    company = t_char,
+    type = t_char,
+    price = t_dbl,
+    quantity = t_int,
 
     # METHODS
     value = function(.self) {
