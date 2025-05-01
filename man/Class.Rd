@@ -4,12 +4,12 @@
 \alias{Class}
 \title{Class}
 \usage{
-Class(name, ...)
+Class(.selfname, ...)
 }
 \arguments{
-\item{name}{The name of the class.}
-
 \item{...}{The fields and methods of the class.}
+
+\item{name}{The name of the class.}
 }
 \description{
 Create a new class

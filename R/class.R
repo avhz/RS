@@ -14,7 +14,7 @@
 #' @param ... The fields and methods of the class.
 #'
 #' @export
-Class <- function(name, ...) {
+Class <- function(.classname, ...) {
     definition_args <- list(...)
     .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
     methods <- Filter(.is_method, definition_args)
@@ -24,14 +24,14 @@ Class <- function(name, ...) {
 
         .Call(
             wrap____new_class__,
-            name,
+            .classname,
             definition_args,
             instance_args,
             methods
         )
     }
 
-    assign(name, new, envir = parent.frame())
+    assign(.classname, new, envir = parent.frame())
 }
 
 #' @export
@@ -87,6 +87,25 @@ if (FALSE) {
     rextendr::document()
     devtools::load_all()
     devtools::test()
+
+    Class(
+        "Dog",
+
+        name = t_char,
+        age = t_int,
+
+        bark = \(.self) {
+            cat("Woof! I'm", .self@name, "and I'm", .self@age, "years old.\n")
+        }
+    )
+
+    bosco <- Dog(name = "Bosco", age = 5L)
+    bosco@bark()
+
+    Class("Foo", a = t_int)
+    foo <- Foo(a = 1L)
+    foo@a <- 2L
+    foo@a
 
     Class(
         "Foo",
