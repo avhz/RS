@@ -4,6 +4,9 @@
 
 #![allow(non_camel_case_types)]
 
+// pub mod types;
+// pub use types::*;
+
 use extendr_api::{pairlist, prelude::*};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -237,7 +240,12 @@ fn __new_class__(name: String, definition_args: List, instance_args: List, metho
         let post = instance_map.get(key).expect("ERROR: Key not found");
 
         if let Some(validator_fn) = pre.as_function() {
-            let check = validator_fn.call(pairlist!(post)).is_ok();
+            let check = validator_fn
+                .call(pairlist!(post))
+                .expect("ERROR: Validator function failed for attribute: {key}")
+                .as_bool()
+                .unwrap_or(false);
+
             if check {
                 definition_map.set(key.into(), post.into());
                 continue;

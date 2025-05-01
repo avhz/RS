@@ -1,72 +1,62 @@
 ## ============================================================================
 ## TYPES
+## Basically anything with an "is.*" method, plus maybe some other stuff.
 ## ============================================================================
 
-#' Type assignment operator
-#' @description
-#' `%:%` is a type assignment operator that allows you to assign a type to a variable.
-#' @param x The variable to assign the type to.
-#' @param y The type to assign to the variable.
-#' @return The variable with the assigned type.
-#' @export
-`%:%` <- function(x, y) if (is.null(y)) x else y(x)
+.new_type <- function(name, validator) {
+    force(name)
+    validator <- utils::removeSource(validator)
+    class(validator) <- c("RS_type", name)
+    return(validator)
+}
 
-"xxx" %:% NULL # No validation
-"xxx" %:% is.character # Validation
+## ANY TYPE
+## This is a catch-all type that will match anything.
 
-#' @name Array type.
-#' @title Array type.
-#' @description
-#' Array type for Class type validation.
-#' @export
-.array <- is.array
+t_any <- .new_type("t_any", \(t) TRUE)
 
-### Types to implement
-## Basically anything with an "is.*" method
-## is.R
-# is.double     == dbl
-# is.leaf
-# is.name
-# is.symbol
-# is.array
-# is.element
-# is.function   == fun
-# is.list       == lst
-# is.nan
-# is.raster
-# is.table
-# is.atomic
-# is.hashtab
-# is.loaded
-# is.nan.POSIXlt
-# is.object
-# is.raw        == raw
-# is.ts
-# is.call
-# is.environment == env
-# is.logical    == bool
-# is.null       == null
-# is.ordered
-# is.recursive
-# is.tskernel
-# is.character  == char
-# is.expression == expr
-# is.matrix     == mat
-# is.numeric    == num
-# is.relistable
-# is.unsorted
-# is.complex    == cplx
-# is.factor     == fact
-# is.integer    == int
-# is.mts
-# is.numeric.Date
-# is.pairlist
-# is.single
-# is.vector     == vec
-# is.data.frame == df
-# is.finite
-# is.language
-# is.na
-# is.numeric.POSIXt
-# is.primitive
-# is.stepfun
+## BASIC TYPES
+t_int <- .new_type("t_int", \(t) is.integer(t) && length(t) == 1)
+t_ints <- .new_type("t_ints", \(t) is.integer(t) && length(t) > 1)
+
+t_dbl <- .new_type("t_dbl", \(t) is.double(t) && length(t) == 1)
+t_dbls <- .new_type("t_dbls", \(t) is.double(t) && length(t) > 1)
+
+t_num <- .new_type("t_num", \(t) is.numeric(t) && length(t) == 1)
+t_nums <- .new_type("t_nums", \(t) is.numeric(t) && length(t) > 1)
+
+t_char <- .new_type("t_char", \(t) is.character(t) && length(t) == 1)
+t_chars <- .new_type("t_chars", \(t) is.character(t) && length(t) > 1)
+
+t_bool <- .new_type("t_bool", \(t) is.logical(t) && length(t) == 1)
+t_bools <- .new_type("t_bools", \(t) is.logical(t) && length(t) > 1)
+
+t_cplx <- .new_type("t_cplx", \(t) is.complex(t) && length(t) == 1)
+t_cplxs <- .new_type("t_cplxs", \(t) is.complex(t) && length(t) > 1)
+
+t_raw <- .new_type("t_raw", \(t) is.raw(t) && length(t) == 1)
+t_raws <- .new_type("t_raws", \(t) is.raw(t) && length(t) > 1)
+
+t_factor <- .new_type("t_factor", \(t) is.factor(t) && length(t) == 1)
+t_factors <- .new_type("t_factors", \(t) is.factor(t) && length(t) > 1)
+
+## COMPOUND TYPES
+
+t_list <- .new_type("t_list", \(t) is.list(t))
+t_array <- .new_type("t_array", \(t) is.array(t))
+t_vector <- .new_type("t_vector", \(t) is.vector(t))
+t_matrix <- .new_type("t_matrix", \(t) is.matrix(t))
+t_dataframe <- .new_type("t_dataframe", \(t) is.data.frame(t))
+t_hashtab <- .new_type("t_hashtab", \(t) is.hashtab(t))
+t_environment <- .new_type("t_environment", \(t) is.environment(t))
+t_pairlist <- .new_type("t_pairlist", \(t) is.pairlist(t))
+
+## EXOTIC TYPES
+
+t_func <- .new_type("t_function", \(t) is.function(t))
+t_expr <- .new_type("t_expression", \(t) is.expression(t))
+t_call <- .new_type("t_call", \(t) is.call(t))
+t_sym <- .new_type("t_symbol", \(t) is.symbol(t))
+t_lang <- .new_type("t_language", \(t) is.language(t))
+t_obj <- .new_type("t_object", \(t) is.object(t))
+t_prim <- .new_type("t_primitive", \(t) is.primitive(t))

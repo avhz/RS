@@ -20,18 +20,29 @@
 #'
 #' @export
 Class <- function(name, ...) {
-    def_args <- list(...)
+    definition_args <- list(...)
     .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
-    .methods <- Filter(.is_method, def_args)
+    methods <- Filter(.is_method, definition_args)
 
-    new <- function(...)
-        .Call(wrap____new_class__, name, def_args, rlang::list2(...), .methods)
+    new <- function(...) {
+        instance_args <- rlang::list2(...)
+
+        .Call(
+            wrap____new_class__,
+            name,
+            definition_args,
+            instance_args,
+            methods
+        )
+    }
 
     assign(name, new, envir = parent.frame())
 }
 
 #' @export
-`@.Class` <- function(self, key) self[["map"]][["get"]](key)
+`@.Class` <- function(self, key) {
+    self[["map"]][["get"]](key)
+}
 
 #' @export
 `@<-.Class` <- function(self, key, value) {
@@ -40,7 +51,9 @@ Class <- function(name, ...) {
 }
 
 #' @export
-`@.Self` <- function(self, key) self[["map"]][["get"]](key)
+`@.Self` <- function(self, key) {
+    self[["map"]][["get"]](key)
+}
 
 #' @export
 `@<-.Self` <- function(self, key, value) {
@@ -48,7 +61,9 @@ Class <- function(name, ...) {
     return(self)
 }
 
-.DollarNames.Class <- function(env, pattern = "") ls(Class, pattern = pattern)
+.DollarNames.Class <- function(env, pattern = "") {
+    ls(Class, pattern = pattern)
+}
 
 #' @export
 print.Class <- function(self, ...) {
@@ -80,9 +95,9 @@ if (FALSE) {
         "Foo",
 
         ## Fields
-        a = is.integer,
-        b = is.double,
-        c = is.character,
+        a = t_int,
+        b = t_dbl,
+        c = t_char,
 
         ## Methods
         bar = function(.self, x) {
@@ -125,11 +140,11 @@ if (FALSE) {
         "Black76",
 
         ## Fields
-        F = is.double,
-        K = is.double,
-        T = is.double,
-        r = is.double,
-        v = is.double,
+        F = t_dbl,
+        K = t_dbl,
+        T = t_dbl,
+        r = t_dbl,
+        v = t_dbl,
 
         ## Methods
         call = function(.self) {
@@ -153,7 +168,7 @@ if (FALSE) {
         }
     )
 
-    black76 <- Black76(F = 100, K = 100, T = 1, r = 0.05, v = 0.2)
+    black76 <- Black76(F = 55, K = 100, T = 1, r = 0.05, v = 0.2)
     black76@call()
     black76@put()
 }
