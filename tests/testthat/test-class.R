@@ -1,4 +1,4 @@
-test_that("class.R", {
+test_that("class.R - Basic Foo class", {
     Class(
         "Foo",
 
@@ -35,15 +35,24 @@ test_that("class.R", {
         foo@c
         foo@baz(1, 2)
         foo@bar(10)
-        foo@c
     }) |>
         capture.output()
 
+    testthat::expect_equal(foo@a, 1L)
+    testthat::expect_equal(foo@b, 2.0)
+
+    testthat::expect_equal(foo@bar(10), foo@c) |> capture.output()
+    testthat::expect_equal(foo@c, "new value")
+})
+
+test_that("class.R - Empty class", {
     expect_no_error({
         Class("Whatever")
         Whatever()
     })
+})
 
+test_that("class.R - Basic Asset class", {
     expect_no_error({
         Class(
             "Asset",
@@ -102,5 +111,63 @@ test_that("class.R", {
                     quantity = df[i, "quantity"]
                 )
         )
+    })
+})
+
+
+test_that("class.R - Black76 pricer class", {
+    expect_no_error({
+        Class(
+            "Black76",
+
+            ## Fields
+            F = t_dbl,
+            K = t_dbl,
+            T = t_dbl,
+            r = t_dbl,
+            v = t_dbl,
+
+            ## Methods
+            call = function(.self) {
+                .self@.df() *
+                    (pnorm(.self@.d1()) *
+                        .self@F -
+                        pnorm(.self@.d2()) * .self@K)
+            },
+            put = function(.self) {
+                .self@.df() *
+                    (pnorm(-.self@.d2()) *
+                        .self@K -
+                        pnorm(-.self@.d1()) * .self@F)
+            },
+            .df = function(.self) {
+                exp(-.self@r * .self@T)
+            },
+            .d1 = function(.self) {
+                (log(.self@F / .self@K) + 0.5 * (.self@v)^2 * .self@T) /
+                    (.self@v * sqrt(.self@T))
+            },
+            .d2 = function(.self) {
+                (log(.self@F / .self@K) - 0.5 * (.self@v)^2 * .self@T) /
+                    (.self@v * sqrt(.self@T))
+            }
+        )
+    })
+
+    testthat::expect_no_error({
+        black76 <- Black76(F = 55, K = 100, T = 1, r = 0.05, v = 0.2)
+    })
+
+    testthat::expect_equal(black76@call(), 0.005577321615771232282688)
+    testthat::expect_equal(black76@put(), 42.81090142414790733483)
+})
+
+test_that("class.R - Basic Class composition", {
+    testthat::expect_no_error({
+        Class("Foo", a = t_int, b = t_dbl, c = t_char)
+        Class("Bar", foo = Foo, baz = t_dbl)
+
+        foo <- Foo(a = 1L, b = 2.0, c = "xxx")
+        bar <- Bar(foo = foo, baz = 3.0)
     })
 })

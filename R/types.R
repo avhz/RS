@@ -53,10 +53,10 @@ t_pairlist <- .new_type("t_pairlist", \(t) is.pairlist(t))
 
 ## EXOTIC TYPES
 
-t_func <- .new_type("t_function", \(t) is.function(t))
-t_expr <- .new_type("t_expression", \(t) is.expression(t))
+t_func <- .new_type("t_func", \(t) is.function(t))
+t_expr <- .new_type("t_expr", \(t) is.expression(t))
 t_call <- .new_type("t_call", \(t) is.call(t))
-t_sym <- .new_type("t_symbol", \(t) is.symbol(t))
-t_lang <- .new_type("t_language", \(t) is.language(t))
-t_obj <- .new_type("t_object", \(t) is.object(t))
-t_prim <- .new_type("t_primitive", \(t) is.primitive(t))
+t_sym <- .new_type("t_sym", \(t) is.symbol(t))
+t_lang <- .new_type("t_lang", \(t) is.language(t))
+t_obj <- .new_type("t_obj", \(t) is.object(t))
+t_prim <- .new_type("t_prim", \(t) is.primitive(t))

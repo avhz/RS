@@ -86,6 +86,7 @@ if (FALSE) {
     remove(list = ls())
     rextendr::document()
     devtools::load_all()
+    devtools::test()
 
     Class(
         "Foo",
@@ -115,70 +116,10 @@ if (FALSE) {
         }
     )
 
-    bench::mark(foo <- Foo(a = 1L, b = 2.0, c = "xxx"))
-
-    foo@a
-    foo@b
-    foo@c
-    foo@baz(1, 2)
-    foo@bar(10)
-    foo@c
-
     n <- 1e+5
+    bench::mark(foo <- Foo(a = 1L, b = 2.0, c = "xxx"), iterations = n)
     system.time(foos <- replicate(n, Foo(a = 1L, b = 1.5, c = "xxx")))
     # profvis::profvis(lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
 
     foo2 <- Foo(a = 1L, b = 2.0) ## HANDLE MISSING ARGUMENTS
-
-    Class(
-        "Black76",
-
-        ## Fields
-        F = t_dbl,
-        K = t_dbl,
-        T = t_dbl,
-        r = t_dbl,
-        v = t_dbl,
-
-        ## Methods
-        call = function(.self) {
-            .self@.df() *
-                (pnorm(.self@.d1()) * .self@F - pnorm(.self@.d2()) * .self@K)
-        },
-        put = function(.self) {
-            .self@.df() *
-                (pnorm(-.self@.d2()) * .self@K - pnorm(-.self@.d1()) * .self@F)
-        },
-        .df = function(.self) {
-            exp(-.self@r * .self@T)
-        },
-        .d1 = function(.self) {
-            (log(.self@F / .self@K) + 0.5 * (.self@v)^2 * .self@T) /
-                (.self@v * sqrt(.self@T))
-        },
-        .d2 = function(.self) {
-            (log(.self@F / .self@K) - 0.5 * (.self@v)^2 * .self@T) /
-                (.self@v * sqrt(.self@T))
-        }
-    )
-
-    black76 <- Black76(F = 55, K = 100, T = 1, r = 0.05, v = 0.2)
-
-    black76@call()
-    black76@put()
-
-    Class("Foo", a = t_int, b = t_dbl, c = t_char)
-    Class("Bar", foo = Foo, baz = t_dbl)
-
-    foo <- Foo(a = 1L, b = 2.0, c = "xxx")
-    bar <- Bar(foo = foo, baz = 3.0)
-    bar
-
-    .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
-
-    .is_method(Foo)
-    .is_method(foo)
-
-    class(foo)
-    class(Foo)
 }
