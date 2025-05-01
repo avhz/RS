@@ -172,6 +172,7 @@ if (FALSE) {
 
     foo <- Foo(a = 1L, b = 2.0, c = "xxx")
     bar <- Bar(foo = foo, baz = 3.0)
+    bar
 
     .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
 

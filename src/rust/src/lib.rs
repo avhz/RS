@@ -192,10 +192,6 @@ impl ClassMap {
 
 #[extendr]
 fn __new_class__(name: String, definition_args: List, instance_args: List, methods: List) -> List {
-    // TODO: Handle missing args !!
-    // TODO: Handle empty args !!
-    // TODO: Public/private attributes: use ".foo" for private, "foo" for public
-
     let mut definition_map = ClassMap::from_list(definition_args);
     let instance_map = instance_args.into_hashmap();
 
@@ -234,18 +230,9 @@ fn __new_class__(name: String, definition_args: List, instance_args: List, metho
 
     let keys: Vec<_> = instance_map.keys().cloned().collect();
     for key in keys {
-        // Check if item is an RS Class
-
-        let pre = definition_map.get(key.into());
-
         // I guess this is ok since the key is already in the map? i.e. for key in keys
         let post = instance_map.get(key).expect("ERROR: Key not found");
-
-        // println!("key: {:?}", key);
-        // println!("pre: {:?}", pre);
-        // println!("post: {:?}", post);
-        // println!("post class: {:?}", post.class());
-        // println!("pre class: {:?}", pre.class());
+        let pre = definition_map.get(key.into());
 
         if let Some(post_class) = post.class() {
             if post_class.into_iter().any(|c| c == "Class") {
@@ -253,10 +240,6 @@ fn __new_class__(name: String, definition_args: List, instance_args: List, metho
                 continue;
             }
         }
-        // if post.class().unwrap().into_iter().any(|c| c == "Class") {
-        //     definition_map.set(key.into(), post.into());
-        //     continue;
-        // }
 
         if let Some(validator_fn) = pre.as_function() {
             let check = validator_fn
