@@ -1,10 +1,11 @@
 test_that("class.R", {
-    Class("Foo",
+    Class(
+        "Foo",
 
         ## Fields
-        a = is.integer,
-        b = is.double,
-        c = is.character,
+        a = t_int,
+        b = t_dbl,
+        c = t_char,
 
         ## Methods
         bar = function(.self, x) {
@@ -22,9 +23,8 @@ test_that("class.R", {
             cat("Arg 'b' is", b, "\n")
             print(c)
         }
-    ) |> expect_no_error(message = "Class definition should not throw an error")
-
-
+    ) |>
+        expect_no_error(message = "Class definition should not throw an error")
 
     expect_no_error({
         foo <- Foo(a = 1L, b = 2.0, c = "xxx")
@@ -36,24 +36,24 @@ test_that("class.R", {
         foo@baz(1, 2)
         foo@bar(10)
         foo@c
-    }) |> capture.output()
+    }) |>
+        capture.output()
 
     expect_no_error({
         Class("Whatever")
         Whatever()
     })
 
-
-
     expect_no_error({
-        Class("Asset",
+        Class(
+            "Asset",
 
             # FIELDS
-            id = is.character,
-            company = is.character,
-            type = is.character,
-            price = is.double,
-            quantity = is.integer,
+            id = t_char,
+            company = t_char,
+            type = t_char,
+            price = t_dbl,
+            quantity = t_int,
 
             # METHODS
             value = function(.self) {
@@ -91,12 +91,16 @@ test_that("class.R", {
         # assets <- lapply(seq_len(nrow(df)), \(i) Asset(!!!df[i, ]))
         # lapply(apply(df, 1, as.list), \(row) Asset(!!!row))
 
-        assets <- lapply(seq_len(nrow(df)), \(i) Asset(
-            id = df[i, "id"],
-            company = df[i, "company"],
-            type = df[i, "type"],
-            price = df[i, "price"],
-            quantity = df[i, "quantity"]
-        ))
+        assets <- lapply(
+            seq_len(nrow(df)),
+            \(i)
+                Asset(
+                    id = df[i, "id"],
+                    company = df[i, "company"],
+                    type = df[i, "type"],
+                    price = df[i, "price"],
+                    quantity = df[i, "quantity"]
+                )
+        )
     })
 })

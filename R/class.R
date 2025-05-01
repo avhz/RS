@@ -1,10 +1,5 @@
 ## ============================================================================
 ## Class
-##
-## To-do:
-## - Handle missing arguments
-## - Handle default values
-## - Fix the new hashmap every instance ??
 ## ============================================================================
 
 #' @title Class
@@ -85,6 +80,7 @@ print.Class <- function(self, ...) {
     cat(sep, "\n")
 }
 
+
 if (FALSE) {
     gc()
     remove(list = ls())
@@ -130,10 +126,8 @@ if (FALSE) {
 
     n <- 1e+5
     system.time(foos <- replicate(n, Foo(a = 1L, b = 1.5, c = "xxx")))
-    profvis::profvis(lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
+    # profvis::profvis(lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
 
-    foo1 <- Foo(a = 1L, b = 2.0, c = "xxx")
-    foo2 <- Foo(a = 1L, b = 2.0, c = "xxx")
     foo2 <- Foo(a = 1L, b = 2.0) ## HANDLE MISSING ARGUMENTS
 
     Class(
@@ -169,6 +163,21 @@ if (FALSE) {
     )
 
     black76 <- Black76(F = 55, K = 100, T = 1, r = 0.05, v = 0.2)
+
     black76@call()
     black76@put()
+
+    Class("Foo", a = t_int, b = t_dbl, c = t_char)
+    Class("Bar", foo = Foo, baz = t_dbl)
+
+    foo <- Foo(a = 1L, b = 2.0, c = "xxx")
+    bar <- Bar(foo = foo, baz = 3.0)
+
+    .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
+
+    .is_method(Foo)
+    .is_method(foo)
+
+    class(foo)
+    class(Foo)
 }
