@@ -14,8 +14,6 @@ NULL
 
 ClassMap <- new.env(parent = emptyenv())
 
-ClassMap$init <- function(`_name`, `_definition_args`, `_instance_args`, `_methods`) invisible(.Call(wrap__ClassMap__init, `_name`, `_definition_args`, `_instance_args`, `_methods`))
-
 ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
 
 ClassMap$set <- function(key, value) invisible(.Call(wrap__ClassMap__set, self, key, value))
@@ -45,6 +43,22 @@ ClassMap$clone <- function() .Call(wrap__ClassMap__clone, self)
 
 #' @export
 `[[.ClassMap` <- `$.ClassMap`
+
+Classy <- new.env(parent = emptyenv())
+
+Classy$new__ <- function(name, definition, instance, methods) .Call(wrap__Classy__new__, name, definition, instance, methods)
+
+Classy$get_name <- function() .Call(wrap__Classy__get_name, self)
+
+Classy$get_self <- function() .Call(wrap__Classy__get_self, self)
+
+Classy$init__ <- function() .Call(wrap__Classy__init__, self)
+
+#' @export
+`$.Classy` <- function (self, name) { func <- Classy[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.Classy` <- `$.Classy`
 
 
 # nolint end

@@ -35,6 +35,27 @@ Class <- function(.classname, ...) {
 }
 
 #' @export
+Classyyy <- function(.classname, ...) {
+    definition_args <- list(...)
+    .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
+    methods <- Filter(.is_method, definition_args)
+
+    new <- function(...) {
+        instance_args <- rlang::list2(...)
+        self <- .Call(
+            wrap__Classy__new__,
+            .classname,
+            definition_args,
+            instance_args,
+            if (!is.null(names(methods))) names(methods) else character(0)
+        )
+        .Call(wrap__Classy__init__, self)
+    }
+
+    assign(.classname, new, envir = parent.frame())
+}
+
+#' @export
 print.ClassMap <- function(x, ...) {
     .print_rust_object(x)
 }
@@ -64,8 +85,22 @@ print.ClassMap <- function(x, ...) {
 
 
 #' @export
+`@.Classy` <- function(self, key) self[["map"]][["get"]](key)
+
+#' @export
+`@<-.Classy` <- function(self, key, value) {
+    self[["map"]][["set"]](key, value)
+    return(self)
+}
+
+#' @export
+.DollarNames.Classy <- function(env, pattern = "") {
+    ls(Classy, pattern = pattern)
+}
+
+
+#' @export
 print.Class <- function(self, ...) {
-    # browser()
     .get_width <- function(df) max(nchar(capture.output(print(df))))
 
     fields <- self[["map"]][["keys"]]() # !in c("new", "print")
@@ -74,7 +109,6 @@ print.Class <- function(self, ...) {
     values <- unlist(lapply(values, \(v) if (is.function(v)) "-" else v))
     types <- sapply(fields, \(n) typeof(self[["map"]][["get"]](n)))
     df <- data.frame(field = fields, type = types, value = values)
-
     df <- df[order(df$field), ]
 
     width <- .get_width(df)
@@ -94,7 +128,7 @@ if (FALSE) {
     devtools::load_all()
     devtools::test()
 
-    Class(
+    Classyyy(
         "Foo",
 
         ## Fields

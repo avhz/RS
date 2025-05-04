@@ -13,22 +13,131 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 #[extendr]
 #[derive(Debug)]
+struct Classy {
+    _name: String,
+    _self: List,
+    definition: ClassMap,
+    instance: List,
+    methods: Strings,
+}
+
+#[extendr]
+impl Classy {
+    /// Create a new Class.
+    fn new__(name: &str, definition: List, instance: List, methods: Strings) -> Self {
+        Self {
+            _name: name.to_string(),
+            _self: List::new(definition.len()),
+            definition: ClassMap::from_list(definition),
+            instance,
+            methods,
+        }
+    }
+
+    /// Return class name.
+    fn get_name(&self) -> String {
+        self._name.clone()
+    }
+
+    /// Return self.
+    fn get_self(&self) -> List {
+        self._self.clone()
+    }
+
+    /// Initialize the Class.
+    fn init__(&mut self) -> &mut Self {
+        self._self = List::from_pairs([("map", self.definition.clone().into())]);
+        self._self
+            .set_class(&[self._name.clone(), "Self".into()])
+            .unwrap();
+
+        self.methods.iter().for_each(|key| {
+            // Get the method from definition_map
+            let method = self.definition.get(key.to_string());
+
+            if let Some(method_fn) = method.as_function() {
+                if let (Some(body), Some(formals), Some(environment)) = (
+                    method_fn.body().and_then(|b| b.as_language()),
+                    method_fn.formals(),
+                    method_fn.environment(),
+                ) {
+                    let filtered_formals: Vec<_> =
+                        formals.iter().filter(|(k, _)| *k != ".self").collect();
+                    let new_formals = Pairlist::from_pairs(filtered_formals);
+                    let env = Environment::new_with_parent(environment);
+                    env.set_local(Symbol::from_string(".self"), self._self.clone());
+                    if let Ok(new_method) = Function::from_parts(new_formals, body, env) {
+                        self.definition
+                            .set(key.to_string(), new_method.as_robj().clone());
+                    }
+                }
+            }
+        });
+
+        for (key, value) in self
+            .instance
+            .clone()
+            .into_hashmap()
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.clone()))
+        {
+            // I guess this is ok since the key is already in the map? i.e. for key in keys
+            let pre = self.definition.get(key.clone());
+
+            if let Some(post_class) = value.class() {
+                let check = post_class.into_iter().any(|c| c == "Class");
+
+                if check {
+                    self.definition.set(key.into(), value.clone());
+                    continue;
+                }
+            }
+
+            if let Some(validator_fn) = pre.as_function() {
+                let check = validator_fn
+                    .call(pairlist!(value.clone()))
+                    .expect("ERROR: Validator function failed for attribute: {key}")
+                    .as_bool()
+                    .unwrap_or(false);
+
+                if check {
+                    self.definition.set(key.into(), value.clone().into());
+                    continue;
+                }
+
+                let msg = format!(
+                    "Invalid type <'{}'> for field <'{}'>.",
+                    value.clone().as_str().unwrap_or("<unknown>"), // WE NEED typeof(x) HERE !
+                    key
+                );
+                panic!("{}", msg);
+            }
+        }
+
+        // let mut object = List::from_pairs([("map", self.definition.clone().into())]);
+        // object
+        //     .set_class([self._name.clone(), "Class".into()])
+        //     .unwrap();
+        // object
+
+        self._self = List::from_pairs([("map", self.definition.clone().into())]);
+        self._self
+            .set_class([self._name.clone(), "Class".into()])
+            .unwrap();
+
+        self
+    }
+}
+
+#[extendr]
+#[derive(Debug)]
 struct ClassMap {
     data: Rc<RefCell<HashMap<String, Robj>>>,
 }
 
 #[extendr]
 impl ClassMap {
-    /// Initialize a new Class.
-    ///
-    /// @export
-    fn init(_name: String, _definition_args: List, _instance_args: List, _methods: List) {
-        todo!("Implement Class::init");
-    }
-
     /// Create a new Class from an R List.
-    ///
-    /// @export
     fn from_list(list: List) -> Self {
         let data = list
             .into_hashmap()
@@ -42,15 +151,11 @@ impl ClassMap {
     }
 
     /// Set a value in the Class.
-    ///
-    /// @export
     fn set(&mut self, key: String, value: Robj) {
         self.data.borrow_mut().insert(key, value);
     }
 
     /// Get a value from the Class.
-    ///
-    /// @export
     fn get(&self, key: String) -> Robj {
         self.data
             .borrow()
@@ -60,22 +165,16 @@ impl ClassMap {
     }
 
     /// Get the keys of the Class.
-    ///
-    /// @export
     fn keys(&self) -> Vec<String> {
         self.data.borrow().keys().cloned().collect()
     }
 
     /// Get the values of the Class.
-    ///
-    /// @export
     fn values(&self) -> Vec<Robj> {
         self.data.borrow().values().cloned().collect()
     }
 
     /// Remove a key-value pair from the Class.
-    ///
-    /// @export
     fn remove(&mut self, key: String) -> Robj {
         self.data
             .borrow_mut()
@@ -84,15 +183,11 @@ impl ClassMap {
     }
 
     /// Print the Class.
-    ///
-    /// @export
     fn print(&self) {
         println!("{:?}", self.data.borrow());
     }
 
     /// Retain only the elements specified by the predicate.
-    ///
-    /// @export
     fn retain(&mut self, f: Robj) {
         if !f.is_function() {
             panic!("ERROR: Expected a function. Got: {:?}", f);
@@ -109,34 +204,24 @@ impl ClassMap {
     }
 
     /// Clear the Class.
-    ///
     /// Clears the map, removing all key-value pairs.
     /// Keeps the allocated memory for reuse.
-    ///
-    /// @export
     fn clear(&mut self) {
         self.data.borrow_mut().clear();
     }
 
     /// Check for the existence of a key in the Class.
-    ///
-    /// @export
     fn contains_key(&self, key: String) -> bool {
         self.data.borrow().contains_key(&key)
     }
 
     /// Check for the existence of a key in the Class.
-    ///
     /// Note: This is an alias for `contains_key`.
-    ///
-    /// @export
     fn has(&self, key: String) -> bool {
         self.data.borrow().contains_key(&key)
     }
 
     /// Clone the Class.
-    ///
-    /// @export
     fn clone(&self) -> Self {
         Self {
             data: self.data.clone(),
@@ -165,6 +250,7 @@ fn __new_class__(name: &str, definition_args: List, instance_args: List, methods
 
                 // let self_pairs = vec![("map", definition_map.clone().into())];
                 let mut _self = List::from_pairs([("map", definition_map.clone().into())]);
+                // let mut _self = List::from_pairs([("map", &definition_map.into())]);
                 _self.set_class(&[name, "Self".into()]).unwrap();
 
                 let env = Environment::new_with_parent(environment);
@@ -184,8 +270,10 @@ fn __new_class__(name: &str, definition_args: List, instance_args: List, methods
         let post = instance_map.get(key).expect("ERROR: Key not found");
         let pre = definition_map.get(key.into());
 
-        if let Some(mut post_class) = post.class() {
-            if post_class.any(|c| c == "Class") {
+        if let Some(post_class) = post.class() {
+            let check = post_class.into_iter().any(|c| c == "Class");
+
+            if check {
                 definition_map.set(key.into(), post.into());
                 continue;
             }
@@ -212,8 +300,8 @@ fn __new_class__(name: &str, definition_args: List, instance_args: List, methods
         }
     }
 
-    let mut object = List::from_pairs(vec![("map", definition_map.into())]);
-    object.set_class(&[name, "Class".into()]).unwrap();
+    let mut object = List::from_pairs([("map", definition_map.into())]);
+    object.set_class([name, "Class".into()]).unwrap();
     object
 }
 
@@ -226,6 +314,9 @@ extendr_module! {
 
     // ClassMap implementation.
     impl ClassMap;
+
+    // Classy implementation.
+    impl Classy;
 
     // __new_class__ implementation.
     fn __new_class__;

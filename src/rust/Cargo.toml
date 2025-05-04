@@ -9,7 +9,7 @@ name = 'RS'
 
 [dependencies]
 extendr-api = { version = "*", features = ['non-api'] }
-profiling = "1.0.16"
+# rayon = "1.10.0"
 
 [profile.release]
 debug = true
