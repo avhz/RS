@@ -4,9 +4,6 @@
 
 #![allow(non_camel_case_types)]
 
-// pub mod types;
-// pub use types::*;
-
 use extendr_api::{pairlist, prelude::*};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -27,15 +24,6 @@ impl ClassMap {
     /// @export
     fn init(_name: String, _definition_args: List, _instance_args: List, _methods: List) {
         todo!("Implement Class::init");
-    }
-
-    /// Create a new Class.
-    ///
-    /// @export
-    fn new() -> Self {
-        Self {
-            data: Rc::new(RefCell::new(HashMap::new())),
-        }
     }
 
     /// Create a new Class from an R List.
@@ -71,26 +59,6 @@ impl ClassMap {
             .clone()
     }
 
-    /// Create a new Class with a given capacity.
-    ///
-    /// @export
-    fn with_capacity(capacity: usize) -> Self {
-        let map = HashMap::with_capacity(capacity);
-        Self {
-            data: Rc::new(RefCell::new(map)),
-        }
-    }
-
-    /// Remove a key-value pair from the Class.
-    ///
-    /// @export
-    fn remove(&mut self, key: String) -> Robj {
-        self.data
-            .borrow_mut()
-            .remove(&key)
-            .unwrap_or("ERROR: Key not found".into())
-    }
-
     /// Get the keys of the Class.
     ///
     /// @export
@@ -105,28 +73,14 @@ impl ClassMap {
         self.data.borrow().values().cloned().collect()
     }
 
-    /// Get the length of the Class.
+    /// Remove a key-value pair from the Class.
     ///
     /// @export
-    fn len(&self) -> usize {
-        self.data.borrow().len()
-    }
-
-    /// Remove a key from the Class, returning the value if it exists.
-    ///
-    /// @export
-    fn remove_key(&mut self, key: String) -> Robj {
+    fn remove(&mut self, key: String) -> Robj {
         self.data
             .borrow_mut()
             .remove(&key)
             .unwrap_or("ERROR: Key not found".into())
-    }
-
-    /// Check if the Class is empty.
-    ///
-    /// @export
-    fn is_empty(&self) -> bool {
-        self.data.borrow().is_empty()
     }
 
     /// Print the Class.
@@ -191,51 +145,47 @@ impl ClassMap {
 }
 
 #[extendr]
-fn __new_class__(name: String, definition_args: List, instance_args: List, methods: List) -> List {
+fn __new_class__(name: &str, definition_args: List, instance_args: List, methods: Strings) -> List {
     let mut definition_map = ClassMap::from_list(definition_args);
-    let instance_map = instance_args.into_hashmap();
 
-    if let Some(method_names) = methods.names() {
-        for key in method_names.into_iter() {
-            let key_str = key.to_string();
+    methods.into_iter().for_each(|key| {
+        // Get the method from definition_map
+        let method = definition_map.get(key.to_string());
 
-            // Get the method from def_map
-            let method = definition_map.get(key_str.clone());
+        if let Some(method_fn) = method.as_function() {
+            if let (Some(body), Some(formals), Some(environment)) = (
+                method_fn.body().and_then(|b| b.as_language()),
+                method_fn.formals(),
+                method_fn.environment(),
+            ) {
+                let filtered_formals: Vec<_> =
+                    formals.iter().filter(|(k, _)| *k != ".self").collect();
 
-            if let Some(method_fn) = method.as_function() {
-                if let (Some(body), Some(formals), Some(environment)) = (
-                    method_fn.body().and_then(|b| b.as_language()),
-                    method_fn.formals(),
-                    method_fn.environment(),
-                ) {
-                    let filtered_formals: Vec<_> =
-                        formals.iter().filter(|(k, _)| *k != ".self").collect();
+                let new_formals = Pairlist::from_pairs(filtered_formals);
 
-                    let new_formals = Pairlist::from_pairs(filtered_formals);
+                // let self_pairs = vec![("map", definition_map.clone().into())];
+                let mut _self = List::from_pairs([("map", definition_map.clone().into())]);
+                _self.set_class(&[name, "Self".into()]).unwrap();
 
-                    let self_pairs = vec![("map", definition_map.clone().into())];
-                    let mut _self = List::from_pairs(self_pairs);
-                    _self.set_class(&[name.clone(), "Self".into()]).unwrap();
+                let env = Environment::new_with_parent(environment);
+                env.set_local(Symbol::from_string(".self"), _self);
 
-                    let env = Environment::new_with_parent(environment);
-                    env.set_local(Symbol::from_string(".self"), _self);
-
-                    if let Ok(new_method) = Function::from_parts(new_formals, body, env) {
-                        definition_map.set(key_str, new_method.as_robj().clone());
-                    }
+                if let Ok(new_method) = Function::from_parts(new_formals, body, env) {
+                    definition_map.set(key.to_string(), new_method.as_robj().clone());
                 }
             }
         }
-    }
+    });
 
-    let keys: Vec<_> = instance_map.keys().cloned().collect();
-    for key in keys {
+    let instance_map = instance_args.into_hashmap();
+
+    for key in instance_map.keys().cloned().collect::<Vec<_>>() {
         // I guess this is ok since the key is already in the map? i.e. for key in keys
         let post = instance_map.get(key).expect("ERROR: Key not found");
         let pre = definition_map.get(key.into());
 
-        if let Some(post_class) = post.class() {
-            if post_class.into_iter().any(|c| c == "Class") {
+        if let Some(mut post_class) = post.class() {
+            if post_class.any(|c| c == "Class") {
                 definition_map.set(key.into(), post.into());
                 continue;
             }
@@ -255,7 +205,7 @@ fn __new_class__(name: String, definition_args: List, instance_args: List, metho
 
             let msg = format!(
                 "Invalid type <'{}'> for field <'{}'>.",
-                post.as_str().unwrap_or("<unknown>"),
+                post.as_str().unwrap_or("<unknown>"), // WE NEED typeof(x) HERE !
                 key
             );
             panic!("{}", msg);

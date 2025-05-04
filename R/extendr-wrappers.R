@@ -16,27 +16,17 @@ ClassMap <- new.env(parent = emptyenv())
 
 ClassMap$init <- function(`_name`, `_definition_args`, `_instance_args`, `_methods`) invisible(.Call(wrap__ClassMap__init, `_name`, `_definition_args`, `_instance_args`, `_methods`))
 
-ClassMap$new <- function() .Call(wrap__ClassMap__new)
-
 ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
 
 ClassMap$set <- function(key, value) invisible(.Call(wrap__ClassMap__set, self, key, value))
 
 ClassMap$get <- function(key) .Call(wrap__ClassMap__get, self, key)
 
-ClassMap$with_capacity <- function(capacity) .Call(wrap__ClassMap__with_capacity, capacity)
-
-ClassMap$remove <- function(key) .Call(wrap__ClassMap__remove, self, key)
-
 ClassMap$keys <- function() .Call(wrap__ClassMap__keys, self)
 
 ClassMap$values <- function() .Call(wrap__ClassMap__values, self)
 
-ClassMap$len <- function() .Call(wrap__ClassMap__len, self)
-
-ClassMap$remove_key <- function(key) .Call(wrap__ClassMap__remove_key, self, key)
-
-ClassMap$is_empty <- function() .Call(wrap__ClassMap__is_empty, self)
+ClassMap$remove <- function(key) .Call(wrap__ClassMap__remove, self, key)
 
 ClassMap$print <- function() invisible(.Call(wrap__ClassMap__print, self))
 

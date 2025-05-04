@@ -27,7 +27,7 @@ Class <- function(.classname, ...) {
             .classname,
             definition_args,
             instance_args,
-            methods
+            if (!is.null(names(methods))) names(methods) else character(0)
         )
     }
 
@@ -35,46 +35,52 @@ Class <- function(.classname, ...) {
 }
 
 #' @export
-`@.Class` <- function(self, key) {
-    self[["map"]][["get"]](key)
+print.ClassMap <- function(x, ...) {
+    .print_rust_object(x)
 }
+
+#' @export
+.DollarNames.ClassMap <- function(env, pattern = "") {
+    ls(ClassMap, pattern = pattern)
+}
+
+#' @export
+`@.Class` <- function(self, key) self[["map"]][["get"]](key)
+
+#' @export
+`@.Self` <- function(self, key) self[["map"]][["get"]](key)
 
 #' @export
 `@<-.Class` <- function(self, key, value) {
-    self$map[["insert"]](key, value)
+    self[["map"]][["set"]](key, value)
     return(self)
-}
-
-#' @export
-`@.Self` <- function(self, key) {
-    self[["map"]][["get"]](key)
 }
 
 #' @export
 `@<-.Self` <- function(self, key, value) {
-    self$map[["set"]](key, value)
+    self[["map"]][["set"]](key, value)
     return(self)
 }
 
-.DollarNames.Class <- function(env, pattern = "") {
-    ls(Class, pattern = pattern)
-}
 
 #' @export
 print.Class <- function(self, ...) {
+    # browser()
     .get_width <- function(df) max(nchar(capture.output(print(df))))
 
-    fields <- self$map$keys() # !in c("new", "print")
-    values <- self$map$values()
+    fields <- self[["map"]][["keys"]]() # !in c("new", "print")
+    values <- self[["map"]][["values"]]()
     ## Only keep values that are not functions
     values <- unlist(lapply(values, \(v) if (is.function(v)) "-" else v))
-    types <- sapply(fields, \(n) typeof(self$map$get(n)))
+    types <- sapply(fields, \(n) typeof(self[["map"]][["get"]](n)))
     df <- data.frame(field = fields, type = types, value = values)
+
+    df <- df[order(df$field), ]
 
     width <- .get_width(df)
     sep <- rep("-", width) |> paste(collapse = "")
     cat(sep, "\n")
-    cat("Class:", self$name, "\n")
+    cat("Class:", self$.classname, "\n")
     cat(sep, "\n")
     df |> print(row.names = FALSE, right = FALSE)
     cat(sep, "\n")
@@ -87,25 +93,6 @@ if (FALSE) {
     rextendr::document()
     devtools::load_all()
     devtools::test()
-
-    Class(
-        "Dog",
-
-        name = t_char,
-        age = t_int,
-
-        bark = \(.self) {
-            cat("Woof! I'm", .self@name, "and I'm", .self@age, "years old.\n")
-        }
-    )
-
-    bosco <- Dog(name = "Bosco", age = 5L)
-    bosco@bark()
-
-    Class("Foo", a = t_int)
-    foo <- Foo(a = 1L)
-    foo@a <- 2L
-    foo@a
 
     Class(
         "Foo",
@@ -135,10 +122,9 @@ if (FALSE) {
         }
     )
 
+    system.time(foo <- Foo(a = 1L, b = 2.0, c = "xxx"))
     n <- 1e+5
     bench::mark(foo <- Foo(a = 1L, b = 2.0, c = "xxx"), iterations = n)
-    system.time(foos <- replicate(n, Foo(a = 1L, b = 1.5, c = "xxx")))
-    # profvis::profvis(lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
-
-    foo2 <- Foo(a = 1L, b = 2.0) ## HANDLE MISSING ARGUMENTS
+    system.time(foos <- lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
+    profvis::profvis(lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
 }

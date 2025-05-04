@@ -13,12 +13,16 @@
 ## ANY TYPE
 ## This is a catch-all type that will match anything.
 
+#' @export
 t_any <- .new_type("t_any", \(t) TRUE)
 
 ## BASIC TYPES
+#' @export
 t_int <- .new_type("t_int", \(t) is.integer(t) && length(t) == 1)
+#' @export
 t_ints <- .new_type("t_ints", \(t) is.integer(t) && length(t) > 1)
 
+#' @export
 t_dbl <- .new_type("t_dbl", \(t) is.double(t) && length(t) == 1)
 t_dbls <- .new_type("t_dbls", \(t) is.double(t) && length(t) > 1)
 

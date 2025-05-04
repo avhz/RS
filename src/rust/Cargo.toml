@@ -9,8 +9,10 @@ name = 'RS'
 
 [dependencies]
 extendr-api = { version = "*", features = ['non-api'] }
+profiling = "1.0.16"
 
 [profile.release]
+debug = true
 lto = "fat"
 opt-level = 3
 incremental = false
