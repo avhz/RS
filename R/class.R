@@ -14,20 +14,19 @@
 #' @param ... The fields and methods of the class.
 #'
 #' @export
-Class <- function(.classname, ...) {
+Class <- function(.classname, .validate = TRUE, ...) {
     definition_args <- list(...)
     .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
-    methods <- Filter(.is_method, definition_args)
+    methods <- Filter(.is_method, definition_args) |> names()
 
     new <- function(...) {
-        instance_args <- rlang::list2(...)
-
         .Call(
             wrap____new_class__,
             .classname,
+            .validate,
             definition_args,
-            instance_args,
-            if (!is.null(names(methods))) names(methods) else character(0)
+            rlang::list2(...), ## Instance fields
+            if (!is.null(methods)) methods else character(0)
         )
     }
 
@@ -65,7 +64,6 @@ print.ClassMap <- function(x, ...) {
 
 #' @export
 print.Class <- function(self, ...) {
-    # browser()
     .get_width <- function(df) max(nchar(capture.output(print(df))))
 
     fields <- self[["map"]][["keys"]]() # !in c("new", "print")
@@ -90,12 +88,14 @@ print.Class <- function(self, ...) {
 if (FALSE) {
     gc()
     remove(list = ls())
+    rextendr::clean()
     rextendr::document()
     devtools::load_all()
     devtools::test()
 
     Class(
-        "Foo",
+        .classname = "Foo",
+        .validate = FALSE,
 
         ## Fields
         a = t_int,
@@ -122,9 +122,60 @@ if (FALSE) {
         }
     )
 
-    system.time(foo <- Foo(a = 1L, b = 2.0, c = "xxx"))
+    foo <- Foo(a = 1L, b = 2.0, c = "xxx")
+    foo <- Foo(a = 1L, b = 2.0, c = NULL)
     n <- 1e+5
-    bench::mark(foo <- Foo(a = 1L, b = 2.0, c = "xxx"), iterations = n)
+    bench::mark(Foo(a = 1L, b = 2.0, c = "xxx"), iterations = n)
     system.time(foos <- lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
     profvis::profvis(lapply(1:n, \(i) Foo(a = i, b = 1.5, c = "xxx")))
+
+    foo@a
+    foo@b
+    foo@c
+    foo@c <- "new value"
+    foo@c
+    foo@bar(1)
+    foo@bar(1, 2)
+    foo@baz(1, 2)
+    foo@baz(1, 2, data.frame(x = 1:5))
+
+    FooR6 <- R6::R6Class(
+        "FooR6",
+        public = list(
+            a = NULL,
+            b = NULL,
+            c = NULL,
+
+            initialize = function(a, b, c) {
+                self$a <- a
+                self$b <- b
+                self$c <- c
+            },
+
+            bar = function(x) {
+                cat("Arg 'x' is", x, "\n")
+                cat("Field 'a' is", self$a, "\n")
+                cat("Field 'b' is", self$b, "\n")
+                cat("Field 'c' is", self$c, "\n")
+                cat("Updating field 'c' to 'new value'\n")
+                self$c <- "new value"
+                print("Calling method 'baz'")
+                self$baz(1, 2)
+            },
+
+            baz = function(a, b, c = data.frame(x = 1:5)) {
+                cat("Arg 'a' is", a, "\n")
+                cat("Arg 'b' is", b, "\n")
+                print(c)
+            }
+        )
+    )
+
+    fooR6 <- FooR6$new(a = 1L, b = 2.0, c = "xxx")
+
+    bench::mark(
+        FooR6$new(a = 1L, b = 2.0, c = "xxx"),
+        iterations = n
+    )
+    system.time(fooR6 <- lapply(1:n, \(i) FooR6$new(a = i, b = 1.5, c = "xxx")))
 }

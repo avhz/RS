@@ -145,11 +145,13 @@ impl ClassMap {
 }
 
 #[extendr]
-fn __new_class__(name: &str, definition_args: List, instance_args: List, methods: Strings) -> List {
-    let mut definition_map = ClassMap::from_list(definition_args);
+fn __define_class__(name: &str, attributes: List, methods: Strings) -> Result<ClassMap> {
+    let mut definition_map = ClassMap::from_list(attributes);
 
-    methods.into_iter().for_each(|key| {
-        // Get the method from definition_map
+    let mut _self = List::from_pairs([("map", definition_map.clone().into())]);
+    _self.set_class([name, "Self"]).unwrap();
+
+    for key in methods.iter() {
         let method = definition_map.get(key.to_string());
 
         if let Some(method_fn) = method.as_function() {
@@ -158,63 +160,100 @@ fn __new_class__(name: &str, definition_args: List, instance_args: List, methods
                 method_fn.formals(),
                 method_fn.environment(),
             ) {
-                let filtered_formals: Vec<_> =
-                    formals.iter().filter(|(k, _)| *k != ".self").collect();
+                let new_formals = Pairlist::from_pairs(
+                    &formals
+                        .iter()
+                        .filter(|(k, _)| *k != ".self") // Exclude .self from formals
+                        .collect::<Vec<_>>(),
+                );
 
-                let new_formals = Pairlist::from_pairs(filtered_formals);
+                environment.set_local(Symbol::from_string(".self"), &_self);
 
-                // let self_pairs = vec![("map", definition_map.clone().into())];
-                let mut _self = List::from_pairs([("map", definition_map.clone().into())]);
-                _self.set_class(&[name, "Self".into()]).unwrap();
-
-                let env = Environment::new_with_parent(environment);
-                env.set_local(Symbol::from_string(".self"), _self);
-
-                if let Ok(new_method) = Function::from_parts(new_formals, body, env) {
-                    definition_map.set(key.to_string(), new_method.as_robj().clone());
+                if let Ok(new_method) = Function::from_parts(new_formals, body, environment) {
+                    definition_map.set(key.to_string(), new_method.into());
                 }
             }
         }
-    });
+    }
 
-    let instance_map = instance_args.into_hashmap();
+    Ok(definition_map)
+}
 
-    for key in instance_map.keys().cloned().collect::<Vec<_>>() {
-        // I guess this is ok since the key is already in the map? i.e. for key in keys
-        let post = instance_map.get(key).expect("ERROR: Key not found");
-        let pre = definition_map.get(key.into());
+#[extendr]
+fn __new_class__(
+    name: &str,
+    validate: bool,
+    definition_args: List,
+    instance_args: List,
+    methods: Strings,
+) -> Result<List> {
+    let mut definition_map = ClassMap::from_list(definition_args);
 
-        if let Some(mut post_class) = post.class() {
-            if post_class.any(|c| c == "Class") {
-                definition_map.set(key.into(), post.into());
-                continue;
+    let mut _self = List::from_pairs([("map", definition_map.clone().into())]);
+    _self.set_class([name, "Self"]).unwrap();
+
+    for key in methods.iter() {
+        let method = definition_map.get(key.to_string());
+
+        if let Some(method_fn) = method.as_function() {
+            if let (Some(body), Some(formals), Some(environment)) = (
+                method_fn.body().and_then(|b| b.as_language()),
+                method_fn.formals(),
+                method_fn.environment(),
+            ) {
+                let new_formals = Pairlist::from_pairs(
+                    &formals
+                        .iter()
+                        .filter(|(k, _)| *k != ".self") // Exclude .self from formals
+                        .collect::<Vec<_>>(),
+                );
+
+                environment.set_local(Symbol::from_string(".self"), &_self);
+
+                if let Ok(new_method) = Function::from_parts(new_formals, body, environment) {
+                    definition_map.set(key.to_string(), new_method.into());
+                }
             }
-        }
-
-        if let Some(validator_fn) = pre.as_function() {
-            let check = validator_fn
-                .call(pairlist!(post))
-                .expect("ERROR: Validator function failed for attribute: {key}")
-                .as_bool()
-                .unwrap_or(false);
-
-            if check {
-                definition_map.set(key.into(), post.into());
-                continue;
-            }
-
-            let msg = format!(
-                "Invalid type <'{}'> for field <'{}'>.",
-                post.as_str().unwrap_or("<unknown>"), // WE NEED typeof(x) HERE !
-                key
-            );
-            panic!("{}", msg);
         }
     }
 
-    let mut object = List::from_pairs(vec![("map", definition_map.into())]);
-    object.set_class(&[name, "Class".into()]).unwrap();
-    object
+    for (key, value) in instance_args.into_hashmap() {
+        let after = value;
+
+        // Allows for composition of classes.
+        if let Some(class) = after.class() {
+            if class.into_iter().any(|c| c == "Class") {
+                definition_map.set(key.into(), after.into());
+                continue;
+            }
+        }
+
+        if validate {
+            let before = definition_map.get(key.into());
+            if let Some(validator_fn) = before.as_function() {
+                let check = validator_fn
+                    .call(pairlist!(after.clone()))
+                    .expect("ERROR: Validator function failed for attribute: {key}")
+                    .as_bool()
+                    .unwrap_or(false);
+
+                if check {
+                    definition_map.set(key.into(), after.into());
+                    continue;
+                }
+
+                let msg = format!(
+                    "Invalid type <'{:?}'> passed for field <'{}'>.",
+                    after.rtype(),
+                    key
+                );
+                return Err(Error::Other(msg));
+            }
+        }
+    }
+
+    _self.set_class([name, "Class"]).unwrap();
+    Ok(_self)
 }
 
 // Macro to generate exports.

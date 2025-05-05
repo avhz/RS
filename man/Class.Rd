@@ -4,7 +4,7 @@
 \alias{Class}
 \title{Class}
 \usage{
-Class(.classname, ...)
+Class(.classname, .validate = TRUE, ...)
 }
 \arguments{
 \item{...}{The fields and methods of the class.}
