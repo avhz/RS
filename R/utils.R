@@ -10,4 +10,6 @@
     stop("Object is not a Rust object (externalptr).")
 }
 
-.compile <- function(.f) compiler::cmpfun(.f, options = list(optimize = 3L))
+.compile <- function(.f) {
+    compiler::cmpfun(.f, options = list(optimize = 3L))
+}
