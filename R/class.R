@@ -21,7 +21,7 @@ Class <- function(.classname, .validate = TRUE, ...) {
 
     new <- function(...) {
         .Call(
-            wrap____new_class__,
+            wrap__new_class,
             .classname,
             .validate,
             definition_args,
@@ -34,9 +34,7 @@ Class <- function(.classname, .validate = TRUE, ...) {
 }
 
 #' @export
-print.ClassMap <- function(x, ...) {
-    .print_rust_object(x)
-}
+print.ClassMap <- function(x, ...) .print_rust_object(x)
 
 #' @export
 .DollarNames.ClassMap <- function(env, pattern = "") {
@@ -88,14 +86,49 @@ print.Class <- function(self, ...) {
 if (FALSE) {
     gc()
     remove(list = ls())
-    rextendr::clean()
+    # rextendr::clean()
     rextendr::document()
     devtools::load_all()
     devtools::test()
 
+    N <- 1e+5
+
+    ## Without validation
+    Class("FooValidated", TRUE, a = t_int, b = t_dbl, c = t_char)
+    Class("FooUnvalidated", a = t_int, b = t_dbl, c = t_char, .validate = FALSE)
+
+    FooR6 <- R6::R6Class(
+        "FooR6",
+        public = list(
+            a = NULL,
+            b = NULL,
+            c = NULL,
+
+            initialize = function(a, b, c) {
+                self$a <- a
+                self$b <- b
+                self$c <- c
+            }
+        )
+    )
+
+    FooRef <- setRefClass(
+        "FooRef",
+        fields = list(a = "integer", b = "numeric", c = "character")
+    )
+
+    bench::mark(
+        FooValidated(a = 1L, b = 2.0, c = "xxx"),
+        FooUnvalidated(a = 1L, b = 2.0, c = "xxx"),
+        FooR6$new(a = 1L, b = 2.0, c = "xxx"),
+        FooRef$new(a = 1L, b = 2.0, c = "xxx"),
+
+        iterations = N,
+        check = FALSE
+    )
+
     Class(
         .classname = "Foo",
-        .validate = FALSE,
 
         ## Fields
         a = t_int,

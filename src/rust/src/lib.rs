@@ -180,7 +180,7 @@ fn __define_class__(name: &str, attributes: List, methods: Strings) -> Result<Cl
 }
 
 #[extendr]
-fn __new_class__(
+fn new_class(
     name: &str,
     validate: bool,
     definition_args: List,
@@ -247,8 +247,10 @@ fn __new_class__(
                     after.rtype(),
                     key
                 );
-                return Err(Error::Other(msg));
+                return Err(Error::TypeMismatch(msg.into()));
             }
+        } else {
+            definition_map.set(key.into(), after.into());
         }
     }
 
@@ -263,9 +265,6 @@ extendr_module! {
     // Module name.
     mod RS;
 
-    // ClassMap implementation.
     impl ClassMap;
-
-    // __new_class__ implementation.
-    fn __new_class__;
+    fn new_class;
 }

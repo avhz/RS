@@ -171,3 +171,97 @@ test_that("class.R - Basic Class composition", {
         bar <- Bar(foo = foo, baz = 3.0)
     })
 })
+
+test_that("class.R - .self", {
+    testthat::expect_no_error({
+        Class(
+            "Foo",
+
+            a = t_int,
+            b = t_dbl,
+
+            bar = function(.self, a, b) {
+                .self@a <- a
+                .self@b <- b
+            },
+
+            baz = function(.self, a, b) {
+                .self@bar(a, b)
+
+                return(.self@a + .self@b)
+            }
+        )
+    })
+
+    testthat::expect_no_error({
+        foo <- Foo(a = 1L, b = 2.0, c = "xxx")
+
+        foo@bar(10L, 20.0)
+        expect_equal(foo@a, 10L)
+        expect_equal(foo@b, 20.0)
+
+        expect_equal(foo@baz(30L, 40.0), 70.0)
+
+        expect_equal(foo@a, 30L)
+        expect_equal(foo@b, 40.0)
+    })
+})
+
+
+test_that("class.R - Field Validation", {
+    expect_no_error({
+        Class("Validated", TRUE, a = t_int, b = t_dbl, c = t_char)
+        Class("Unvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
+    })
+
+    ## Should throw an error
+    expect_error(Validated(a = 1L, b = 2.0, c = NULL))
+
+    ## Should not throw an error
+    expect_no_error({
+        foo <- Validated(a = 1L, b = 2.0, c = "xxx")
+        foo <- Unvalidated(a = 1L, b = 2.0, c = "xxx")
+        foo <- Unvalidated(a = 1L, b = 2.0, c = NULL)
+    })
+})
+
+test_that("class.R - Timings", {
+    Class("FooValidated", TRUE, a = t_int, b = t_dbl, c = t_char)
+    Class("FooUnvalidated", a = t_int, b = t_dbl, c = t_char, .validate = FALSE)
+
+    FooR6 <- R6::R6Class(
+        "FooR6",
+        public = list(
+            a = NULL,
+            b = NULL,
+            c = NULL,
+
+            initialize = function(a, b, c) {
+                self$a <- a
+                self$b <- b
+                self$c <- c
+            }
+        )
+    )
+
+    FooRef <- setRefClass(
+        "FooRef",
+        fields = list(a = "integer", b = "numeric", c = "character")
+    )
+
+    timings <- bench::mark(
+        FooUnvalidated(a = 1L, b = 2.0, c = "xxx"),
+        FooValidated(a = 1L, b = 2.0, c = "xxx"),
+        FooR6$new(a = 1L, b = 2.0, c = "xxx"),
+        FooRef$new(a = 1L, b = 2.0, c = "xxx"),
+
+        iterations = 1e+4,
+        check = FALSE
+    )
+
+    ## Expect RS to have least garbage collection
+    expect_true(all(diff(timings[["n_gc"]]) >= 0))
+
+    ## Expect RS to be faster than R6 and RefClass
+    expect_true(all(diff(timings[["itr/sec"]]) <= 0))
+})

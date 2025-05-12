@@ -3,15 +3,10 @@
 ## ============================================================================
 
 .print_rust_object <- function(.o) {
-    .print <- function(.o) {
+    if (typeof(.o) == "externalptr") {
         cat(paste(capture.output(str(.o)), format(.o), sep = ""), "\n")
         .o$print()
     }
-
-    if (typeof(.o) == "externalptr") {
-        .print(.o)
-    }
-
     stop("Object is not a Rust object (externalptr).")
 }
 

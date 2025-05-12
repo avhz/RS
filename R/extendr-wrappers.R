@@ -10,7 +10,7 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
-`__new_class__` <- function(name, validate, definition_args, instance_args, methods) .Call(wrap____new_class__, name, validate, definition_args, instance_args, methods)
+new_class <- function(name, validate, definition_args, instance_args, methods) .Call(wrap__new_class, name, validate, definition_args, instance_args, methods)
 
 ClassMap <- new.env(parent = emptyenv())
 
