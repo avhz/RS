@@ -12,6 +12,10 @@ NULL
 
 new_class <- function(name, validate, definition_args, instance_args, methods) .Call(wrap__new_class, name, validate, definition_args, instance_args, methods)
 
+new_class2 <- function(name, validate, self_, instance_args) .Call(wrap__new_class2, name, validate, self_, instance_args)
+
+define_class <- function(name, definition_args, methods) .Call(wrap__define_class, name, definition_args, methods)
+
 ClassMap <- new.env(parent = emptyenv())
 
 ClassMap$init <- function(`_name`, `_definition_args`, `_instance_args`, `_methods`) invisible(.Call(wrap__ClassMap__init, `_name`, `_definition_args`, `_instance_args`, `_methods`))
@@ -19,6 +23,8 @@ ClassMap$init <- function(`_name`, `_definition_args`, `_instance_args`, `_metho
 ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
 
 ClassMap$set <- function(key, value) invisible(.Call(wrap__ClassMap__set, self, key, value))
+
+ClassMap$set_multiple <- function(values) invisible(.Call(wrap__ClassMap__set_multiple, self, values))
 
 ClassMap$get <- function(key) .Call(wrap__ClassMap__get, self, key)
 

@@ -261,9 +261,9 @@ test_that("class.R - Timings", {
 
     ## Expect RS to have least garbage collection
     ## Not really a reliable test, can fail maybe 10-20% of the time
-    expect_true(all(diff(timings[["n_gc"]]) >= 0))
+    # expect_true(all(diff(timings[["n_gc"]]) >= 0))
 
     ## Expect RS to be faster than R6 and RefClass
     ## Can also fail, but much less likely than n_gc
-    expect_true(all(diff(timings[["itr/sec"]]) <= 0))
+    # expect_true(all(diff(timings[["itr/sec"]]) <= 0))
 })

@@ -15,21 +15,39 @@
 #'
 #' @export
 Class <- function(.classname, .validate = TRUE, ...) {
+    # browser()
     definition_args <- list(...)
     .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
     methods <- (Filter(.is_method, definition_args) |> names())
     methods <- if (!is.null(methods)) methods else character(0)
 
+    .self <- .Call(
+        wrap__define_class,
+        .classname,
+        definition_args,
+        methods
+    )
+
     new <- function(...) {
         .Call(
-            wrap__new_class,
+            wrap__new_class2,
             .classname,
             .validate,
-            definition_args,
-            rlang::list2(...), ## Instance fields
-            methods
+            .self,
+            rlang::list2(...)
         )
     }
+
+    # new <- function(...) {
+    #     .Call(
+    #         wrap__new_class,
+    #         .classname,
+    #         .validate,
+    #         definition_args,
+    #         rlang::list2(...), ## Instance fields
+    #         methods
+    #     )
+    # }
 
     assign(.classname, new, envir = parent.frame())
 }
@@ -63,13 +81,20 @@ print.ClassMap <- function(x, ...) .print_rust_object(x)
 
 #' @export
 print.Class <- function(self, ...) {
+    # browser()
     .get_width <- function(df) max(nchar(capture.output(print(df))))
+    # .get_signature <- function(fn) {
+    #     name <- deparse(substitute(fn))
+    #     args <- names(formals(fn))
+    #     paste0(name, "(", paste(args, collapse = ", "), ")")
+    # }
 
     fields <- self[["map"]][["keys"]]() # !in c("new", "print")
     values <- self[["map"]][["values"]]()
     ## Only keep values that are not functions
     values <- unlist(lapply(values, \(v) if (is.function(v)) "-" else v))
     types <- sapply(fields, \(n) typeof(self[["map"]][["get"]](n)))
+    # lapply(\(x) if (is.function(x)) .get_signature(x) else x)
     df <- data.frame(field = fields, type = types, value = values)
 
     df <- df[order(df$field), ]
@@ -87,14 +112,14 @@ print.Class <- function(self, ...) {
 if (FALSE) {
     gc()
     remove(list = ls())
-    # rextendr::clean()
+    rextendr::clean()
     rextendr::document()
     devtools::load_all()
     devtools::test()
 
     ## Without validation
     Class("FooValidated", TRUE, a = t_int, b = t_dbl, c = t_char)
-    Class("FooUnvalidated", a = t_int, b = t_dbl, c = t_char, .validate = FALSE)
+    Class("FooUnvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
 
     FooR6 <- R6::R6Class(
         "FooR6",
@@ -122,7 +147,13 @@ if (FALSE) {
         FooR6$new(a = 1L, b = 2.0, c = "xxx"),
         FooRef$new(a = 1L, b = 2.0, c = "xxx"),
 
-        iterations = 1e+4,
+        iterations = 1e4,
         check = FALSE
     )
+
+    Class("Foo", x = t_int, bar = function(.self, y) cat(.self@x, y, "\n"))
+    foo <- Foo(x = 1L)
+    foo@bar(2L, 2)
+    foo@x <- 2L
+    foo@bar(3L)
 }
