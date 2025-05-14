@@ -1,6 +1,6 @@
 Package: RS
-Title: Classes for R. 
-Description: Classes for R.
+Title: Fast classes for R. 
+Description: Fast classes for R.
 Depends: R (>= 4.1.0)
 Version: 0.0.0.9000
 Maintainer: Amando Z <RustQuantContact@gmail.com>
@@ -11,5 +11,5 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Config/rextendr/version: 0.3.1
 VignetteBuilder: quarto
-Suggests: testthat (>= 3.0.0), R6, bench
+Suggests: testthat (>= 3.0.0), R6, bench, S7
 Config/testthat/edition: 3

@@ -10,15 +10,11 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
-new_class <- function(name, validate, definition_args, instance_args, methods) .Call(wrap__new_class, name, validate, definition_args, instance_args, methods)
-
-new_class2 <- function(name, validate, self_, instance_args) .Call(wrap__new_class2, name, validate, self_, instance_args)
-
 define_class <- function(name, definition_args, methods) .Call(wrap__define_class, name, definition_args, methods)
 
-ClassMap <- new.env(parent = emptyenv())
+new_class <- function(name, validate, self_, instance_args) .Call(wrap__new_class, name, validate, self_, instance_args)
 
-ClassMap$init <- function(`_name`, `_definition_args`, `_instance_args`, `_methods`) invisible(.Call(wrap__ClassMap__init, `_name`, `_definition_args`, `_instance_args`, `_methods`))
+ClassMap <- new.env(parent = emptyenv())
 
 ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
 

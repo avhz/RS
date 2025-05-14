@@ -15,11 +15,13 @@
 #'
 #' @export
 Class <- function(.classname, .validate = TRUE, ...) {
-    # browser()
     definition_args <- list(...)
-    .is_method <- function(.f) is.function(.f) && (".self" %in% formalArgs(.f))
-    methods <- (Filter(.is_method, definition_args) |> names())
-    methods <- if (!is.null(methods)) methods else character(0)
+
+    methods <- names(Filter(
+        \(.f) is.function(.f) && (".self" %in% formalArgs(.f)),
+        definition_args
+    ))
+    if (is.null(methods)) methods <- character(0)
 
     .self <- .Call(
         wrap__define_class,
@@ -28,32 +30,23 @@ Class <- function(.classname, .validate = TRUE, ...) {
         methods
     )
 
-    new <- function(...) {
+    new_class <- .compile(function(...) {
         .Call(
-            wrap__new_class2,
+            wrap__new_class,
             .classname,
             .validate,
             .self,
             rlang::list2(...)
         )
-    }
+    })
 
-    # new <- function(...) {
-    #     .Call(
-    #         wrap__new_class,
-    #         .classname,
-    #         .validate,
-    #         definition_args,
-    #         rlang::list2(...), ## Instance fields
-    #         methods
-    #     )
-    # }
-
-    assign(.classname, new, envir = parent.frame())
+    assign(.classname, new_class, envir = parent.frame())
 }
 
 #' @export
-print.ClassMap <- function(x, ...) .print_rust_object(x)
+print.ClassMap <- function(x, ...) {
+    .print_rust_object(x)
+}
 
 #' @export
 .DollarNames.ClassMap <- function(env, pattern = "") {
@@ -61,10 +54,14 @@ print.ClassMap <- function(x, ...) .print_rust_object(x)
 }
 
 #' @export
-`@.Class` <- function(self, key) self[["map"]][["get"]](key)
+`@.Class` <- function(self, key) {
+    self[["map"]][["get"]](key)
+}
 
 #' @export
-`@.Self` <- function(self, key) self[["map"]][["get"]](key)
+`@.Self` <- function(self, key) {
+    self[["map"]][["get"]](key)
+}
 
 #' @export
 `@<-.Class` <- function(self, key, value) {
@@ -81,31 +78,29 @@ print.ClassMap <- function(x, ...) .print_rust_object(x)
 
 #' @export
 print.Class <- function(self, ...) {
-    # browser()
     .get_width <- function(df) max(nchar(capture.output(print(df))))
-    # .get_signature <- function(fn) {
-    #     name <- deparse(substitute(fn))
-    #     args <- names(formals(fn))
-    #     paste0(name, "(", paste(args, collapse = ", "), ")")
-    # }
+    .get_signature <- function(nm, fn) {
+        paste0(nm, "(", paste(formalArgs(fn), collapse = ", "), ")")
+    }
 
     fields <- self[["map"]][["keys"]]() # !in c("new", "print")
     values <- self[["map"]][["values"]]()
-    ## Only keep values that are not functions
-    values <- unlist(lapply(values, \(v) if (is.function(v)) "-" else v))
+    values <- unlist(lapply(
+        values,
+        \(v) if (is.function(v)) .get_signature("", v) else v
+    ))
     types <- sapply(fields, \(n) typeof(self[["map"]][["get"]](n)))
-    # lapply(\(x) if (is.function(x)) .get_signature(x) else x)
-    df <- data.frame(field = fields, type = types, value = values)
 
+    df <- data.frame(field = fields, type = types, value = values)
     df <- df[order(df$field), ]
 
     width <- .get_width(df)
     sep <- rep("-", width) |> paste(collapse = "")
-    cat(sep, "\n")
-    cat("Class:", self$.classname, "\n")
-    cat(sep, "\n")
+    cat(sep, fill = TRUE)
+    cat(class(self), fill = T)
+    cat(sep, fill = TRUE)
     df |> print(row.names = FALSE, right = FALSE)
-    cat(sep, "\n")
+    cat(sep, fill = TRUE)
 }
 
 
@@ -141,19 +136,45 @@ if (FALSE) {
         fields = list(a = "integer", b = "numeric", c = "character")
     )
 
-    bench::mark(
+    FooS7 <- S7::new_class(
+        "FooS7",
+        properties = list(
+            x = S7::class_integer,
+            y = S7::class_integer,
+            z = S7::class_integer
+        )
+    )
+
+    system.time(for (i in 1:1e5) FooValidated(1L, 2.0, "xxx"))
+
+    timings <- bench::mark(
         FooUnvalidated(a = 1L, b = 2.0, c = "xxx"),
         FooValidated(a = 1L, b = 2.0, c = "xxx"),
         FooR6$new(a = 1L, b = 2.0, c = "xxx"),
         FooRef$new(a = 1L, b = 2.0, c = "xxx"),
+        FooS7(x = 1L, y = 2L, z = 3L),
 
         iterations = 1e4,
         check = FALSE
     )
 
-    Class("Foo", x = t_int, bar = function(.self, y) cat(.self@x, y, "\n"))
+    timings |>
+        dplyr::mutate(iter_gc = .data$`itr/sec` / n_gc) |>
+        View()
+
+    Class(
+        "Foo",
+
+        x = t_int,
+        bar = function(.self, y) cat(.self@x, y, "\n"),
+        baz = function(z) cat(z, "\n")
+    )
+
     foo <- Foo(x = 1L)
-    foo@bar(2L, 2)
     foo@x <- 2L
     foo@bar(3L)
+    foo@baz(4L)
+
+    bar <- function(.self, y) cat(.self@x, y, "\n")
+    bar(foo, 2L)
 }
