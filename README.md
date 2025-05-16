@@ -20,7 +20,7 @@ renv::install("avhz/RS")
 
 ```R
 expression     min  median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time
-RS          4.26µs  5.04µs   191415.        0B     19.1  9999     1     52.2ms
+RS          4.26µs  5.04µs   191415.        0B     19.1  9999     1     52.2ms ✅
 R6         12.34µs 12.96µs    75757.        0B     83.4  9989    11    131.9ms
 S4          32.1µs 33.58µs    28526.      328B     65.8  9977    23    349.7ms
 S7         45.18µs 46.99µs    20296.        0B     63.1  9969    31    491.2ms
