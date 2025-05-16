@@ -1,6 +1,4 @@
-# RS
-
-Classes for R.
+# `RS` - Faster classes for R
 
 The name `RS` is a combination of R and S (R's predecessor), 
 and is the file extension and top-level domain (`.rs`) 
@@ -8,7 +6,7 @@ used for Rust files and websites, respectively.
 
 ## Install
 
-Anything of the following should work:
+Any of the following should work:
 
 ```R
 pak::pak("avhz/RS")
@@ -32,12 +30,11 @@ Ref        94.05µs 97.25µs     9971.    47.4KB     40.0  9960    40    998.9ms
 Benchmark code [here](https://github.com/avhz/RS/blob/main/bench.R).
 
 Note: This is not really a fair "benchmark", 
-since RS does not have as many features as some of the other OOP offerings. 
+since RS does not yet have as many features as some of the other OOP offerings. 
 
 ## Examples
 
 ```R
-
 Class(
     "Foo",
     # Fields
