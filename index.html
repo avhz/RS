@@ -61,9 +61,21 @@
 <span><span class="fu">renv</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"avhz/RS"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="benchmark">Benchmark<a class="anchor" aria-label="anchor" href="#benchmark"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>expression     min  median <span class="st">`</span><span class="at">itr/sec</span><span class="st">`</span> mem_alloc <span class="st">`</span><span class="at">gc/sec</span><span class="st">`</span> n_itr  n_gc total_time</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>RS          <span class="fl">4.26</span>µs  <span class="fl">5.04</span>µs   <span class="fl">191415.</span>        <span class="dv">0</span>B     <span class="fl">19.1</span>  <span class="dv">9999</span>     <span class="dv">1</span>     <span class="fl">52.2</span>ms</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>R6         <span class="fl">12.34</span>µs <span class="fl">12.96</span>µs    <span class="fl">75757.</span>        <span class="dv">0</span>B     <span class="fl">83.4</span>  <span class="dv">9989</span>    <span class="dv">11</span>    <span class="fl">131.9</span>ms</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>S4          <span class="fl">32.1</span>µs <span class="fl">33.58</span>µs    <span class="fl">28526.</span>      <span class="dv">328</span>B     <span class="fl">65.8</span>  <span class="dv">9977</span>    <span class="dv">23</span>    <span class="fl">349.7</span>ms</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>S7         <span class="fl">45.18</span>µs <span class="fl">46.99</span>µs    <span class="fl">20296.</span>        <span class="dv">0</span>B     <span class="fl">63.1</span>  <span class="dv">9969</span>    <span class="dv">31</span>    <span class="fl">491.2</span>ms</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>Ref        <span class="fl">94.05</span>µs <span class="fl">97.25</span>µs     <span class="fl">9971.</span>    <span class="fl">47.4</span>KB     <span class="fl">40.0</span>  <span class="dv">9960</span>    <span class="dv">40</span>    <span class="fl">998.9</span>ms</span></code></pre></div>
+<p>Benchmark code <a href="https://github.com/avhz/RS/blob/main/bench.R" class="external-link">here</a>.</p>
+<p>Note: This is not really a fair “benchmark”, since RS does not have as many features as some of the other OOP offerings.</p>
+</div>
+<div class="section level2">
 <h2 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="reference/Class.html">Class</a></span><span class="op">(</span></span>
 <span>    <span class="st">"Foo"</span>,</span>
@@ -89,36 +101,36 @@
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">c</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="sc">&gt;</span> foo <span class="ot">&lt;-</span> <span class="fu">Foo</span>(<span class="at">a =</span> <span class="dv">1</span><span class="dt">L</span>, <span class="at">b =</span> <span class="fl">2.0</span>, <span class="at">c =</span> <span class="st">"xxx"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>a</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>[<span class="dv">1</span>] <span class="dv">1</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>b</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>[<span class="dv">1</span>] <span class="dv">2</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>c</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"xxx"</span></span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span><span class="fu">bar</span>(<span class="dv">1</span>)</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>Arg <span class="st">'x'</span> is <span class="dv">1</span> </span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>Field <span class="st">'a'</span> is <span class="dv">1</span> </span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>Arg <span class="st">'a'</span> is <span class="dv">1</span> </span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>Arg <span class="st">'b'</span> is <span class="dv">2</span> </span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>  x</span>
-<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="dv">1</span> <span class="dv">1</span></span>
-<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="dv">2</span> <span class="dv">2</span></span>
-<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="dv">3</span> <span class="dv">3</span></span>
-<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="dv">4</span> <span class="dv">4</span></span>
-<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="dv">5</span> <span class="dv">5</span></span>
-<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span><span class="fu">baz</span>(<span class="dv">1</span>, <span class="dv">2</span>)</span>
-<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a>Arg <span class="st">'a'</span> is <span class="dv">1</span> </span>
-<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a>Arg <span class="st">'b'</span> is <span class="dv">2</span> </span>
-<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a>  x</span>
-<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="dv">1</span> <span class="dv">1</span></span>
-<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="dv">2</span> <span class="dv">2</span></span>
-<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="dv">3</span> <span class="dv">3</span></span>
-<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="dv">4</span> <span class="dv">4</span></span>
-<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="dv">5</span> <span class="dv">5</span></span>
-<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>c</span>
-<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"new value"</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="sc">&gt;</span> foo <span class="ot">&lt;-</span> <span class="fu">Foo</span>(<span class="at">a =</span> <span class="dv">1</span><span class="dt">L</span>, <span class="at">b =</span> <span class="fl">2.0</span>, <span class="at">c =</span> <span class="st">"xxx"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>a</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>[<span class="dv">1</span>] <span class="dv">1</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>b</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>[<span class="dv">1</span>] <span class="dv">2</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>c</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"xxx"</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span><span class="fu">bar</span>(<span class="dv">1</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>Arg <span class="st">'x'</span> is <span class="dv">1</span> </span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>Field <span class="st">'a'</span> is <span class="dv">1</span> </span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>Arg <span class="st">'a'</span> is <span class="dv">1</span> </span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>Arg <span class="st">'b'</span> is <span class="dv">2</span> </span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>  x</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="dv">1</span> <span class="dv">1</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="dv">2</span> <span class="dv">2</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="dv">3</span> <span class="dv">3</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="dv">4</span> <span class="dv">4</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="dv">5</span> <span class="dv">5</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span><span class="fu">baz</span>(<span class="dv">1</span>, <span class="dv">2</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a>Arg <span class="st">'a'</span> is <span class="dv">1</span> </span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a>Arg <span class="st">'b'</span> is <span class="dv">2</span> </span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a>  x</span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="dv">1</span> <span class="dv">1</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="dv">2</span> <span class="dv">2</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="dv">3</span> <span class="dv">3</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="dv">4</span> <span class="dv">4</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="dv">5</span> <span class="dv">5</span></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="sc">&gt;</span> foo<span class="sc">@</span>c</span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>[<span class="dv">1</span>] <span class="st">"new value"</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/Class.html">Class</a></span><span class="op">(</span></span>
 <span>    <span class="st">"Black76"</span>,</span>
 <span></span>
@@ -156,7 +168,7 @@
 <span><span class="va">black76</span><span class="op">@</span><span class="va">call</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">black76</span><span class="op">@</span><span class="va">put</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Or create from a <code>data.frame</code>:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/Class.html">Class</a></span><span class="op">(</span><span class="st">"Asset"</span>,</span>
 <span></span>
 <span>    <span class="co"># FIELDS</span></span>
@@ -197,48 +209,48 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">assets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu">Asset</span><span class="op">(</span><span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">df</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>assets</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>[[<span class="dv">1</span>]]</span>
-<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="sc">--------------------------------------</span> </span>
-<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>Class<span class="sc">:</span> </span>
-<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="sc">--------------------------------------</span> </span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a> field    type      value     </span>
-<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a> price    double    <span class="dv">150</span>       </span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a> value    closure   <span class="sc">-</span>         </span>
-<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a> company  character Apple Inc.</span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a> print    closure   <span class="sc">-</span>         </span>
-<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a> quantity integer   <span class="dv">10</span>        </span>
-<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a> id       character AAPL      </span>
-<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a> type     character Equity    </span>
-<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="sc">--------------------------------------</span> </span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a></span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>[[<span class="dv">2</span>]]</span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="sc">-----------------------------------------</span> </span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a>Class<span class="sc">:</span> </span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="sc">-----------------------------------------</span> </span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a> field    type      value        </span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a> value    closure   <span class="sc">-</span>            </span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a> print    closure   <span class="sc">-</span>            </span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a> type     character Equity       </span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a> quantity integer   <span class="dv">5</span>            </span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a> price    double    <span class="dv">2800</span>         </span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a> company  character Alphabet Inc.</span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a> id       character GOOGL        </span>
-<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="sc">-----------------------------------------</span> </span>
-<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a></span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>[[<span class="dv">3</span>]]</span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="sc">-------------------------------------------</span> </span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>Class<span class="sc">:</span> </span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a><span class="sc">-------------------------------------------</span> </span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a> field    type      value          </span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a> price    double    <span class="dv">3400</span>           </span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a> company  character Amazon.com Inc.</span>
-<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a> value    closure   <span class="sc">-</span>              </span>
-<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a> quantity integer   <span class="dv">2</span>              </span>
-<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a> print    closure   <span class="sc">-</span>              </span>
-<span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a> type     character Equity         </span>
-<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a> id       character AMZN           </span>
-<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a><span class="sc">-------------------------------------------</span> </span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>assets</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>[[<span class="dv">1</span>]]</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="sc">--------------------------------------</span> </span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>Class<span class="sc">:</span> </span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="sc">--------------------------------------</span> </span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a> field    type      value     </span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a> price    double    <span class="dv">150</span>       </span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a> value    closure   <span class="sc">-</span>         </span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a> company  character Apple Inc.</span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a> print    closure   <span class="sc">-</span>         </span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a> quantity integer   <span class="dv">10</span>        </span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a> id       character AAPL      </span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a> type     character Equity    </span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="sc">--------------------------------------</span> </span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a>[[<span class="dv">2</span>]]</span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="sc">-----------------------------------------</span> </span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>Class<span class="sc">:</span> </span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="sc">-----------------------------------------</span> </span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a> field    type      value        </span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a> value    closure   <span class="sc">-</span>            </span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a> print    closure   <span class="sc">-</span>            </span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a> type     character Equity       </span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a> quantity integer   <span class="dv">5</span>            </span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a> price    double    <span class="dv">2800</span>         </span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a> company  character Alphabet Inc.</span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a> id       character GOOGL        </span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="sc">-----------------------------------------</span> </span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a>[[<span class="dv">3</span>]]</span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="sc">-------------------------------------------</span> </span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a>Class<span class="sc">:</span> </span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="sc">-------------------------------------------</span> </span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a> field    type      value          </span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a> price    double    <span class="dv">3400</span>           </span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a> company  character Amazon.com Inc.</span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a> value    closure   <span class="sc">-</span>              </span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a> quantity integer   <span class="dv">2</span>              </span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a> print    closure   <span class="sc">-</span>              </span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a> type     character Equity         </span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a> id       character AMZN           </span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="sc">-------------------------------------------</span> </span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="license">
