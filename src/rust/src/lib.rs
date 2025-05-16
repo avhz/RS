@@ -6,6 +6,32 @@ use extendr_api::{pairlist, prelude::*};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 // ============================================================================
+// EXTENDR MODULE
+// Macro to generate exports.
+// This ensures exported functions are registered with R.
+// See corresponding C code in `entrypoint.c`.
+// ============================================================================
+
+extendr_module! {
+    mod RS;
+
+    impl ClassMap;
+
+    fn define_class;
+    fn initialise_class;
+}
+
+// ============================================================================
+// GLOBALS
+// ============================================================================
+
+#[global_allocator]
+static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+const RS_CLASS: &str = "RS_CLASS";
+const RS_SELF: &str = "RS_SELF";
+
+// ============================================================================
 // CLASSMAP
 // ============================================================================
 
@@ -148,25 +174,30 @@ impl ClassMap {
     }
 }
 
-impl TryFrom<Robj> for ClassMap {
+impl TryFrom<&Robj> for ClassMap {
     type Error = Error;
 
-    fn try_from(value: Robj) -> Result<Self> {
+    fn try_from(value: &Robj) -> Result<Self> {
         let result: Result<ExternalPtr<Self>> = value.try_into();
 
-        if let Ok(ptr) = result {
-            Ok(ClassMap {
-                data: ptr.data.clone(),
-            })
-        } else {
-            Err(Error::TypeMismatch("Expected ClassMap instance.".into()))
+        match result.and_then(|ptr| Ok(ptr.data.clone())) {
+            Ok(data) => Ok(ClassMap { data }),
+            Err(_) => Err(Error::TypeMismatch("Expected ClassMap instance.".into())),
         }
     }
 }
 
 impl From<List> for ClassMap {
     fn from(list: List) -> Self {
-        Self::from_list(list)
+        let data = list
+            .into_hashmap()
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect();
+
+        Self {
+            data: Rc::new(RefCell::new(data)),
+        }
     }
 }
 
@@ -174,105 +205,108 @@ impl From<List> for ClassMap {
 // DEFINE CLASS FUNCTION
 // ============================================================================
 
+fn create_object(map: ClassMap, class: [&str; 2]) -> Result<List> {
+    let mut object = List::from_pairs([("map", map.into())]);
+    object.set_class(class)?;
+
+    Ok(object)
+}
+
+fn create_method(map: &mut ClassMap, self_: &List, key: &str) -> Result<()> {
+    if let Some(method_fn) = map.get(key.to_string()).as_function() {
+        if let (Some(body), Some(formals), Some(environment)) = (
+            method_fn.body().and_then(|b| b.as_language()),
+            method_fn.formals(),
+            method_fn.environment(),
+        ) {
+            let new_formals = Pairlist::from_pairs(
+                &formals
+                    .iter()
+                    .filter(|(k, _)| *k != ".self") // Exclude .self from formals
+                    .collect::<Vec<_>>(),
+            );
+
+            environment.set_local(Symbol::from_string(".self"), self_);
+
+            match Function::from_parts(new_formals, body, environment) {
+                Ok(new_method) => map.set(key.into(), new_method.into()),
+                Err(err) => {
+                    let msg = format!("ERROR: Failed to create method: {}", err);
+                    return Err(Error::Other(msg.into()));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
 #[extendr]
 fn define_class(name: &str, definition_args: List, methods: Strings) -> Result<List> {
-    let mut definition_map = ClassMap::from_list(definition_args);
+    let mut definition_map: ClassMap = definition_args.into();
 
-    let mut _self = List::from_pairs([("map", definition_map.clone().into())]);
-    _self.set_class([name, "Self"]).unwrap();
+    let self_ = create_object(definition_map.clone(), [RS_SELF, name])?;
 
-    for key in methods.iter() {
-        let method = definition_map.get(key.to_string());
+    methods.iter().for_each(|key| {
+        let _ = create_method(&mut definition_map, &self_, &key);
+    });
 
-        if let Some(method_fn) = method.as_function() {
-            if let (Some(body), Some(formals), Some(environment)) = (
-                method_fn.body().and_then(|b| b.as_language()),
-                method_fn.formals(),
-                method_fn.environment(),
-            ) {
-                let new_formals = Pairlist::from_pairs(
-                    &formals
-                        .iter()
-                        .filter(|(k, _)| *k != ".self") // Exclude .self from formals
-                        .collect::<Vec<_>>(),
-                );
-
-                environment.set_local(Symbol::from_string(".self"), &_self);
-
-                if let Ok(new_method) = Function::from_parts(new_formals, body, environment) {
-                    definition_map.set(key.to_string(), new_method.into());
-                }
-            }
-        }
-    }
-
-    Ok(_self)
+    Ok(self_)
 }
 
 // ============================================================================
-// NEW CLASS FUNCTION
+// INITIALISE CLASS FUNCTION
 // ============================================================================
+
+fn validate_attribute(data: &mut HashMap<String, Robj>, key: String, after: Robj) -> Result<()> {
+    // Fast path for Class composition
+    if after.inherits(RS_CLASS) {
+        data.insert(key, after);
+        return Ok(());
+    }
+
+    if let Some(validator) = data.get(&key).and_then(|before| before.as_function()) {
+        let arg = Pairlist::from_pairs([("", after.clone())]);
+
+        let check = match validator.call(arg) {
+            Ok(result) => result.as_bool().unwrap_or(false),
+            Err(_) => {
+                let msg = format!("ERROR: Validator function failed for attribute: {}", key);
+                return Err(Error::Other(msg.into()));
+            }
+        };
+
+        if check {
+            data.insert(key, after);
+            return Ok(());
+        }
+
+        let msg = format!(
+            "Invalid type <'{:?}'> passed for field <'{}'>.",
+            after.rtype(),
+            key
+        );
+        return Err(Error::TypeMismatch(msg.into()));
+    }
+
+    Ok(())
+}
 
 #[extendr]
-fn new_class(name: &str, validate: bool, self_: List, instance_args: List) -> Result<List> {
-    let _self = self_.into_hashmap();
-    let mut definition_map = ClassMap::try_from(_self.get("map").unwrap().clone())?;
-
-    for (key, value) in instance_args.into_hashmap() {
-        let after = value;
-
-        // Allows for composition of classes.
-        if let Some(class) = after.class() {
-            if class.into_iter().any(|c| c == "Class") {
-                definition_map.set(key.into(), after.into());
-                continue;
-            }
+fn initialise_class(name: &str, self_: List, instance_args: List) -> Result<List> {
+    let classmap = match self_.into_hashmap().get("map") {
+        Some(robj) => ClassMap::try_from(robj)?,
+        None => {
+            let msg = "ERROR: Missing 'map' in self_ argument to initialise_class.";
+            return Err(Error::Other(msg.into()));
         }
+    };
 
-        if validate {
-            let before = definition_map.get(key.into());
-            if let Some(validator_fn) = before.as_function() {
-                let check = validator_fn
-                    .call(pairlist!(after.clone()))
-                    .expect("ERROR: Validator function failed for attribute: {key}")
-                    .as_bool()
-                    .unwrap_or(false);
+    let data_ref = Rc::clone(&classmap.data);
+    let mut data = data_ref.borrow_mut();
 
-                if check {
-                    definition_map.set(key.into(), after.into());
-                    continue;
-                }
-
-                let msg = format!(
-                    "Invalid type <'{:?}'> passed for field <'{}'>.",
-                    after.rtype(),
-                    key
-                );
-                return Err(Error::TypeMismatch(msg.into()));
-            }
-        } else {
-            definition_map.set(key.into(), after.into());
-        }
+    for (key, after) in instance_args.into_hashmap() {
+        validate_attribute(&mut data, key.to_string(), after)?;
     }
 
-    let mut _self = List::from_pairs([("map", definition_map.clone().into())]);
-    _self.set_class([name, "Class"]).unwrap();
-
-    Ok(_self)
-}
-
-// ============================================================================
-// EXTENDR MODULE
-// Macro to generate exports.
-// This ensures exported functions are registered with R.
-// See corresponding C code in `entrypoint.c`.
-// ============================================================================
-
-extendr_module! {
-    mod RS;
-
-    impl ClassMap;
-
-    fn define_class;
-    fn new_class;
+    Ok(create_object(classmap, [RS_CLASS, name])?)
 }

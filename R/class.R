@@ -14,7 +14,7 @@
 #' @param ... The fields and methods of the class.
 #'
 #' @export
-Class <- function(.classname, .validate = TRUE, ...) {
+Class <- function(.classname, ...) {
     definition_args <- list(...)
 
     methods <- names(Filter(
@@ -24,21 +24,22 @@ Class <- function(.classname, .validate = TRUE, ...) {
     if (is.null(methods)) methods <- character(0)
 
     .self <- .Call(
-        wrap__define_class,
-        .classname,
-        definition_args,
-        methods
+        "wrap__define_class",
+        name = .classname,
+        definition_args = definition_args,
+        methods = methods,
+        PACKAGE = "RS"
     )
 
-    new_class <- .compile(function(...) {
+    new_class <- function(...) {
         .Call(
-            wrap__new_class,
-            .classname,
-            .validate,
-            .self,
-            rlang::list2(...)
+            "wrap__initialise_class",
+            name = .classname,
+            self_ = .self,
+            instance_args = rlang::list2(...),
+            PACKAGE = "RS"
         )
-    })
+    }
 
     assign(.classname, new_class, envir = parent.frame())
 }
@@ -54,40 +55,40 @@ print.ClassMap <- function(x, ...) {
 }
 
 #' @export
-`@.Class` <- function(self, key) {
+`@.RS_CLASS` <- function(self, key) {
     self[["map"]][["get"]](key)
 }
 
 #' @export
-`@.Self` <- function(self, key) {
+`@.RS_SELF` <- function(self, key) {
     self[["map"]][["get"]](key)
 }
 
 #' @export
-`@<-.Class` <- function(self, key, value) {
+`@<-.RS_CLASS` <- function(self, key, value) {
     self[["map"]][["set"]](key, value)
     return(self)
 }
 
 #' @export
-`@<-.Self` <- function(self, key, value) {
+`@<-.RS_SELF` <- function(self, key, value) {
     self[["map"]][["set"]](key, value)
     return(self)
 }
 
 
 #' @export
-print.Class <- function(self, ...) {
+print.RS_CLASS <- function(self, ...) {
     .get_width <- function(df) max(nchar(capture.output(print(df))))
-    .get_signature <- function(nm, fn) {
-        paste0(nm, "(", paste(formalArgs(fn), collapse = ", "), ")")
+    .get_signature <- function(fn) {
+        paste0("f", "(", paste(formalArgs(fn), collapse = ", "), ")")
     }
 
     fields <- self[["map"]][["keys"]]() # !in c("new", "print")
     values <- self[["map"]][["values"]]()
     values <- unlist(lapply(
         values,
-        \(v) if (is.function(v)) .get_signature("", v) else v
+        \(v) if (is.function(v)) .get_signature(v) else v
     ))
     types <- sapply(fields, \(n) typeof(self[["map"]][["get"]](n)))
 
@@ -97,7 +98,7 @@ print.Class <- function(self, ...) {
     width <- .get_width(df)
     sep <- rep("-", width) |> paste(collapse = "")
     cat(sep, fill = TRUE)
-    cat(class(self), fill = T)
+    cat(class(self), fill = TRUE)
     cat(sep, fill = TRUE)
     df |> print(row.names = FALSE, right = FALSE)
     cat(sep, fill = TRUE)
@@ -112,9 +113,12 @@ if (FALSE) {
     devtools::load_all()
     devtools::test()
 
-    ## Without validation
-    Class("FooValidated", TRUE, a = t_int, b = t_dbl, c = t_char)
-    Class("FooUnvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
+    Class(
+        "FooRS",
+        a = t_int,
+        b = t_dbl,
+        c = t_char
+    )
 
     FooR6 <- R6::R6Class(
         "FooR6",
@@ -139,39 +143,52 @@ if (FALSE) {
     FooS7 <- S7::new_class(
         "FooS7",
         properties = list(
-            x = S7::class_integer,
-            y = S7::class_integer,
-            z = S7::class_integer
+            a = S7::class_integer,
+            b = S7::class_numeric,
+            c = S7::class_character
         )
     )
 
-    system.time(for (i in 1:1e5) FooValidated(1L, 2.0, "xxx"))
+    FooS4 <- setClass(
+        "FooS4",
+        slots = list(
+            a = "integer",
+            b = "numeric",
+            c = "character"
+        )
+    )
 
-    timings <- bench::mark(
-        FooUnvalidated(a = 1L, b = 2.0, c = "xxx"),
-        FooValidated(a = 1L, b = 2.0, c = "xxx"),
-        FooR6$new(a = 1L, b = 2.0, c = "xxx"),
-        FooRef$new(a = 1L, b = 2.0, c = "xxx"),
-        FooS7(x = 1L, y = 2L, z = 3L),
+    gc()
+
+    bench::mark(
+        "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
+        "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
+        "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),
+        "S7" = FooS7(a = 1L, b = 2.0, c = "xxx"),
+        "Ref" = FooRef(a = 1L, b = 2.0, c = "xxx"),
 
         iterations = 1e4,
         check = FALSE
     )
 
-    timings |>
-        dplyr::mutate(iter_gc = .data$`itr/sec` / n_gc) |>
-        View()
+    # print(timings, width = Inf)
+    # View(dplyr::mutate(timings, iter_gc = .data$`itr/sec` / .data$n_gc))
+
+    system.time(for (i in 1:1e5) FooRS(1L, 2.0, "xxx"))
 
     Class(
         "Foo",
-
         x = t_int,
         bar = function(.self, y) cat(.self@x, y, "\n"),
         baz = function(z) cat(z, "\n")
     )
 
-    foo <- Foo(x = 1L)
+    foo <- Foo(1L)
+    foo$map
+    foo
+    foo@x
     foo@x <- 2L
+    foo@x
     foo@bar(3L)
     foo@baz(4L)
 

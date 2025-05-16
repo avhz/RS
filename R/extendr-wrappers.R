@@ -12,7 +12,7 @@ NULL
 
 define_class <- function(name, definition_args, methods) .Call(wrap__define_class, name, definition_args, methods)
 
-new_class <- function(name, validate, self_, instance_args) .Call(wrap__new_class, name, validate, self_, instance_args)
+initialise_class <- function(name, self_, instance_args) .Call(wrap__initialise_class, name, self_, instance_args)
 
 ClassMap <- new.env(parent = emptyenv())
 

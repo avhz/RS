@@ -7,7 +7,7 @@
     force(name)
     force(validator)
     utils::removeSource(validator) |>
-        structure(class = c("RS_type", name))
+        structure(class = c("RS_TYPE", name))
 }
 
 ## ANY TYPE

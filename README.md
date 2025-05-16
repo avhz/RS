@@ -2,7 +2,9 @@
 
 Classes for R.
 
-The name `RS` is a combination of R and S (R's predecessor), and is the file extension and top-level domain (`.rs`) used for Rust files and websites, respectively. 
+The name `RS` is a combination of R and S (R's predecessor), 
+and is the file extension and top-level domain (`.rs`) 
+used for Rust files and websites, respectively. 
 
 ## Install
 
@@ -15,6 +17,22 @@ devtools::install_github("avhz/RS")
 ## or
 renv::install("avhz/RS")
 ```
+
+## Benchmark
+
+```R
+expression     min  median `itr/sec` mem_alloc `gc/sec` n_itr  n_gc total_time
+RS          4.26µs  5.04µs   191415.        0B     19.1  9999     1     52.2ms
+R6         12.34µs 12.96µs    75757.        0B     83.4  9989    11    131.9ms
+S4          32.1µs 33.58µs    28526.      328B     65.8  9977    23    349.7ms
+S7         45.18µs 46.99µs    20296.        0B     63.1  9969    31    491.2ms
+Ref        94.05µs 97.25µs     9971.    47.4KB     40.0  9960    40    998.9ms
+```
+
+Benchmark code [here](https://github.com/avhz/RS/blob/main/bench.R).
+
+Note: This is not really a fair "benchmark", 
+since RS does not have as many features as some of the other OOP offerings. 
 
 ## Examples
 

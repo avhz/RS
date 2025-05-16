@@ -9,6 +9,7 @@ name = 'RS'
 
 [dependencies]
 extendr-api = { version = "*", features = ['non-api'] }
+mimalloc = "0.1.46"
 
 [profile.release]
 debug = true
