@@ -14,8 +14,15 @@ define_class <- function(name, definition_args, methods) .Call(wrap__define_clas
 
 initialise_class <- function(name, self_, instance_args) .Call(wrap__initialise_class, name, self_, instance_args)
 
-#' Define a new class by injecting it into the global R environment.
-chatgpt <- function(name, members) .Call(wrap__chatgpt, name, members)
+rs_class <- function() .Call(wrap__rs_class)
+
+rs_self <- function() .Call(wrap__rs_self)
+
+rs_method <- function() .Call(wrap__rs_method)
+
+rs_type <- function() .Call(wrap__rs_type)
+
+rs_static <- function() .Call(wrap__rs_static)
 
 ClassMap <- new.env(parent = emptyenv())
 
