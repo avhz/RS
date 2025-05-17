@@ -24,7 +24,7 @@ Class <- function(.classname, ...) {
     if (is.null(methods)) methods <- character(0)
 
     .self <- .Call(
-        "wrap__define_class_3",
+        "wrap__define_class",
         name = .classname,
         definition_args = definition_args,
         methods = methods,
@@ -33,7 +33,7 @@ Class <- function(.classname, ...) {
 
     new_class <- function(...) {
         .Call(
-            "wrap__initialise_class_3",
+            "wrap__initialise_class",
             name = .classname,
             self_ = .self,
             instance_args = rlang::list2(...),
