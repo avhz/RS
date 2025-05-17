@@ -8,7 +8,7 @@ crate-type = ['staticlib']
 name = 'RS'
 
 [dependencies]
-extendr-api = { version = "*", features = ['non-api'] }
+extendr-api = { version = "0.8.0", features = ['non-api'] }
 mimalloc = "0.1.46"
 
 [profile.release]

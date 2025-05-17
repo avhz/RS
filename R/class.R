@@ -24,7 +24,7 @@ Class <- function(.classname, ...) {
     if (is.null(methods)) methods <- character(0)
 
     .self <- .Call(
-        "wrap__define_class",
+        "wrap__define_class_3",
         name = .classname,
         definition_args = definition_args,
         methods = methods,
@@ -33,7 +33,7 @@ Class <- function(.classname, ...) {
 
     new_class <- function(...) {
         .Call(
-            "wrap__initialise_class",
+            "wrap__initialise_class_3",
             name = .classname,
             self_ = .self,
             instance_args = rlang::list2(...),
@@ -104,76 +104,22 @@ print.RS_CLASS <- function(self, ...) {
     cat(sep, fill = TRUE)
 }
 
+`%class%` <- function(.name, ...) {
+    Class(.name, ...)
+}
 
 if (FALSE) {
-    gc()
-    remove(list = ls())
-    rextendr::clean()
-    rextendr::document()
-    devtools::load_all()
-    devtools::test()
+    . <- function() {
+        gc()
+        remove(list = ls())
+        rextendr::clean()
+        rextendr::document()
+        devtools::load_all()
+        devtools::test()
+    }
+    .()
 
-    Class(
-        "FooRS",
-        a = t_int,
-        b = t_dbl,
-        c = t_char
-    )
-
-    FooR6 <- R6::R6Class(
-        "FooR6",
-        public = list(
-            a = NULL,
-            b = NULL,
-            c = NULL,
-
-            initialize = function(a, b, c) {
-                self$a <- a
-                self$b <- b
-                self$c <- c
-            }
-        )
-    )
-
-    FooRef <- setRefClass(
-        "FooRef",
-        fields = list(a = "integer", b = "numeric", c = "character")
-    )
-
-    FooS7 <- S7::new_class(
-        "FooS7",
-        properties = list(
-            a = S7::class_integer,
-            b = S7::class_numeric,
-            c = S7::class_character
-        )
-    )
-
-    FooS4 <- setClass(
-        "FooS4",
-        slots = list(
-            a = "integer",
-            b = "numeric",
-            c = "character"
-        )
-    )
-
-    gc()
-
-    bench::mark(
-        "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
-        "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
-        "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),
-        "S7" = FooS7(a = 1L, b = 2.0, c = "xxx"),
-        "Ref" = FooRef(a = 1L, b = 2.0, c = "xxx"),
-
-        iterations = 1e4,
-        check = FALSE
-    )
-
-    # print(timings, width = Inf)
-    # View(dplyr::mutate(timings, iter_gc = .data$`itr/sec` / .data$n_gc))
-
+    .benchmark(1e4)
     system.time(for (i in 1:1e5) FooRS(1L, 2.0, "xxx"))
 
     Class(

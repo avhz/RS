@@ -14,6 +14,9 @@ define_class <- function(name, definition_args, methods) .Call(wrap__define_clas
 
 initialise_class <- function(name, self_, instance_args) .Call(wrap__initialise_class, name, self_, instance_args)
 
+#' Define a new class by injecting it into the global R environment.
+chatgpt <- function(name, members) .Call(wrap__chatgpt, name, members)
+
 ClassMap <- new.env(parent = emptyenv())
 
 ClassMap$from_hashmap <- function(map) .Call(wrap__ClassMap__from_hashmap, map)
@@ -22,7 +25,7 @@ ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
 
 ClassMap$set <- function(key, value) invisible(.Call(wrap__ClassMap__set, self, key, value))
 
-ClassMap$set_multiple <- function(values) invisible(.Call(wrap__ClassMap__set_multiple, self, values))
+ClassMap$mset <- function(values) invisible(.Call(wrap__ClassMap__mset, self, values))
 
 ClassMap$get <- function(key) .Call(wrap__ClassMap__get, self, key)
 

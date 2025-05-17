@@ -6,7 +6,7 @@
 .new_type <- function(name, validator) {
     force(name)
     force(validator)
-    structure(utils::removeSource(validator), class = c(RS_TYPE, name))
+    structure(utils::removeSource(validator), class = c("RS_SELF", name))
 }
 
 ## ANY TYPE
