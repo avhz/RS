@@ -6,8 +6,7 @@
 .new_type <- function(name, validator) {
     force(name)
     force(validator)
-    utils::removeSource(validator) |>
-        structure(class = c("RS_TYPE", name))
+    structure(utils::removeSource(validator), class = c(RS_TYPE, name))
 }
 
 ## ANY TYPE
@@ -19,44 +18,44 @@ t_any <- .new_type("t_any", \(t) TRUE)
 ## BASIC TYPES
 
 #' @export
-t_int <- .new_type("t_int", \(t) is.integer(t) && length(t) == 1)
+t_int <- .new_type("t_int", \(t) is.integer(t) && length(t) == 1L)
 #' @export
-t_ints <- .new_type("t_ints", \(t) is.integer(t) && length(t) > 1)
+t_ints <- .new_type("t_ints", \(t) is.integer(t) && length(t) > 1L)
 
 #' @export
-t_dbl <- .new_type("t_dbl", \(t) is.double(t) && length(t) == 1)
+t_dbl <- .new_type("t_dbl", \(t) is.double(t) && length(t) == 1L)
 #' @export
-t_dbls <- .new_type("t_dbls", \(t) is.double(t) && length(t) > 1)
+t_dbls <- .new_type("t_dbls", \(t) is.double(t) && length(t) > 1L)
 
 #' @export
-t_num <- .new_type("t_num", \(t) is.numeric(t) && length(t) == 1)
+t_num <- .new_type("t_num", \(t) is.numeric(t) && length(t) == 1L)
 #' @export
-t_nums <- .new_type("t_nums", \(t) is.numeric(t) && length(t) > 1)
+t_nums <- .new_type("t_nums", \(t) is.numeric(t) && length(t) > 1L)
 
 #' @export
-t_char <- .new_type("t_char", \(t) is.character(t) && length(t) == 1)
+t_char <- .new_type("t_char", \(t) is.character(t) && length(t) == 1L)
 #' @export
-t_chars <- .new_type("t_chars", \(t) is.character(t) && length(t) > 1)
+t_chars <- .new_type("t_chars", \(t) is.character(t) && length(t) > 1L)
 
 #' @export
-t_bool <- .new_type("t_bool", \(t) is.logical(t) && length(t) == 1)
+t_bool <- .new_type("t_bool", \(t) is.logical(t) && length(t) == 1L)
 #' @export
-t_bools <- .new_type("t_bools", \(t) is.logical(t) && length(t) > 1)
+t_bools <- .new_type("t_bools", \(t) is.logical(t) && length(t) > 1L)
 
 #' @export
-t_cplx <- .new_type("t_cplx", \(t) is.complex(t) && length(t) == 1)
+t_cplx <- .new_type("t_cplx", \(t) is.complex(t) && length(t) == 1L)
 #' @export
-t_cplxs <- .new_type("t_cplxs", \(t) is.complex(t) && length(t) > 1)
+t_cplxs <- .new_type("t_cplxs", \(t) is.complex(t) && length(t) > 1L)
 
 #' @export
-t_raw <- .new_type("t_raw", \(t) is.raw(t) && length(t) == 1)
+t_raw <- .new_type("t_raw", \(t) is.raw(t) && length(t) == 1L)
 #' @export
-t_raws <- .new_type("t_raws", \(t) is.raw(t) && length(t) > 1)
+t_raws <- .new_type("t_raws", \(t) is.raw(t) && length(t) > 1L)
 
 #' @export
-t_factor <- .new_type("t_factor", \(t) is.factor(t) && length(t) == 1)
+t_factor <- .new_type("t_factor", \(t) is.factor(t) && length(t) == 1L)
 #' @export
-t_factors <- .new_type("t_factors", \(t) is.factor(t) && length(t) > 1)
+t_factors <- .new_type("t_factors", \(t) is.factor(t) && length(t) > 1L)
 
 ## COMPOUND TYPES
 

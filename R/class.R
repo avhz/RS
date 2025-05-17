@@ -183,6 +183,11 @@ if (FALSE) {
         baz = function(z) cat(z, "\n")
     )
 
+    foo1 <- Foo(x = 1L)
+    foo2 <- Foo(x = 2L)
+    foo1
+    foo2
+
     foo <- Foo(1L)
     foo$map
     foo

@@ -16,6 +16,8 @@ initialise_class <- function(name, self_, instance_args) .Call(wrap__initialise_
 
 ClassMap <- new.env(parent = emptyenv())
 
+ClassMap$from_hashmap <- function(map) .Call(wrap__ClassMap__from_hashmap, map)
+
 ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
 
 ClassMap$set <- function(key, value) invisible(.Call(wrap__ClassMap__set, self, key, value))

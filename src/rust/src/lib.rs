@@ -3,7 +3,7 @@
 // ============================================================================
 
 use extendr_api::{pairlist, prelude::*};
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, hash::Hash, rc::Rc};
 
 // ============================================================================
 // EXTENDR MODULE
@@ -19,6 +19,15 @@ extendr_module! {
 
     fn define_class;
     fn initialise_class;
+
+    // fn define_class_2;
+    // fn initialise_class_2;
+
+    fn rs_class;
+    fn rs_self;
+    fn rs_method;
+    fn rs_type;
+    fn rs_static;
 }
 
 // ============================================================================
@@ -28,8 +37,38 @@ extendr_module! {
 #[global_allocator]
 static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
+// SPECIAL CLASS NAMES
 const RS_CLASS: &str = "RS_CLASS";
 const RS_SELF: &str = "RS_SELF";
+const RS_METHOD: &str = "RS_METHOD";
+const RS_TYPE: &str = "RS_TYPE";
+const RS_STATIC: &str = "RS_STATIC";
+
+// WRAPPER FUNCTIONS TO SEND CONSTS TO R
+#[extendr]
+fn rs_class() -> Rstr {
+    RS_CLASS.into()
+}
+
+#[extendr]
+fn rs_self() -> Rstr {
+    RS_SELF.into()
+}
+
+#[extendr]
+fn rs_method() -> Rstr {
+    RS_METHOD.into()
+}
+
+#[extendr]
+fn rs_type() -> Rstr {
+    RS_TYPE.into()
+}
+
+#[extendr]
+fn rs_static() -> Rstr {
+    RS_STATIC.into()
+}
 
 // ============================================================================
 // CLASSMAP
@@ -43,6 +82,15 @@ struct ClassMap {
 
 #[extendr]
 impl ClassMap {
+    /// Create a new ClassMap from a HashMap.
+    ///     
+    /// @export
+    fn from_hashmap(map: HashMap<String, Robj>) -> Self {
+        Self {
+            data: Rc::new(RefCell::new(map)),
+        }
+    }
+
     /// Create a new Class from an R List.
     ///
     /// @export
@@ -201,6 +249,14 @@ impl From<List> for ClassMap {
     }
 }
 
+fn externalptr_to_hashmap(robj: Robj) -> Result<HashMap<String, Robj>> {
+    let ptr: ExternalPtr<HashMap<String, Robj>> = robj
+        .try_into()
+        .map_err(|_| Error::TypeMismatch("Expected ClassMap instance.".into()))?;
+
+    Ok(ptr.as_ref().clone())
+}
+
 // ============================================================================
 // DEFINE CLASS FUNCTION
 // ============================================================================
@@ -310,3 +366,148 @@ fn initialise_class(name: &str, self_: List, instance_args: List) -> Result<List
 
     Ok(create_object(classmap, [RS_CLASS, name])?)
 }
+
+// ============================================================================
+// NEW SETUP
+// Made a mistake.
+// The map defined in define_class
+// is the same as the one in initialise_class.
+// So if a a second class is created,
+// it contains the old map.
+//
+// Need to:
+// 1. Create a map in define_class containing the methods. This contains:
+//        - Validators: anything that has class RS_TYPE.
+//        - Methods: anything that has ".self" in the formals. We then assign RS_METHOD to these.
+//        - Static: anything that has class RS_STATIC.
+//        - Class: anything that has class RS_CLASS.
+// 2. Create a * new * map in initialise_class containing the attributes, plus the methods.
+//        - This must be a new map, not a reference to the old one.
+// 3. Send the map back to R with class attributes.
+// ============================================================================
+
+// type RobjMap = ExternalPtr<HashMap<String, Robj>>;
+
+// fn create_object_2(
+//     map: HashMap<String, Robj>,
+//     class: [&str; 2],
+// ) -> Result<ExternalPtr<HashMap<String, Robj>>> {
+//     let mut object = ExternalPtr::new(map);
+//     object.set_class(class)?;
+//     Ok(object)
+// }
+
+// fn create_method_2(map: &mut HashMap<String, Robj>, self_: &RobjMap, key: &str) -> Result<()> {
+//     if let Some(method_fn) = map.get(key).unwrap().as_function() {
+//         if let (Some(body), Some(formals), Some(environment)) = (
+//             method_fn.body().and_then(|b| b.as_language()),
+//             method_fn.formals(),
+//             method_fn.environment(),
+//         ) {
+//             let new_formals = Pairlist::from_pairs(
+//                 &formals
+//                     .iter()
+//                     .filter(|(k, _)| *k != ".self") // Exclude .self from formals
+//                     .collect::<Vec<_>>(),
+//             );
+
+//             environment.set_local(Symbol::from_string(".self"), self_.clone());
+
+//             match Function::from_parts(new_formals, body, environment) {
+//                 Ok(new_method) => {
+//                     map.insert(key.into(), new_method.into());
+//                 }
+//                 Err(err) => {
+//                     let msg = format!("ERROR: Failed to create method: {}", err);
+//                     return Err(Error::Other(msg.into()));
+//                 }
+//             }
+//         }
+//     }
+//     Ok(())
+// }
+
+// // Function to assign correct class to an Robj
+// fn assign_class(robj: &mut Robj, class: &str) -> Result<()> {
+//     robj.set_class([class])?;
+//     Ok(())
+// }
+
+// // .self <- .Call(
+// //     "wrap__define_class",
+// //     name = .classname,
+// //     definition = definition,
+// //     PACKAGE = "RS"
+// // )
+// #[extendr]
+// fn define_class_2(classname: &str, definition: List) -> Result<RobjMap> {
+//     // Create a new basic hashmap from the definition arguments
+//     // This contains the validators, methods, and static methods.
+//     let mut definition: HashMap<String, Robj> = definition
+//         .into_hashmap()
+//         .into_iter()
+//         .map(|(k, v)| (k.to_string(), v))
+//         .collect();
+
+//     let self_ = create_object_2(definition.clone(), [RS_SELF, classname])?;
+//     methods.iter().for_each(|key| {
+//         let _ = create_method_2(&mut definition, &self_, &key);
+//     });
+//     Ok(self_)
+// }
+
+// fn validate_attribute_2(data: &mut HashMap<String, Robj>, key: String, after: Robj) -> Result<()> {
+//     // Fast path for Class composition
+//     if after.inherits(RS_CLASS) {
+//         data.insert(key, after);
+//         return Ok(());
+//     }
+
+//     if let Some(validator) = data.get(&key).and_then(|before| before.as_function()) {
+//         let arg = Pairlist::from_pairs([("", after.clone())]);
+
+//         let check = match validator.call(arg) {
+//             Ok(result) => result.as_bool().unwrap_or(false),
+//             Err(_) => {
+//                 let msg = format!("ERROR: Validator function failed for attribute: {}", key);
+//                 return Err(Error::Other(msg.into()));
+//             }
+//         };
+
+//         if check {
+//             data.insert(key, after);
+//             return Ok(());
+//         }
+
+//         let msg = format!(
+//             "Invalid type <'{:?}'> passed for field <'{}'>.",
+//             after.rtype(),
+//             key
+//         );
+//         return Err(Error::TypeMismatch(msg.into()));
+//     }
+
+//     Ok(())
+// }
+
+// #[extendr]
+// fn initialise_class_2(name: &str, self_: Robj, instance_args: List) -> Result<List> {
+//     let classmap = match externalptr_to_hashmap(self_) {
+//         Ok(robj) => ClassMap::from_hashmap(robj),
+//         Err(_) => {
+//             let msg = "ERROR: Could not convert self_ to ClassMap.";
+//             return Err(Error::Other(msg.into()));
+//         }
+//     };
+
+//     let data_ref = Rc::clone(&classmap.data);
+//     let mut data = data_ref.borrow_mut();
+
+//     for (key, after) in instance_args.into_hashmap() {
+//         validate_attribute_2(&mut data, key.to_string(), after)?;
+//     }
+
+//     let mut object = List::from_pairs([("map", ClassMap::from_hashmap(data.clone()).into())]);
+//     object.set_class([RS_CLASS, name])?;
+//     Ok(object)
+// }
