@@ -23,20 +23,31 @@ Class <- function(.classname, ...) {
     ))
     if (is.null(methods)) methods <- character(0)
 
-    .self <- .Call(
-        "wrap__define_class",
-        name = .classname,
-        definition_args = definition_args,
-        methods = methods,
-        PACKAGE = "RS"
-    )
+    # .self <- .Call(
+    #     "wrap__define_class",
+    #     name = .classname,
+    #     definition_args = definition_args,
+    #     methods = methods,
+    #     PACKAGE = "RS"
+    # )
+
+    # new_class <- function(...) {
+    #     .Call(
+    #         "wrap__initialise_class",
+    #         name = .classname,
+    #         self_ = .self,
+    #         instance_args = rlang::list2(...),
+    #         PACKAGE = "RS"
+    #     )
+    # }
 
     new_class <- function(...) {
         .Call(
-            "wrap__initialise_class",
+            "wrap____new_class__",
             name = .classname,
-            self_ = .self,
+            definition_args = definition_args,
             instance_args = rlang::list2(...),
+            methods = methods,
             PACKAGE = "RS"
         )
     }
@@ -109,7 +120,7 @@ print.RS_CLASS <- function(self, ...) {
 }
 
 if (FALSE) {
-    . <- function() {
+    . <- function(clean = TRUE) {
         gc()
         remove(list = ls())
         rextendr::clean()
@@ -122,12 +133,12 @@ if (FALSE) {
     .benchmark(1e4)
     system.time(for (i in 1:1e5) FooRS(1L, 2.0, "xxx"))
 
-    Class(
-        "Foo",
-        x = t_int,
-        bar = function(.self, y) cat(.self@x, y, "\n"),
-        baz = function(z) cat(z, "\n")
-    )
+    "Foo" %class%
+        c(
+            x = t_int,
+            bar = function(.self, y) cat(.self@x, y, "\n"),
+            baz = function(z) cat(z, "\n")
+        )
 
     foo1 <- Foo(x = 1L)
     foo2 <- Foo(x = 2L)

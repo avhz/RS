@@ -10,6 +10,8 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
+`__new_class__` <- function(name, definition_args, instance_args, methods) .Call(wrap____new_class__, name, definition_args, instance_args, methods)
+
 define_class <- function(name, definition_args, methods) .Call(wrap__define_class, name, definition_args, methods)
 
 initialise_class <- function(name, self_, instance_args) .Call(wrap__initialise_class, name, self_, instance_args)

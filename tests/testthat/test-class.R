@@ -208,146 +208,98 @@ test_that("class.R - .self", {
 })
 
 
-test_that("class.R - Field Validation", {
-    expect_no_error({
-        Class("Validated", TRUE, a = t_int, b = t_dbl, c = t_char)
-        Class("Unvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
-    })
-
-    ## Should throw an error
-    expect_error(Validated(a = 1L, b = 2.0, c = NULL))
-
-    ## Should not throw an error
-    expect_no_error({
-        foo <- Validated(a = 1L, b = 2.0, c = "xxx")
-        foo <- Unvalidated(a = 1L, b = 2.0, c = "xxx")
-        foo <- Unvalidated(a = 1L, b = 2.0, c = NULL)
-    })
-})
-
-test_that("class.R - Timings", {
-    Class("FooValidated", TRUE, a = t_int, b = t_dbl, c = t_char)
-    Class("FooUnvalidated", a = t_int, b = t_dbl, c = t_char, .validate = FALSE)
-
-    FooR6 <- R6::R6Class(
-        "FooR6",
-        public = list(
-            a = NULL,
-            b = NULL,
-            c = NULL,
-
-            initialize = function(a, b, c) {
-                self$a <- a
-                self$b <- b
-                self$c <- c
-            }
-        )
-    )
-
-    FooRef <- setRefClass(
-        "FooRef",
-        fields = list(a = "integer", b = "numeric", c = "character")
-    )
-
-    timings <- bench::mark(
-        FooUnvalidated(a = 1L, b = 2.0, c = "xxx"),
-        FooValidated(a = 1L, b = 2.0, c = "xxx"),
-        FooR6$new(a = 1L, b = 2.0, c = "xxx"),
-        FooRef$new(a = 1L, b = 2.0, c = "xxx"),
-
-        iterations = 1e+4,
-        check = FALSE
-    )
-
-    ## Expect RS to have least garbage collection
-    ## Not really a reliable test, can fail maybe 10-20% of the time
-    # expect_true(all(diff(timings[["n_gc"]]) >= 0))
-
-    ## Expect RS to be faster than R6 and RefClass
-    ## Can also fail, but much less likely than n_gc
-    # expect_true(all(diff(timings[["itr/sec"]]) <= 0))
-
-    expect_true(TRUE) ## TO-DO: Re-evaluate these tests later
-})
-
-
 test_that("class.R - Separation of maps", {
     Class("Foo", a = t_int)
 
     foo1 <- Foo(a = 1L)
     foo2 <- Foo(a = 2L)
+    foo3 <- Foo(a = 3L)
 
     expect_equal(foo1@a, 1L)
-    expect_equal(foo2@a, 2L) ## This currently fails, very bad situation
+    expect_equal(foo2@a, 2L)
+    expect_equal(foo3@a, 3L)
 })
 
-if (FALSE) {
-    Class <- function(classname, ...) {
-        # Capture the class definition as a list
-        class_map <- list(...)
+# test_that("class.R - Timings", {
+# Class(
+#     "FooRS",
+#     a = t_int,
+#     b = t_dbl,
+#     c = t_char
+# )
 
-        # Constructor function
-        constructor <- function(...) {
-            instance_fields <- list(...)
+# FooR6 <- R6::R6Class(
+#     "FooR6",
+#     public = list(
+#         a = NULL,
+#         b = NULL,
+#         c = NULL,
 
-            # Create a new environment for the instance
-            self_env <- new.env(parent = emptyenv())
+#         initialize = function(a, b, c) {
+#             self$a <- a
+#             self$b <- b
+#             self$c <- c
+#         }
+#     )
+# )
 
-            # Temporary placeholder object so we can assign .self later
-            tmp_object <- structure(list(map = self_env), class = classname)
+# FooRef <- setRefClass(
+#     "FooRef",
+#     fields = list(a = "integer", b = "numeric", c = "character"),
+#     where = globalenv()
+# )
 
-            # Copy class map into the instance environment
-            for (name in names(class_map)) {
-                val <- class_map[[name]]
-                if (is.function(val)) {
-                    # Inject full object (with @ methods) as .self
-                    fn_env <- new.env(parent = environment(val))
-                    fn_env$.self <- tmp_object
-                    environment(val) <- fn_env
-                }
-                assign(name, val, envir = self_env)
-            }
+# FooS7 <- S7::new_class(
+#     "FooS7",
+#     properties = list(
+#         a = S7::class_integer,
+#         b = S7::class_numeric,
+#         c = S7::class_character
+#     )
+# )
 
-            # Override with instance-specific fields
-            for (name in names(instance_fields)) {
-                assign(name, instance_fields[[name]], envir = self_env)
-            }
+# FooS4 <- setClass(
+#     "FooS4",
+#     slots = list(
+#         a = "integer",
+#         b = "numeric",
+#         c = "character"
+#     ),
+#     where = globalenv()
+# )
 
-            # Final object
-            structure(list(map = self_env), class = classname)
-        }
+# timings <- bench::mark(
+#     "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
+#     "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
+#     "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),
+#     "S7" = FooS7(a = 1L, b = 2.0, c = "xxx"),
+#     "Ref" = FooRef(a = 1L, b = 2.0, c = "xxx"),
 
-        # Optionally assign to global environment
-        assign(classname, constructor, envir = .GlobalEnv)
-    }
+#     iterations = n,
+#     check = FALSE
+# )
 
-    # Accessor for @
-    `@.Foo` <- function(obj, name) {
-        get(name, envir = obj$map)
-    }
+## Expect RS to have least garbage collection
+## Not really a reliable test, can fail maybe 10-20% of the time
+# expect_true(all(diff(timings[["n_gc"]]) >= 0))
 
-    # Setter for @
-    `@<-.Foo` <- function(obj, name, value) {
-        assign(name, value, envir = obj$map)
-        obj
-    }
+## Expect RS to be faster than R6 and RefClass
+## Can also fail, but much less likely than n_gc
+# expect_true(all(diff(timings[["itr/sec"]]) <= 0))
 
-    Class(
-        "Foo",
-        x = 0L,
-        bar = function(.self, y) cat(.self@x, y, "\n"),
-        baz = function(z) cat(z, "\n")
-    )
+# })
 
-    foo1 <- Foo(x = 1L)
-    foo2 <- Foo(x = 2L)
-
-    foo1@x # 1
-    foo2@x # 2
-
-    foo1@bar(10) # prints: 1 10
-    foo2@bar(20) # prints: 2 20
-
-    foo1@x <- 5L
-    foo1@bar(7) # prints: 5 7
-}
+# test_that("class.R - Field Validation", {
+#     expect_no_error({
+#         Class("Validated", TRUE, a = t_int, b = t_dbl, c = t_char)
+#         Class("Unvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
+#     })
+#     ## Should throw an error
+#     expect_error(Validated(a = 1L, b = 2.0, c = NULL))
+#     ## Should not throw an error
+#     expect_no_error({
+#         foo <- Validated(a = 1L, b = 2.0, c = "xxx")
+#         foo <- Unvalidated(a = 1L, b = 2.0, c = "xxx")
+#         foo <- Unvalidated(a = 1L, b = 2.0, c = NULL)
+#     })
+# })

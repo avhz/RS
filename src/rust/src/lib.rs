@@ -20,28 +20,28 @@ type ExtPtrMap = ExternalPtr<RcRefMap>;
 // WRAPPER FUNCTIONS TO SEND CONSTS TO R
 
 #[extendr]
-const fn rs_class() -> &'static str {
-    "RS_CLASS"
+fn rs_class() -> Strings {
+    "RS_CLASS".into()
 }
 
 #[extendr]
-const fn rs_self() -> &'static str {
-    "RS_SELF"
+fn rs_self() -> Strings {
+    "RS_SELF".into()
 }
 
 #[extendr]
-const fn rs_method() -> &'static str {
-    "RS_METHOD"
+fn rs_method() -> Strings {
+    "RS_METHOD".into()
 }
 
 #[extendr]
-const fn rs_type() -> &'static str {
-    "RS_TYPE"
+fn rs_type() -> Strings {
+    "RS_TYPE".into()
 }
 
 #[extendr]
-const fn rs_static() -> &'static str {
-    "RS_STATIC"
+fn rs_static() -> Strings {
+    "RS_STATIC".into()
 }
 
 // ============================================================================
@@ -55,22 +55,22 @@ struct Class {
     name: String,
 
     /// Map containing the methods.
-    methods: HashMap<String, Robj>,
+    methods: RobjMap,
 
     /// Map containing the static methods.
-    statics: HashMap<String, Robj>,
+    statics: RobjMap,
 
     /// Map containing the validators (aka types).
-    validators: HashMap<String, Robj>,
+    validators: RobjMap,
 
     /// Map containing the class instance.
-    instance: Rc<RefCell<HashMap<String, Robj>>>,
+    instance: RcRefMap,
 }
 
 #[extendr]
 #[derive(Debug)]
 struct ClassMap {
-    data: Rc<RefCell<HashMap<String, Robj>>>,
+    data: RcRefMap,
 }
 
 #[extendr]
@@ -292,7 +292,7 @@ fn create_method(map: &mut ClassMap, self_: &List, key: &str) -> Result<()> {
 fn define_class(name: &str, definition_args: List, methods: Strings) -> Result<List> {
     let mut definition_map: ClassMap = definition_args.into();
 
-    let self_ = create_object(definition_map.clone(), [rs_self(), name])?;
+    let self_ = create_object(definition_map.clone(), ["RS_SELF", name])?;
 
     methods.iter().for_each(|key| {
         let _ = create_method(&mut definition_map, &self_, &key);
@@ -307,7 +307,7 @@ fn define_class(name: &str, definition_args: List, methods: Strings) -> Result<L
 
 fn validate_attribute(data: &mut HashMap<String, Robj>, key: String, after: Robj) -> Result<()> {
     // Fast path for Class composition
-    if after.inherits(rs_class()) {
+    if after.inherits("RS_CLASS") {
         data.insert(key, after);
         return Ok(());
     }
@@ -356,7 +356,7 @@ fn initialise_class(name: &str, self_: List, instance_args: List) -> Result<List
         validate_attribute(&mut data, key.to_string(), after)?;
     }
 
-    Ok(create_object(classmap, [rs_class(), name])?)
+    Ok(create_object(classmap, ["RS_CLASS", name])?)
 }
 
 // ============================================================================
@@ -378,6 +378,85 @@ fn initialise_class(name: &str, self_: List, instance_args: List) -> Result<List
 // 3. Send the map back to R with class attributes.
 // ============================================================================
 
+#[extendr]
+fn __new_class__(
+    name: &str,
+    definition_args: List,
+    instance_args: List,
+    methods: Strings,
+) -> Result<List> {
+    let mut definition_map = ClassMap::from_list(definition_args);
+
+    let mut self_ = List::from_pairs([("map", definition_map.clone().into())]);
+    self_.set_class([name, rs_self().first().unwrap()]).unwrap();
+
+    for key in methods.iter() {
+        let key = key.to_string();
+
+        let method = definition_map.get(key.clone());
+
+        if let Some(method_fn) = method.as_function() {
+            if let (Some(body), Some(formals), Some(environment)) = (
+                method_fn.body().and_then(|b| b.as_language()),
+                method_fn.formals(),
+                method_fn.environment(),
+            ) {
+                let new_formals = Pairlist::from_pairs(
+                    &formals
+                        .iter()
+                        .filter(|(k, _)| *k != ".self") // Exclude .self from formals
+                        .collect::<Vec<_>>(),
+                );
+
+                environment.set_local(Symbol::from_string(".self"), &self_);
+
+                if let Ok(new_method) = Function::from_parts(new_formals, body, environment) {
+                    definition_map.set(key, new_method.into());
+                }
+            }
+        }
+    }
+
+    for (key, value) in instance_args.into_hashmap() {
+        let after = value;
+
+        // Allows for composition of classes.
+        if after.inherits(rs_class().first().unwrap()) {
+            definition_map.set(key.into(), after.into());
+            continue;
+        }
+
+        let before = definition_map.get(key.into());
+
+        if let Some(validator_fn) = before.as_function() {
+            let arg = Pairlist::from_pairs([("", after.clone())]);
+
+            let check = validator_fn
+                .call(arg)
+                .expect("ERROR: Validator function failed for attribute: {key}")
+                .as_bool()
+                .unwrap_or(false);
+
+            if check {
+                definition_map.set(key.into(), after.into());
+                continue;
+            }
+
+            let msg = format!(
+                "Invalid type <'{:?}'> passed for field <'{}'>.",
+                after.rtype(),
+                key
+            );
+            return Err(Error::Other(msg));
+        }
+    }
+
+    self_
+        .set_class([name, rs_class().first().unwrap()])
+        .unwrap();
+    Ok(self_)
+}
+
 // ============================================================================
 // EXTENDR MODULE
 // Macro to generate exports.
@@ -390,6 +469,7 @@ extendr_module! {
 
     impl ClassMap;
 
+    fn __new_class__;
     fn define_class;
     fn initialise_class;
 
