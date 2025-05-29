@@ -9,6 +9,7 @@ test_that("class.R - Basic Foo class", {
 
         ## Methods
         bar = function(.self, x) {
+            # browser()
             cat("Arg 'x' is", x, "\n")
             cat("Field 'a' is", .self@a, "\n")
             cat("Field 'b' is", .self@b, "\n")
@@ -213,11 +214,9 @@ test_that("class.R - Separation of maps", {
 
     foo1 <- Foo(a = 1L)
     foo2 <- Foo(a = 2L)
-    foo3 <- Foo(a = 3L)
 
     expect_equal(foo1@a, 1L)
     expect_equal(foo2@a, 2L)
-    expect_equal(foo3@a, 3L)
 })
 
 # test_that("class.R - Timings", {

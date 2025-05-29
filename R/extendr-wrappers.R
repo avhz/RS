@@ -28,6 +28,10 @@ rs_static <- function() .Call(wrap__rs_static)
 
 ClassMap <- new.env(parent = emptyenv())
 
+ClassMap$with_capacity <- function(capacity) .Call(wrap__ClassMap__with_capacity, capacity)
+
+ClassMap$new <- function() .Call(wrap__ClassMap__new)
+
 ClassMap$from_hashmap <- function(map) .Call(wrap__ClassMap__from_hashmap, map)
 
 ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
@@ -61,6 +65,18 @@ ClassMap$clone <- function() .Call(wrap__ClassMap__clone, self)
 
 #' @export
 `[[.ClassMap` <- `$.ClassMap`
+
+RSClass <- new.env(parent = emptyenv())
+
+RSClass$define <- function(name, arguments) .Call(wrap__RSClass__define, name, arguments)
+
+RSClass$initialise <- function(arguments) .Call(wrap__RSClass__initialise, self, arguments)
+
+#' @export
+`$.RSClass` <- function (self, name) { func <- RSClass[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.RSClass` <- `$.RSClass`
 
 
 # nolint end

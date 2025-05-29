@@ -23,34 +23,34 @@ Class <- function(.classname, ...) {
     ))
     if (is.null(methods)) methods <- character(0)
 
-    # .self <- .Call(
-    #     "wrap__define_class",
-    #     name = .classname,
-    #     definition_args = definition_args,
-    #     methods = methods,
-    #     PACKAGE = "RS"
-    # )
-
-    # new_class <- function(...) {
-    #     .Call(
-    #         "wrap__initialise_class",
-    #         name = .classname,
-    #         self_ = .self,
-    #         instance_args = rlang::list2(...),
-    #         PACKAGE = "RS"
-    #     )
-    # }
+    .self <- .Call(
+        "wrap__define_class",
+        name = .classname,
+        definition_args = definition_args,
+        methods = methods,
+        PACKAGE = "RS"
+    )
 
     new_class <- function(...) {
         .Call(
-            "wrap____new_class__",
+            "wrap__initialise_class",
             name = .classname,
-            definition_args = definition_args,
+            self_ = .self,
             instance_args = rlang::list2(...),
-            methods = methods,
             PACKAGE = "RS"
         )
     }
+
+    # new_class <- function(...) {
+    #     .Call(
+    #         "wrap____new_class__",
+    #         name = .classname,
+    #         definition_args = definition_args,
+    #         instance_args = rlang::list2(...),
+    #         methods = methods,
+    #         PACKAGE = "RS"
+    #     )
+    # }
 
     assign(.classname, new_class, envir = parent.frame())
 }
@@ -120,7 +120,7 @@ print.RS_CLASS <- function(self, ...) {
 }
 
 if (FALSE) {
-    . <- function(clean = TRUE) {
+    . <- function() {
         gc()
         remove(list = ls())
         rextendr::clean()
@@ -130,8 +130,43 @@ if (FALSE) {
     }
     .()
 
-    .benchmark(1e4)
-    system.time(for (i in 1:1e5) FooRS(1L, 2.0, "xxx"))
+    (bm <- .benchmark(1e4))
+    ggplot2::autoplot(bm)
+
+    system.time(
+        for (i in 1:1e6) {
+            # Class("Foo", a = t_int)
+            . <- .Call(wrap__ClassMap__new)
+        }
+    )
+
+    system.time(
+        for (i in 1:1e6) {
+            # Class("Foo", a = t_int)
+            . <- .Call(wrap__ClassMap__new)
+        }
+    )
+
+    bench::mark(
+        # ClassMap$from_list(list(x = 1L, y = 2.0, z = "hello")),
+        # ClassMap$with_capacity(10L),
+        # ClassMap$new(),
+        # "cm" = .Call(wrap__ClassMap__new),
+        "ext" = RSClass$define("Foo", list()),
+        "rscl" = .Call(wrap__RSClass__define, "Foo", list()),
+
+        iterations = 1e6
+    )
+
+    Class("Foo", a = t_int)
+
+    foo1 <- Foo(a = 1L)
+    foo2 <- Foo(a = 2L)
+
+    foo1
+    foo2
+
+    system.time(for (i in 1:1e6) Foo(1L, 2.0, "xxx"))
 
     "Foo" %class%
         c(
