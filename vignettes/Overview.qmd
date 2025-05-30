@@ -1,0 +1,12 @@
+---
+title: "Overview"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Vignette's Title}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+# `RS` Package Overview
+
+Welcome to the `RS` package !

@@ -1,4 +1,11 @@
 .benchmark <- function(n) {
+    Class1(
+        "FooRS1",
+        a = t_int,
+        b = t_dbl,
+        c = t_char
+    )
+
     Class(
         "FooRS",
         a = t_int,
@@ -47,6 +54,7 @@
     )
 
     bench::mark(
+        "RS1" = FooRS1(a = 1L, b = 2.0, c = "xxx"),
         "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
         "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
         "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),

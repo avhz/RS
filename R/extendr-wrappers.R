@@ -66,17 +66,35 @@ ClassMap$clone <- function() .Call(wrap__ClassMap__clone, self)
 #' @export
 `[[.ClassMap` <- `$.ClassMap`
 
-RSClass <- new.env(parent = emptyenv())
+ClassDefinition <- new.env(parent = emptyenv())
 
-RSClass$define <- function(name, arguments) .Call(wrap__RSClass__define, name, arguments)
+ClassDefinition$new <- function(name, methods) .Call(wrap__ClassDefinition__new, name, methods)
 
-RSClass$initialise <- function(arguments) .Call(wrap__RSClass__initialise, self, arguments)
+ClassDefinition$print <- function() invisible(.Call(wrap__ClassDefinition__print, self))
+
+ClassDefinition$get <- function(key) .Call(wrap__ClassDefinition__get, self, key)
 
 #' @export
-`$.RSClass` <- function (self, name) { func <- RSClass[[name]]; environment(func) <- environment(); func }
+`$.ClassDefinition` <- function (self, name) { func <- ClassDefinition[[name]]; environment(func) <- environment(); func }
 
 #' @export
-`[[.RSClass` <- `$.RSClass`
+`[[.ClassDefinition` <- `$.ClassDefinition`
+
+ClassInstance <- new.env(parent = emptyenv())
+
+ClassInstance$new <- function(name, fields, def) .Call(wrap__ClassInstance__new, name, fields, def)
+
+ClassInstance$print <- function() invisible(.Call(wrap__ClassInstance__print, self))
+
+ClassInstance$get <- function(key) .Call(wrap__ClassInstance__get, self, key)
+
+ClassInstance$set <- function(key, value) .Call(wrap__ClassInstance__set, self, key, value)
+
+#' @export
+`$.ClassInstance` <- function (self, name) { func <- ClassInstance[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.ClassInstance` <- `$.ClassInstance`
 
 
 # nolint end

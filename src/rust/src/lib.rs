@@ -486,6 +486,18 @@ fn __new_class__(
 // E.O.F.
 // ============================================================================
 
+#[derive(Debug)]
+struct RobjMap1(HashMap<String, Robj>);
+
+#[derive(Debug)]
+struct RcRefMap1(Rc<RefCell<RobjMap>>);
+
+#[derive(Debug)]
+struct ExtPtrMap1(ExternalPtr<RcRefMap>);
+
+#[derive(Debug)]
+struct RcClassDefinition(Rc<ClassDefinition>);
+
 #[extendr]
 #[derive(Debug)]
 struct ClassDefinition {
@@ -493,7 +505,7 @@ struct ClassDefinition {
     name: &'static str,
 
     /// The methods shared by the class instances.
-    methods: RobjMap,
+    methods: RcRefMap1,
 }
 
 #[extendr]
@@ -503,28 +515,128 @@ struct ClassInstance {
     name: &'static str,
 
     /// The individual instance data.
-    fields: RobjMap,
+    fields: RcRefMap1,
 
     /// Pointer to the class definition this instance belongs to.
-    def: Rc<ClassDefinition>,
+    methods: RcClassDefinition,
+}
+
+// Allow conversion
+impl From<HashMap<String, Robj>> for RobjMap1 {
+    fn from(map: HashMap<String, Robj>) -> Self {
+        RobjMap1(map)
+    }
 }
 
 #[extendr]
 impl ClassDefinition {
-    /// Create a new class definition.
-    ///
-    /// @export
-    fn new(name: &'static str, methods: RobjMap) -> Self {
-        Self { name, methods }
+    fn new(name: &'static str, methods: List) -> Robj {
+        let map = methods
+            .into_hashmap()
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect::<HashMap<_, _>>();
+
+        println!("map: {:?}", map);
+
+        let methods_map = RcRefMap1(Rc::new(RefCell::new(map.into())));
+        let class_def = Rc::new(ClassDefinition {
+            name,
+            methods: methods_map,
+        });
+
+        r!(ExternalPtr::new(RcClassDefinition(class_def)))
+    }
+
+    fn print(&self) {
+        println!("ClassDefinition {{");
+        println!("    name: {}", self.name);
+        println!("    methods: {:?}", self.methods.0.borrow());
+        println!("}}");
+    }
+
+    fn get(&self, key: &str) -> Result<Robj> {
+        if let Some(method) = self.methods.0.borrow().get(key) {
+            return Ok(method.clone());
+        }
+        Err(Error::Other(
+            format!("Method '{}' not found in class '{}'", key, self.name).into(),
+        ))
     }
 }
 
 #[extendr]
 impl ClassInstance {
-    /// Create a new class instance.
-    ///
-    /// @export
-    fn new(name: &'static str, fields: RobjMap, def: Rc<ClassDefinition>) -> Self {
-        Self { name, fields, def }
+    fn new(name: &'static str, fields: List, def: Robj) -> Result<Self> {
+        let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
+        let rc_def = RcClassDefinition(Rc::clone(&def_ptr.0));
+
+        let map = fields
+            .into_hashmap()
+            .into_iter()
+            .map(|(k, v)| (k.to_string(), v))
+            .collect::<HashMap<_, _>>();
+
+        let fields_map = RcRefMap1(Rc::new(RefCell::new(map.into())));
+
+        Ok(ClassInstance {
+            name,
+            fields: fields_map,
+            methods: rc_def,
+        })
+    }
+
+    fn print(&self) {
+        println!("ClassInstance {{");
+        println!("    name: {}", self.name);
+        println!("    fields: {:?}", self.fields.0.borrow());
+        println!("    def: {:?}", self.methods.0);
+        println!("}}");
+    }
+
+    fn get(&self, key: &str) -> Result<Robj> {
+        // 1. Check instance fields
+        if let Some(value) = self.fields.0.borrow().get(key) {
+            return Ok(value.clone());
+        }
+
+        // 2. Check methods in the class definition
+        let def = &self.methods.0;
+        println!("Definition methods: {:?}", &def.methods.0.borrow());
+        if let Some(method) = def.methods.0.borrow().get(key) {
+            return Ok(method.clone());
+        }
+
+        // 3. If not found
+        Err(Error::Other(
+            format!(
+                "Field or method '{}' not found in class instance '{}'",
+                key, self.name
+            )
+            .into(),
+        ))
+    }
+
+    fn set(&mut self, key: &str, value: Robj) -> Result<Robj> {
+        // 1. Check instance fields
+        if let Some(value) = self
+            .fields
+            .0
+            .borrow_mut()
+            .insert(key.to_string(), value.clone())
+        {
+            return Ok(value);
+        }
+
+        // 3. If not found
+        Err(Error::Other(
+            format!(
+                "Unable to set attribute '{:?}' with key '{}' in class '{}'",
+                value.rtype(),
+                key,
+                self.name
+            )
+            .into(),
+        ))
     }
 }
