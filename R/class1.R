@@ -14,21 +14,11 @@
 #' @param ... The fields and methods of the class.
 #'
 #' @export
-Class1 <- function(.classname, ...) {
-    # browser()
-    definition_args <- list(...)
-
-    # methods <- names(Filter(
-    #     \(.f) is.function(.f) && (".self" %in% formalArgs(.f)),
-    #     definition_args
-    # ))
-    # if (is.null(methods)) methods <- list()
-
+Class <- function(.classname, ...) {
     .self <- .Call(
         "wrap__ClassDefinition__new",
         name = .classname,
-        # methods = as.list(methods),
-        methods = definition_args,
+        methods = list(...),
         PACKAGE = "RS"
     )
 
@@ -45,6 +35,16 @@ Class1 <- function(.classname, ...) {
     assign(.classname, new_class, envir = parent.frame())
 }
 
+`@.ClassInstance` <- function(self, name) {
+    .attr <- .Call("wrap__ClassInstance__get", self, name)
+    if (is.function(.attr)) return(function(...) .attr(self, ...))
+    return(.attr)
+}
+
+`@<-.ClassInstance` <- function(self, name, value) {
+    .Call("wrap__ClassInstance__set", self, name, value)
+    return(self)
+}
 
 if (FALSE) {
     . <- function() {
@@ -60,22 +60,27 @@ if (FALSE) {
     (bm <- .benchmark(1e4))
     ggplot2::autoplot(bm)
 
-    Class1(
+    Class(
         "FooRS1",
         a = t_int,
         b = t_dbl,
         c = t_char,
 
-        bar = function(y) print(y)
+        bar = function(y) print(y),
+        baz = function(self, something) {
+            print(self@a)
+            print(something)
+        }
     )
-
-    `@.ClassInstance` <- function(self, name) self$get(name)
-    `@<-.ClassInstance` <- function(self, k, v) self$set(k, v)
 
     foo1 <- FooRS1(a = 1L, b = 2.0, c = "xxx")
     foo1
     foo1@a
     foo1@b <- 1111
+    foo1@b
+    foo1@bar()
+    foo1@baz(123)
+
     foo1$print()
     foo1$get("bar")(3L)
     foo1$get("a")

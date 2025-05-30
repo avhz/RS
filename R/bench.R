@@ -1,12 +1,12 @@
 .benchmark <- function(n) {
-    Class1(
+    Class(
         "FooRS1",
         a = t_int,
         b = t_dbl,
         c = t_char
     )
 
-    Class(
+    ClassOld(
         "FooRS",
         a = t_int,
         b = t_dbl,

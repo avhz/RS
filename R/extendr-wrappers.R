@@ -68,6 +68,8 @@ ClassMap$clone <- function() .Call(wrap__ClassMap__clone, self)
 
 ClassDefinition <- new.env(parent = emptyenv())
 
+ClassDefinition$name <- function() .Call(wrap__ClassDefinition__name, self)
+
 ClassDefinition$new <- function(name, methods) .Call(wrap__ClassDefinition__new, name, methods)
 
 ClassDefinition$print <- function() invisible(.Call(wrap__ClassDefinition__print, self))

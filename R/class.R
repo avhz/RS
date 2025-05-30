@@ -14,7 +14,7 @@
 #' @param ... The fields and methods of the class.
 #'
 #' @export
-Class <- function(.classname, ...) {
+ClassOld <- function(.classname, ...) {
     definition_args <- list(...)
 
     methods <- names(Filter(
@@ -23,34 +23,34 @@ Class <- function(.classname, ...) {
     ))
     if (is.null(methods)) methods <- character(0)
 
-    .self <- .Call(
-        "wrap__define_class",
-        name = .classname,
-        definition_args = definition_args,
-        methods = methods,
-        PACKAGE = "RS"
-    )
-
-    new_class <- function(...) {
-        .Call(
-            "wrap__initialise_class",
-            name = .classname,
-            self_ = .self,
-            instance_args = rlang::list2(...),
-            PACKAGE = "RS"
-        )
-    }
+    # .self <- .Call(
+    #     "wrap__define_class",
+    #     name = .classname,
+    #     definition_args = definition_args,
+    #     methods = methods,
+    #     PACKAGE = "RS"
+    # )
 
     # new_class <- function(...) {
     #     .Call(
-    #         "wrap____new_class__",
+    #         "wrap__initialise_class",
     #         name = .classname,
-    #         definition_args = definition_args,
+    #         self_ = .self,
     #         instance_args = rlang::list2(...),
-    #         methods = methods,
     #         PACKAGE = "RS"
     #     )
     # }
+
+    new_class <- function(...) {
+        .Call(
+            "wrap____new_class__",
+            name = .classname,
+            definition_args = definition_args,
+            instance_args = rlang::list2(...),
+            methods = methods,
+            PACKAGE = "RS"
+        )
+    }
 
     assign(.classname, new_class, envir = parent.frame())
 }

@@ -2,6 +2,9 @@
 // IMPORTS
 // ============================================================================
 
+mod maps;
+use maps::*;
+
 use extendr_api::{pairlist, prelude::*};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -478,22 +481,13 @@ fn __new_class__(
         }
     }
 
-    self_.set_class([name, rs_class().first().unwrap()]);
+    let _ = self_.set_class([name, rs_class().first().unwrap()]);
     Ok(self_)
 }
 
 // ============================================================================
 // E.O.F.
 // ============================================================================
-
-#[derive(Debug)]
-struct RobjMap1(HashMap<String, Robj>);
-
-#[derive(Debug)]
-struct RcRefMap1(Rc<RefCell<RobjMap>>);
-
-#[derive(Debug)]
-struct ExtPtrMap1(ExternalPtr<RcRefMap>);
 
 #[derive(Debug)]
 struct RcClassDefinition(Rc<ClassDefinition>);
@@ -530,6 +524,10 @@ impl From<HashMap<String, Robj>> for RobjMap1 {
 
 #[extendr]
 impl ClassDefinition {
+    fn name(&self) -> &'static str {
+        self.name
+    }
+
     fn new(name: &'static str, methods: List) -> Robj {
         let map = methods
             .into_hashmap()
@@ -537,7 +535,7 @@ impl ClassDefinition {
             .map(|(k, v)| (k.to_string(), v))
             .collect::<HashMap<_, _>>();
 
-        println!("map: {:?}", map);
+        // println!("map: {:?}", map);
 
         let methods_map = RcRefMap1(Rc::new(RefCell::new(map.into())));
         let class_def = Rc::new(ClassDefinition {
@@ -556,7 +554,7 @@ impl ClassDefinition {
     }
 
     fn get(&self, key: &str) -> Result<Robj> {
-        if let Some(method) = self.methods.0.borrow().get(key) {
+        if let Some(method) = self.methods.0.borrow().0.get(key) {
             return Ok(method.clone());
         }
         Err(Error::Other(
@@ -577,6 +575,39 @@ impl ClassInstance {
             .map(|(k, v)| (k.to_string(), v))
             .collect::<HashMap<_, _>>();
 
+        for (key, value) in map.iter() {
+            let after = value;
+
+            // Allows for composition of classes.
+            // if after.inherits(rs_class().first().unwrap()) {
+            if after.inherits("ClassInstance") {
+                continue;
+            }
+
+            let before = rc_def.0.get(key.as_str()).unwrap();
+
+            if let Some(validator_fn) = before.as_function() {
+                let arg = Pairlist::from_pairs([("", after.clone())]);
+
+                let check = validator_fn
+                    .call(arg)
+                    .expect("ERROR: Validator function failed for attribute: {key}")
+                    .as_bool()
+                    .unwrap_or(false);
+
+                if check {
+                    continue;
+                }
+
+                let msg = format!(
+                    "Invalid type <'{:?}'> passed for field <'{}'>.",
+                    after.rtype(),
+                    key
+                );
+                return Err(Error::Other(msg));
+            }
+        }
+
         let fields_map = RcRefMap1(Rc::new(RefCell::new(map.into())));
 
         Ok(ClassInstance {
@@ -588,22 +619,22 @@ impl ClassInstance {
 
     fn print(&self) {
         println!("ClassInstance {{");
-        println!("    name: {}", self.name);
+        println!("    name:   {}", self.name);
         println!("    fields: {:?}", self.fields.0.borrow());
-        println!("    def: {:?}", self.methods.0);
+        println!("    def:    {:?}", self.methods.0);
         println!("}}");
     }
 
     fn get(&self, key: &str) -> Result<Robj> {
         // 1. Check instance fields
-        if let Some(value) = self.fields.0.borrow().get(key) {
+        if let Some(value) = self.fields.0.borrow().0.get(key) {
             return Ok(value.clone());
         }
 
         // 2. Check methods in the class definition
         let def = &self.methods.0;
-        println!("Definition methods: {:?}", &def.methods.0.borrow());
-        if let Some(method) = def.methods.0.borrow().get(key) {
+        // println!("Definition methods: {:?}", &def.methods.0.borrow());
+        if let Some(method) = def.methods.0.borrow().0.get(key) {
             return Ok(method.clone());
         }
 
@@ -618,25 +649,22 @@ impl ClassInstance {
     }
 
     fn set(&mut self, key: &str, value: Robj) -> Result<Robj> {
-        // 1. Check instance fields
         if let Some(value) = self
             .fields
             .0
             .borrow_mut()
+            .0
             .insert(key.to_string(), value.clone())
         {
             return Ok(value);
         }
 
-        // 3. If not found
-        Err(Error::Other(
-            format!(
-                "Unable to set attribute '{:?}' with key '{}' in class '{}'",
-                value.rtype(),
-                key,
-                self.name
-            )
-            .into(),
-        ))
+        let msg = format!(
+            "Unable to set attribute '{:?}' with key '{}' in class '{}'",
+            value.rtype(),
+            key,
+            self.name
+        );
+        Err(Error::Other(msg.into()))
     }
 }

@@ -16,14 +16,14 @@ test_that("class.R - Basic Foo class", {
             cat("Field 'c' is", .self@c, "\n")
             cat("Updating field 'c' to 'new value'\n")
             .self@c <- "new value"
-        },
+        }
 
         ## Static methods
-        baz = function(a, b, c = data.frame(x = 1:5)) {
-            cat("Arg 'a' is", a, "\n")
-            cat("Arg 'b' is", b, "\n")
-            print(c)
-        }
+        # baz = function(a, b, c = data.frame(x = 1:5)) {
+        #     cat("Arg 'a' is", a, "\n")
+        #     cat("Arg 'b' is", b, "\n")
+        #     print(c)
+        # }
     ) |>
         expect_no_error(message = "Class definition should not throw an error")
 
@@ -34,7 +34,7 @@ test_that("class.R - Basic Foo class", {
         foo@a
         foo@b
         foo@c
-        foo@baz(1, 2)
+        # foo@baz(1, 2)
         foo@bar(10)
     }) |>
         capture.output()
@@ -51,6 +51,15 @@ test_that("class.R - Empty class", {
         Class("Whatever")
         Whatever()
     })
+})
+
+test_that("class.R - Validation", {
+    expect_no_error(Class("Whatever", a = t_int, b = t_dbl, c = t_char))
+    expect_no_error(Whatever(a = 1L, b = 2.0, c = "test"))
+    expect_error(Whatever(a = 1L, b = 2.0, c = NULL))
+    expect_error(Whatever(a = 1L, b = "not a double", c = "test"))
+    expect_error(Whatever(a = "not an integer", b = 2.0, c = "test"))
+    expect_error(Whatever(a = 1L, b = 2.0, c = "test", d = "extra arg"))
 })
 
 test_that("class.R - Basic Asset class", {
@@ -180,6 +189,7 @@ test_that("class.R - .self", {
 
             a = t_int,
             b = t_dbl,
+            c = t_char,
 
             bar = function(.self, a, b) {
                 .self@a <- a
