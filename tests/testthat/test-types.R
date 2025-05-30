@@ -53,11 +53,3 @@ test_that("types.R - t_any", {
     expect_equal(t_any(c(1, 2)), TRUE)
     expect_equal(t_any(c(TRUE, FALSE)), TRUE)
 })
-
-test_that("types.R - t_int", {
-    expect_equal(rs_class(), "RS_CLASS")
-    expect_equal(rs_self(), "RS_SELF")
-    expect_equal(rs_method(), "RS_METHOD")
-    expect_equal(rs_type(), "RS_TYPE")
-    expect_equal(rs_static(), "RS_STATIC")
-})

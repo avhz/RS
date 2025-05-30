@@ -10,62 +10,6 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
-`__new_class__` <- function(name, definition_args, instance_args, methods) .Call(wrap____new_class__, name, definition_args, instance_args, methods)
-
-define_class <- function(name, definition_args, methods) .Call(wrap__define_class, name, definition_args, methods)
-
-initialise_class <- function(name, self_, instance_args) .Call(wrap__initialise_class, name, self_, instance_args)
-
-rs_class <- function() .Call(wrap__rs_class)
-
-rs_self <- function() .Call(wrap__rs_self)
-
-rs_method <- function() .Call(wrap__rs_method)
-
-rs_type <- function() .Call(wrap__rs_type)
-
-rs_static <- function() .Call(wrap__rs_static)
-
-ClassMap <- new.env(parent = emptyenv())
-
-ClassMap$with_capacity <- function(capacity) .Call(wrap__ClassMap__with_capacity, capacity)
-
-ClassMap$new <- function() .Call(wrap__ClassMap__new)
-
-ClassMap$from_hashmap <- function(map) .Call(wrap__ClassMap__from_hashmap, map)
-
-ClassMap$from_list <- function(list) .Call(wrap__ClassMap__from_list, list)
-
-ClassMap$set <- function(key, value) invisible(.Call(wrap__ClassMap__set, self, key, value))
-
-ClassMap$mset <- function(values) invisible(.Call(wrap__ClassMap__mset, self, values))
-
-ClassMap$get <- function(key) .Call(wrap__ClassMap__get, self, key)
-
-ClassMap$keys <- function() .Call(wrap__ClassMap__keys, self)
-
-ClassMap$values <- function() .Call(wrap__ClassMap__values, self)
-
-ClassMap$remove <- function(key) .Call(wrap__ClassMap__remove, self, key)
-
-ClassMap$print <- function() invisible(.Call(wrap__ClassMap__print, self))
-
-ClassMap$retain <- function(f) invisible(.Call(wrap__ClassMap__retain, self, f))
-
-ClassMap$clear <- function() invisible(.Call(wrap__ClassMap__clear, self))
-
-ClassMap$contains_key <- function(key) .Call(wrap__ClassMap__contains_key, self, key)
-
-ClassMap$has <- function(key) .Call(wrap__ClassMap__has, self, key)
-
-ClassMap$clone <- function() .Call(wrap__ClassMap__clone, self)
-
-#' @export
-`$.ClassMap` <- function (self, name) { func <- ClassMap[[name]]; environment(func) <- environment(); func }
-
-#' @export
-`[[.ClassMap` <- `$.ClassMap`
-
 ClassDefinition <- new.env(parent = emptyenv())
 
 ClassDefinition$name <- function() .Call(wrap__ClassDefinition__name, self)

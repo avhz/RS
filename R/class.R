@@ -14,40 +14,20 @@
 #' @param ... The fields and methods of the class.
 #'
 #' @export
-ClassOld <- function(.classname, ...) {
-    definition_args <- list(...)
-
-    methods <- names(Filter(
-        \(.f) is.function(.f) && (".self" %in% formalArgs(.f)),
-        definition_args
-    ))
-    if (is.null(methods)) methods <- character(0)
-
-    # .self <- .Call(
-    #     "wrap__define_class",
-    #     name = .classname,
-    #     definition_args = definition_args,
-    #     methods = methods,
-    #     PACKAGE = "RS"
-    # )
-
-    # new_class <- function(...) {
-    #     .Call(
-    #         "wrap__initialise_class",
-    #         name = .classname,
-    #         self_ = .self,
-    #         instance_args = rlang::list2(...),
-    #         PACKAGE = "RS"
-    #     )
-    # }
+Class <- function(.classname, ...) {
+    .self <- .Call(
+        "wrap__ClassDefinition__new",
+        name = .classname,
+        methods = list(...),
+        PACKAGE = "RS"
+    )
 
     new_class <- function(...) {
         .Call(
-            "wrap____new_class__",
+            "wrap__ClassInstance__new",
             name = .classname,
-            definition_args = definition_args,
-            instance_args = rlang::list2(...),
-            methods = methods,
+            fields = rlang::list2(...),
+            def = .self,
             PACKAGE = "RS"
         )
     }
@@ -56,67 +36,26 @@ ClassOld <- function(.classname, ...) {
 }
 
 #' @export
-print.ClassMap <- function(x, ...) {
+print.ClassInstance <- function(x, ...) {
     .print_rust_object(x)
 }
 
 #' @export
-.DollarNames.ClassMap <- function(env, pattern = "") {
-    ls(ClassMap, pattern = pattern)
+.DollarNames.ClassInstance <- function(env, pattern = "") {
+    ls(ClassInstance, pattern = pattern)
 }
 
 #' @export
-`@.RS_CLASS` <- function(self, key) {
-    self[["map"]][["get"]](key)
+`@.ClassInstance` <- function(self, name) {
+    .attr <- .Call("wrap__ClassInstance__get", self, name)
+    if (is.function(.attr)) return(function(...) .attr(self, ...))
+    return(.attr)
 }
 
 #' @export
-`@.RS_SELF` <- function(self, key) {
-    self[["map"]][["get"]](key)
-}
-
-#' @export
-`@<-.RS_CLASS` <- function(self, key, value) {
-    self[["map"]][["set"]](key, value)
+`@<-.ClassInstance` <- function(self, name, value) {
+    .Call("wrap__ClassInstance__set", self, name, value)
     return(self)
-}
-
-#' @export
-`@<-.RS_SELF` <- function(self, key, value) {
-    self[["map"]][["set"]](key, value)
-    return(self)
-}
-
-
-#' @export
-print.RS_CLASS <- function(self, ...) {
-    .get_width <- function(df) max(nchar(capture.output(print(df))))
-    .get_signature <- function(fn) {
-        paste0("f", "(", paste(formalArgs(fn), collapse = ", "), ")")
-    }
-
-    fields <- self[["map"]][["keys"]]() # !in c("new", "print")
-    values <- self[["map"]][["values"]]()
-    values <- unlist(lapply(
-        values,
-        \(v) if (is.function(v)) .get_signature(v) else v
-    ))
-    types <- sapply(fields, \(n) typeof(self[["map"]][["get"]](n)))
-
-    df <- data.frame(field = fields, type = types, value = values)
-    df <- df[order(df$field), ]
-
-    width <- .get_width(df)
-    sep <- rep("-", width) |> paste(collapse = "")
-    cat(sep, fill = TRUE)
-    cat(class(self), fill = TRUE)
-    cat(sep, fill = TRUE)
-    df |> print(row.names = FALSE, right = FALSE)
-    cat(sep, fill = TRUE)
-}
-
-`%class%` <- function(.name, ...) {
-    Class(.name, ...)
 }
 
 if (FALSE) {
@@ -132,63 +71,43 @@ if (FALSE) {
 
     (bm <- .benchmark(1e4))
     ggplot2::autoplot(bm)
+    system.time(for (i in 1:1e6) . <- FooRS1(a = 1L, b = 2.0, c = "xxx"))
 
-    system.time(
-        for (i in 1:1e6) {
-            # Class("Foo", a = t_int)
-            . <- .Call(wrap__ClassMap__new)
+    Class(
+        "FooRS1",
+        a = t_int,
+        b = t_dbl,
+        c = t_char,
+
+        bar = function(y) print(y),
+        baz = function(self, something) {
+            print(self@a)
+            print(something)
         }
     )
 
-    system.time(
-        for (i in 1:1e6) {
-            # Class("Foo", a = t_int)
-            . <- .Call(wrap__ClassMap__new)
-        }
-    )
-
-    bench::mark(
-        # ClassMap$from_list(list(x = 1L, y = 2.0, z = "hello")),
-        # ClassMap$with_capacity(10L),
-        # ClassMap$new(),
-        # "cm" = .Call(wrap__ClassMap__new),
-        "ext" = RSClass$define("Foo", list()),
-        "rscl" = .Call(wrap__RSClass__define, "Foo", list()),
-
-        iterations = 1e6
-    )
-
-    Class("Foo", a = t_int)
-
-    foo1 <- Foo(a = 1L)
-    foo2 <- Foo(a = 2L)
-
+    foo1 <- FooRS1(a = 1L, b = 2.0, c = "xxx")
     foo1
+    foo1@a
+    foo1@b <- 1111
+    foo1@b
+    foo1@bar()
+    foo1@baz(123)
+
+    foo1$print()
+    foo1$get("bar")(3L)
+    foo1$get("a")
+    foo1$set("a", 3L)
+    foo1$get("a")
+
+    foo2 <- FooRS1(a = 1L, b = 2.0, c = "xxx")
     foo2
+    foo2$print()
+    foo2$get("bar")(3L)
+    foo2$get("a")
+    foo2$set("a", 420L)
+    foo2$get("a")
 
-    system.time(for (i in 1:1e6) Foo(1L, 2.0, "xxx"))
-
-    "Foo" %class%
-        c(
-            x = t_int,
-            bar = function(.self, y) cat(.self@x, y, "\n"),
-            baz = function(z) cat(z, "\n")
-        )
-
-    foo1 <- Foo(x = 1L)
-    foo2 <- Foo(x = 2L)
-    foo1
-    foo2
-
-    foo <- Foo(1L)
-    foo$map
-    foo
-    foo@x
-    foo@x <- 2L
-    foo@x
-    foo@bar(3L)
-    foo@baz(4L)
-
-    bar <- function(.self, y) cat(.self@x, y, "\n")
-    bar(foo, 2L)
+    foo1@a
+    foo2@a
 }
