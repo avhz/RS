@@ -46,7 +46,7 @@
         where = globalenv()
     )
 
-    bench::mark(
+    .out <- bench::mark(
         "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
         "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
         "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),
@@ -55,7 +55,11 @@
 
         iterations = n,
         check = FALSE
-    )
+    )[, c(1, 3, 4, 5, 6, 8, 9)]
+
+    .out$speedup <- .out$`itr/sec`[1] / .out$`itr/sec`
+
+    return(.out)
     # print(timings, width = Inf)
     # View(dplyr::mutate(timings, iter_gc = .data$`itr/sec` / .data$n_gc))
 }

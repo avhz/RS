@@ -25,26 +25,18 @@ extendr_module! {
 // GLOBALS
 // ============================================================================
 
-#[global_allocator]
-static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+// #[cfg(not(target_env = "msvc"))]
+// use tikv_jemallocator::Jemalloc;
+
+// #[cfg(not(target_env = "msvc"))]
+// #[global_allocator]
+// static GLOBAL: Jemalloc = Jemalloc;
+
+// #[global_allocator]
+// static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 // ============================================================================
-// NEW SETUP
-// Made a mistake.
-// The map defined in define_class
-// is the same as the one in initialise_class.
-// So if a a second class is created,
-// it contains the old map.
-//
-// Need to:
-// 1. Create a map in define_class containing the methods. This contains:
-//        - Validators: anything that has class RS_TYPE.
-//        - Methods: anything that has ".self" in the formals. We then assign RS_METHOD to these.
-//        - Static: anything that has class RS_STATIC.
-//        - Class: anything that has class RS_CLASS.
-// 2. Create a * new * map in initialise_class containing the attributes, plus the methods.
-//        - This must be a new map, not a reference to the old one.
-// 3. Send the map back to R with class attributes.
+// STRUCTS
 // ============================================================================
 
 #[derive(Debug)]
@@ -72,6 +64,10 @@ struct ClassInstance {
     /// Pointer to the class definition this instance belongs to.
     methods: RcClassDefinition,
 }
+
+// ============================================================================
+// IMPLEMENTATIONS
+// ============================================================================
 
 // Allow conversion
 impl From<HashMap<String, Robj>> for RobjMap {
@@ -113,9 +109,9 @@ impl ClassDefinition {
         if let Some(method) = self.methods.0.borrow().0.get(key) {
             return Ok(method.clone());
         }
-        Err(Error::Other(
-            format!("Method '{}' not found in class '{}'", key, self.name).into(),
-        ))
+
+        let msg = format!("Method '{}' not found in class '{}'", key, self.name);
+        Err(Error::Other(msg.into()))
     }
 }
 

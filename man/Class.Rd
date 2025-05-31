@@ -12,9 +12,9 @@ Class(.classname, ...)
 \item{name}{The name of the class.}
 }
 \description{
-Create a new class
+Create a new ClassInstance in R.
 }
 \details{
-The Class function creates a new class in R.
+The Class function creates a new ClassInstance in R.
 It allows you to define fields and methods for the class.
 }
