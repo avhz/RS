@@ -2,43 +2,47 @@
 // IMPORTS
 // ============================================================================
 
-use extendr_api::{ExternalPtr, Robj};
+use extendr_api::Robj;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 // ============================================================================
 // STRUCTS
 // ============================================================================
 
-#[derive(Debug)]
-pub(crate) struct RobjMap(pub(crate) HashMap<String, Robj>);
+// #[derive(Debug)]
+// pub(crate) struct RobjMap(pub(crate) HashMap<String, Robj>);
 
-#[derive(Debug)]
-pub(crate) struct RcRefMap(pub(crate) Rc<RefCell<RobjMap>>);
-
-#[derive(Debug)]
-pub(crate) struct ExtPtrMap(pub(crate) ExternalPtr<RcRefMap>);
+// #[derive(Debug)]
+// pub(crate) struct ExtPtrMap(pub(crate) ExternalPtr<RcRefMap>);
 
 // ============================================================================
 // IMPLEMENTATIONS
 // ============================================================================
 
-impl RobjMap {
-    fn new() -> Self {
-        Self(HashMap::new())
-    }
-}
+// impl RobjMap {
+//     fn new() -> Self {
+//         Self(HashMap::new())
+//     }
+// }
 
 impl RcRefMap {
     fn new() -> Self {
-        Self(Rc::new(RefCell::new(RobjMap::new())))
+        Self(Rc::new(RefCell::new(HashMap::new())))
     }
 }
 
-impl ExtPtrMap {
-    fn new() -> Self {
-        Self(ExternalPtr::new(RcRefMap::new()))
-    }
-}
+// impl ExtPtrMap {
+//     fn new() -> Self {
+//         Self(ExternalPtr::new(RcRefMap::new()))
+//     }
+// }
+
+// Allow conversion
+// impl From<HashMap<String, Robj>> for RobjMap {
+//     fn from(map: HashMap<String, Robj>) -> Self {
+//         RobjMap(map)
+//     }
+// }
 
 // impl RcRefMap {
 //     /// Create a new empty ClassMap with a capacity.
