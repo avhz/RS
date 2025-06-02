@@ -2,8 +2,6 @@
 // IMPORTS
 // ============================================================================
 
-mod types;
-
 use extendr_api::prelude::*;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
@@ -19,7 +17,8 @@ extendr_module! {
 
     impl ClassDefinition;
     impl ClassInstance;
-    use types;
+
+    fn class_equality;
 }
 
 // ============================================================================
@@ -33,24 +32,27 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 // STRUCTS
 // ============================================================================
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 struct RcRefMap(Rc<RefCell<HashMap<String, Robj>>>);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 struct RcClassDefinition(Rc<ClassDefinition>);
 
 #[extendr]
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 struct ClassDefinition {
     /// The name of the class.
     name: Strings,
 
     /// The methods shared by the class instances.
     methods: RcRefMap,
+
+    /// Whether to validate the class instance fields.
+    validate: bool,
 }
 
 #[extendr]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct ClassInstance {
     /// The name of the class.
     name: Strings,
@@ -66,18 +68,40 @@ struct ClassInstance {
 // IMPLEMENTATIONS
 // ============================================================================
 
+fn list_to_hashmap(list: List) -> HashMap<String, Robj> {
+    list.into_hashmap()
+        .into_iter()
+        .map(|(k, v)| (k.into(), v))
+        .collect()
+}
+
+// TODO: Fix this !
+#[extendr]
+fn class_equality(class1: ExternalPtr<ClassInstance>, class2: ExternalPtr<ClassInstance>) -> bool {
+    class1 == class2
+}
+
+impl RcRefMap {
+    fn from_hashmap(map: HashMap<String, Robj>) -> Self {
+        Self(Rc::new(RefCell::new(map)))
+    }
+
+    fn from_list(list: List) -> Self {
+        Self::from_hashmap(list_to_hashmap(list))
+    }
+}
+
 #[extendr]
 impl ClassDefinition {
     fn name(&self) -> Strings {
         self.name.clone().into()
     }
 
-    fn new(name: Strings, methods: List) -> Robj {
-        let map = list_to_hashmap(methods);
-
+    fn new(name: Strings, methods: List, validate: bool) -> Robj {
         let class_definition = Rc::new(Self {
             name,
-            methods: RcRefMap(Rc::new(RefCell::new(map.into()))),
+            methods: RcRefMap::from_list(methods),
+            validate,
         });
 
         ExternalPtr::new(RcClassDefinition(class_definition)).into()
@@ -89,57 +113,48 @@ impl ClassDefinition {
         println!("    methods: {:?}", self.methods.0.borrow());
         println!("}}");
     }
-
-    fn get(&self, key: &str) -> Result<Robj> {
-        if let Some(method) = self.methods.0.borrow().get(key) {
-            return Ok(method.clone());
-        }
-
-        let msg = format!("Method '{}' not found in class '{:?}'", key, self.name);
-        Err(Error::Other(msg.into()))
-    }
-}
-
-fn list_to_hashmap(list: List) -> HashMap<String, Robj> {
-    list.into_hashmap()
-        .into_iter()
-        .map(|(k, v)| (k.to_string(), v))
-        .collect()
 }
 
 #[extendr]
 impl ClassInstance {
     fn new(name: Strings, fields: List, def: Robj) -> Result<Self> {
         let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
-        let def_rc = RcClassDefinition(Rc::clone(&def_ptr.0));
-        // let def_map = def_rc.0.methods.0.borrow();
+        let def_ref = RcClassDefinition(Rc::clone(&def_ptr.0));
+        let def_map = def_ref.0.methods.0.borrow();
 
         let map = list_to_hashmap(fields);
 
-        // for (key, value) in &map {
-        //     // Only check validators if method exists
-        //     if let Some(validator) = def_map.get(key).and_then(|v| v.as_function()) {
-        //         let arg = Pairlist::from_pairs([("", value)]);
+        if def_ref.0.validate {
+            for (key, value) in &map {
+                // Support composition of classes
+                if value.inherits("ClassInstance") {
+                    continue;
+                }
 
-        //         if !validator.call(arg)?.as_bool().unwrap_or(false) {
-        //             let msg = format!(
-        //                 "Invalid type <'{:?}'> passed for field <'{}'>.",
-        //                 value.rtype(),
-        //                 key
-        //             );
+                // Only check validators if method exists
+                if let Some(validator) = def_map.get(key).and_then(|v| v.as_function()) {
+                    let arg = Pairlist::from_pairs([("", value)]);
 
-        //             return Err(Error::Other(msg.into()));
-        //         }
-        //     }
-        // }
+                    if !validator.call(arg)?.as_bool().unwrap_or(false) {
+                        let msg = format!(
+                            "Invalid type <'{:?}'> passed for field <'{}'>.",
+                            value.rtype(),
+                            key
+                        );
 
-        // // need to explicitly drop the borrow
-        // drop(def_map);
+                        return Err(Error::Other(msg.into()));
+                    }
+                }
+            }
+        }
+
+        // need to explicitly drop the borrow
+        drop(def_map);
 
         Ok(Self {
-            name: name.into(),
-            fields: RcRefMap(Rc::new(RefCell::new(map))),
-            methods: def_rc,
+            name: name,
+            fields: RcRefMap::from_hashmap(map),
+            methods: def_ref,
         })
     }
 
@@ -158,26 +173,26 @@ impl ClassInstance {
         }
 
         // 2. Check methods in the class definition
-        let def = &self.methods.0;
-        if let Some(method) = def.methods.0.borrow().get(key) {
+        if let Some(method) = (&self.methods.0).methods.0.borrow().get(key) {
             return Ok(method.clone());
         }
 
         // 3. If not found
         let msg = format!(
-            "Field or method '{}' not found in class instance '{:?}'",
+            "Attribute '{}' not found in class instance '{:?}'",
             key, self.name
         );
         Err(Error::Other(msg.into()))
     }
 
-    fn set(&mut self, key: &str, value: Robj) -> Result<Robj> {
-        if let Some(value) = self
+    fn set(&mut self, key: String, value: Robj) -> Result<Robj> {
+        let inserted = self
             .fields
             .0
             .borrow_mut()
-            .insert(key.to_string(), value.clone())
-        {
+            .insert(key.to_string(), value.clone());
+
+        if let Some(value) = inserted {
             return Ok(value);
         }
 

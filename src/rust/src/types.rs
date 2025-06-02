@@ -4,178 +4,47 @@ use extendr_api::prelude::*;
 
 extendr_module! {
     mod types;
-    impl t_int;
-    impl t_ints;
-    impl t_dbl;
-    impl t_dbls;
-    impl t_num;
-    impl t_nums;
-    impl t_char;
-    impl t_chars;
-    impl t_bool;
-    impl t_bools;
-    impl t_cplx;
-    impl t_cplxs;
-    impl t_raw;
-    impl t_raws;
-    impl t_factor;
-    impl t_factors;
-    impl t_list;
-    impl t_array;
-    impl t_vector;
-    impl t_matrix;
-    impl t_dataframe;
-    impl t_environment;
-    impl t_pairlist;
-    impl t_func;
-    impl t_expr;
-    impl t_sym;
-    impl t_lang;
-    impl t_obj;
-    impl t_prim;
+
+    fn t_int;
+    fn t_ints;
+    fn t_dbl;
+    fn t_dbls;
+    fn t_num;
+    fn t_nums;
+    fn t_char;
+    fn t_chars;
+    fn t_bool;
+    fn t_bools;
+    fn t_cplx;
+    fn t_cplxs;
+    fn t_raw;
+    fn t_raws;
+    fn t_factor;
+    fn t_factors;
+    fn t_list;
+    fn t_array;
+    fn t_vector;
+    fn t_matrix;
+    fn t_dataframe;
+    fn t_environment;
+    fn t_pairlist;
+    fn t_func;
+    fn t_expr;
+    fn t_sym;
+    fn t_lang;
+    fn t_obj;
+    fn t_prim;
 }
-
-#[extendr]
-trait ClassType {
-    fn validate(&self) -> bool;
-}
-
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_int;
-
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_ints;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_dbl;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_dbls;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_num;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_nums;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_char;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_chars;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_bool;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_bools;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_cplx;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_cplxs;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_raw;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_raws;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_factor;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_factors;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_list;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_array;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_vector;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_matrix;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_dataframe;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_environment;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_pairlist;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_func;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_expr;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_sym;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_lang;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_obj;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_prim;
-#[extendr]
-#[derive(Debug, Clone, Copy)]
-struct t_call;
 
 macro_rules! define_class_type {
     ($name:ident, $type_check:ident, $len_check:expr) => {
-        // #[extendr]
-        // #[derive(Debug, Clone, Copy)]
-        // struct $name;
-
+        #[inline(always)]
         #[extendr]
-        impl ClassType for $name {
-            fn validate(&self) -> bool {
-                let x = self.into_robj();
-                x.$type_check() && ($len_check)(x.len())
-            }
+        fn $name(x: Robj) -> bool {
+            x.$type_check() && ($len_check)(x.len())
         }
     };
 }
-
-// macro_rules! define_class_type {
-//     ($name:ident, $type_check:ident, $len_check:expr) => {
-//         #[extendr]
-//         #[derive(Debug, Clone, Copy)]
-//         pub struct $name;
-
-//         #[extendr]
-//         impl $name {
-//             pub fn validate(&self) -> bool {
-//                 let x = self.into_robj();
-//                 x.$type_check() && ($len_check)(x.len())
-//             }
-//         }
-//     };
-// }
-
-// #[extendr]
-// impl ClassType for t_int {
-//     fn validate(&self) -> bool {
-//         let x = self.into_robj();
-//         x.is_integer() && x.len() == 1
-//     }
-// }
-
-// #[extendr]
-// fn validate_type(x: Robj) -> bool {
-//     x.validate()
-// }
 
 // ============================================================================
 // BASIC TYPES

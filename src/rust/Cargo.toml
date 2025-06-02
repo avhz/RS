@@ -10,10 +10,8 @@ name = 'RS'
 [dependencies]
 extendr-api = { version = "0.8.0", features = ['non-api', 'result_condition'] }
 mimalloc = "0.1.46"
-
 # [target.'cfg(not(target_env = "msvc"))'.dependencies]
 # tikv-jemallocator = "0.5"
-
 
 [profile.release]
 debug = true

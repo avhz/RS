@@ -14,11 +14,12 @@
 #' @param ... The fields and methods of the class.
 #'
 #' @export
-Class <- function(.classname, ...) {
+Class <- function(.classname, ..., .validate = TRUE) {
     .self <- .Call(
         "wrap__ClassDefinition__new",
         name = .classname,
         methods = list(...),
+        validate = .validate,
         PACKAGE = "RS"
     )
 
@@ -65,9 +66,8 @@ print.extendr_error <- function(error) {
 
 #' @export
 `==.ClassInstance` <- function(cls1, cls2) {
-    ## PLACEHOLDER: This is a placeholder for the actual equality check.
     if (inherits(cls1, "ClassInstance") && inherits(cls2, "ClassInstance")) {
-        return(TRUE)
+        return(.Call("wrap__class_equality", cls1, cls2, PACKAGE = "RS"))
     }
     stop("Both arguments must be `ClassInstance` objects.")
 }
@@ -93,7 +93,7 @@ if (FALSE) {
         c = t_char
     )
 
-    Foo(a = 1L, b = 2.0, c = "xxx")
+    Foo(a = 1L, b = 2.0, c = "xxx")$print()
     Foo(a = 1L, b = 2.0, c = 1)
 
     Foo(a = 1L, b = 2.0, c = "xxx") == Foo(a = 1L, b = 2.0, c = "xxx")
