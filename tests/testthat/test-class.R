@@ -182,6 +182,28 @@ test_that("class.R - Basic Class composition", {
         foo <- Foo(a = 1L, b = 2.0, c = "xxx")
         bar <- Bar(foo = foo, baz = 3.0)
     })
+
+    expect_no_error({
+        ## Composition
+        Class(
+            "Foo",
+            a = t_int,
+            qux = \(self) print(self@a)
+        )
+
+        Class(
+            "Bar",
+            foo = Foo
+        )
+
+        foo <- Foo(a = 1L)
+        foo@qux()
+
+        bar <- Bar(foo = foo)
+    })
+
+    expect_equal(bar@foo@qux(), 1L)
+    expect_equal(bar@foo@a, 1L)
 })
 
 test_that("class.R - .self", {

@@ -63,6 +63,15 @@ print.extendr_error <- function(error) {
     print(error$value)
 }
 
+#' @export
+`==.ClassInstance` <- function(cls1, cls2) {
+    ## PLACEHOLDER: This is a placeholder for the actual equality check.
+    if (inherits(cls1, "ClassInstance") && inherits(cls2, "ClassInstance")) {
+        return(TRUE)
+    }
+    stop("Both arguments must be `ClassInstance` objects.")
+}
+
 if (FALSE) {
     . <- function() {
         gc()
@@ -86,6 +95,8 @@ if (FALSE) {
 
     Foo(a = 1L, b = 2.0, c = "xxx")
     Foo(a = 1L, b = 2.0, c = 1)
+
+    Foo(a = 1L, b = 2.0, c = "xxx") == Foo(a = 1L, b = 2.0, c = "xxx")
 
     system.time(for (i in 1:1e6) Foo(a = 1L, b = 2.0, c = "xxx"))
 }

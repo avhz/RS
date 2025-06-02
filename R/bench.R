@@ -57,7 +57,7 @@
         check = FALSE
     )[, c(1, 3, 4, 5, 6, 8, 9)]
 
-    .out$speedup <- .out$`itr/sec`[1] / .out$`itr/sec`
+    .out$speedup <- sprintf("%f", .out$`itr/sec`[1] / .out$`itr/sec`)
 
     return(.out)
     # print(timings, width = Inf)

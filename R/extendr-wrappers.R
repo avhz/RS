@@ -42,5 +42,295 @@ ClassInstance$set <- function(key, value) .Call(wrap__ClassInstance__set, self, 
 #' @export
 `[[.ClassInstance` <- `$.ClassInstance`
 
+t_int <- new.env(parent = emptyenv())
+
+t_int$validate <- function() .Call(wrap__t_int__validate, self)
+
+#' @export
+`$.t_int` <- function (self, name) { func <- t_int[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_int` <- `$.t_int`
+
+t_ints <- new.env(parent = emptyenv())
+
+t_ints$validate <- function() .Call(wrap__t_ints__validate, self)
+
+#' @export
+`$.t_ints` <- function (self, name) { func <- t_ints[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_ints` <- `$.t_ints`
+
+t_dbl <- new.env(parent = emptyenv())
+
+t_dbl$validate <- function() .Call(wrap__t_dbl__validate, self)
+
+#' @export
+`$.t_dbl` <- function (self, name) { func <- t_dbl[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_dbl` <- `$.t_dbl`
+
+t_dbls <- new.env(parent = emptyenv())
+
+t_dbls$validate <- function() .Call(wrap__t_dbls__validate, self)
+
+#' @export
+`$.t_dbls` <- function (self, name) { func <- t_dbls[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_dbls` <- `$.t_dbls`
+
+t_num <- new.env(parent = emptyenv())
+
+t_num$validate <- function() .Call(wrap__t_num__validate, self)
+
+#' @export
+`$.t_num` <- function (self, name) { func <- t_num[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_num` <- `$.t_num`
+
+t_nums <- new.env(parent = emptyenv())
+
+t_nums$validate <- function() .Call(wrap__t_nums__validate, self)
+
+#' @export
+`$.t_nums` <- function (self, name) { func <- t_nums[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_nums` <- `$.t_nums`
+
+t_char <- new.env(parent = emptyenv())
+
+t_char$validate <- function() .Call(wrap__t_char__validate, self)
+
+#' @export
+`$.t_char` <- function (self, name) { func <- t_char[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_char` <- `$.t_char`
+
+t_chars <- new.env(parent = emptyenv())
+
+t_chars$validate <- function() .Call(wrap__t_chars__validate, self)
+
+#' @export
+`$.t_chars` <- function (self, name) { func <- t_chars[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_chars` <- `$.t_chars`
+
+t_bool <- new.env(parent = emptyenv())
+
+t_bool$validate <- function() .Call(wrap__t_bool__validate, self)
+
+#' @export
+`$.t_bool` <- function (self, name) { func <- t_bool[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_bool` <- `$.t_bool`
+
+t_bools <- new.env(parent = emptyenv())
+
+t_bools$validate <- function() .Call(wrap__t_bools__validate, self)
+
+#' @export
+`$.t_bools` <- function (self, name) { func <- t_bools[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_bools` <- `$.t_bools`
+
+t_cplx <- new.env(parent = emptyenv())
+
+t_cplx$validate <- function() .Call(wrap__t_cplx__validate, self)
+
+#' @export
+`$.t_cplx` <- function (self, name) { func <- t_cplx[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_cplx` <- `$.t_cplx`
+
+t_cplxs <- new.env(parent = emptyenv())
+
+t_cplxs$validate <- function() .Call(wrap__t_cplxs__validate, self)
+
+#' @export
+`$.t_cplxs` <- function (self, name) { func <- t_cplxs[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_cplxs` <- `$.t_cplxs`
+
+t_raw <- new.env(parent = emptyenv())
+
+t_raw$validate <- function() .Call(wrap__t_raw__validate, self)
+
+#' @export
+`$.t_raw` <- function (self, name) { func <- t_raw[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_raw` <- `$.t_raw`
+
+t_raws <- new.env(parent = emptyenv())
+
+t_raws$validate <- function() .Call(wrap__t_raws__validate, self)
+
+#' @export
+`$.t_raws` <- function (self, name) { func <- t_raws[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_raws` <- `$.t_raws`
+
+t_factor <- new.env(parent = emptyenv())
+
+t_factor$validate <- function() .Call(wrap__t_factor__validate, self)
+
+#' @export
+`$.t_factor` <- function (self, name) { func <- t_factor[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_factor` <- `$.t_factor`
+
+t_factors <- new.env(parent = emptyenv())
+
+t_factors$validate <- function() .Call(wrap__t_factors__validate, self)
+
+#' @export
+`$.t_factors` <- function (self, name) { func <- t_factors[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_factors` <- `$.t_factors`
+
+t_list <- new.env(parent = emptyenv())
+
+t_list$validate <- function() .Call(wrap__t_list__validate, self)
+
+#' @export
+`$.t_list` <- function (self, name) { func <- t_list[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_list` <- `$.t_list`
+
+t_array <- new.env(parent = emptyenv())
+
+t_array$validate <- function() .Call(wrap__t_array__validate, self)
+
+#' @export
+`$.t_array` <- function (self, name) { func <- t_array[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_array` <- `$.t_array`
+
+t_vector <- new.env(parent = emptyenv())
+
+t_vector$validate <- function() .Call(wrap__t_vector__validate, self)
+
+#' @export
+`$.t_vector` <- function (self, name) { func <- t_vector[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_vector` <- `$.t_vector`
+
+t_matrix <- new.env(parent = emptyenv())
+
+t_matrix$validate <- function() .Call(wrap__t_matrix__validate, self)
+
+#' @export
+`$.t_matrix` <- function (self, name) { func <- t_matrix[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_matrix` <- `$.t_matrix`
+
+t_dataframe <- new.env(parent = emptyenv())
+
+t_dataframe$validate <- function() .Call(wrap__t_dataframe__validate, self)
+
+#' @export
+`$.t_dataframe` <- function (self, name) { func <- t_dataframe[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_dataframe` <- `$.t_dataframe`
+
+t_environment <- new.env(parent = emptyenv())
+
+t_environment$validate <- function() .Call(wrap__t_environment__validate, self)
+
+#' @export
+`$.t_environment` <- function (self, name) { func <- t_environment[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_environment` <- `$.t_environment`
+
+t_pairlist <- new.env(parent = emptyenv())
+
+t_pairlist$validate <- function() .Call(wrap__t_pairlist__validate, self)
+
+#' @export
+`$.t_pairlist` <- function (self, name) { func <- t_pairlist[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_pairlist` <- `$.t_pairlist`
+
+t_func <- new.env(parent = emptyenv())
+
+t_func$validate <- function() .Call(wrap__t_func__validate, self)
+
+#' @export
+`$.t_func` <- function (self, name) { func <- t_func[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_func` <- `$.t_func`
+
+t_expr <- new.env(parent = emptyenv())
+
+t_expr$validate <- function() .Call(wrap__t_expr__validate, self)
+
+#' @export
+`$.t_expr` <- function (self, name) { func <- t_expr[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_expr` <- `$.t_expr`
+
+t_sym <- new.env(parent = emptyenv())
+
+t_sym$validate <- function() .Call(wrap__t_sym__validate, self)
+
+#' @export
+`$.t_sym` <- function (self, name) { func <- t_sym[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_sym` <- `$.t_sym`
+
+t_lang <- new.env(parent = emptyenv())
+
+t_lang$validate <- function() .Call(wrap__t_lang__validate, self)
+
+#' @export
+`$.t_lang` <- function (self, name) { func <- t_lang[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_lang` <- `$.t_lang`
+
+t_obj <- new.env(parent = emptyenv())
+
+t_obj$validate <- function() .Call(wrap__t_obj__validate, self)
+
+#' @export
+`$.t_obj` <- function (self, name) { func <- t_obj[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_obj` <- `$.t_obj`
+
+t_prim <- new.env(parent = emptyenv())
+
+t_prim$validate <- function() .Call(wrap__t_prim__validate, self)
+
+#' @export
+`$.t_prim` <- function (self, name) { func <- t_prim[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.t_prim` <- `$.t_prim`
+
 
 # nolint end

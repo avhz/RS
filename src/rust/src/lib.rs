@@ -16,8 +16,10 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 extendr_module! {
     mod RS;
+
     impl ClassDefinition;
     impl ClassInstance;
+    use types;
 }
 
 // ============================================================================
