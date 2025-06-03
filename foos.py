@@ -13,7 +13,7 @@ class Foo:
         return self.x + self.y + self.z
 
 
-N = int(1e6)
+N = int(3e6)
 
 t = time.perf_counter()
 # foos = [Foo(i, i, i) for i in range(N)]

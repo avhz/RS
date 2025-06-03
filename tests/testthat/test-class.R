@@ -184,26 +184,100 @@ test_that("class.R - Basic Class composition", {
     })
 
     expect_no_error({
-        ## Composition
         Class(
             "Foo",
             a = t_int,
             qux = \(self) print(self@a)
         )
-
         Class(
             "Bar",
             foo = Foo
         )
-
         foo <- Foo(a = 1L)
-        foo@qux()
-
+        foo@qux() |> capture.output()
         bar <- Bar(foo = foo)
     })
 
     expect_equal(bar@foo@qux(), 1L)
     expect_equal(bar@foo@a, 1L)
+
+    expect_no_error({
+        Class("Foo", a = t_int)
+        Class("Bar", b = t_dbl, baz = function(self, foo) {
+            self@b + foo@a
+        })
+
+        foo <- Foo(a = 1L)
+        bar <- Bar(b = 2.0)
+    })
+
+    expect_equal(bar@baz(foo), 3.0)
+
+    expect_no_error({
+        Class(
+            "VanillaEuropeanOption",
+            strike = t_dbl,
+            maturity = t_date,
+
+            year_fraction = function(self) {
+                # as.numeric(self@maturity - Sys.Date()) / 365
+                as.numeric(self@maturity - as.Date("2025-06-03")) / 365
+            }
+        )
+
+        Class(
+            "Black76",
+
+            f = t_dbl,
+            r = t_dbl,
+            v = t_dbl,
+            option = VanillaEuropeanOption,
+
+            t = function(self) {
+                self@option@year_fraction()
+            },
+            .df = function(self) {
+                exp(-self@r * self@t())
+            },
+            .d1 = function(self) {
+                (log(self@f / self@option@strike) +
+                    0.5 * (self@v)^2 * self@t()) /
+                    (self@v * sqrt(self@t()))
+            },
+            .d2 = function(self) {
+                (log(self@f / self@option@strike) -
+                    0.5 * (self@v)^2 * self@t()) /
+                    (self@v * sqrt(self@t()))
+            },
+            call_price = function(self) {
+                self@.df() *
+                    (self@f *
+                        pnorm(self@.d1()) -
+                        self@option@strike * pnorm(self@.d2()))
+            },
+            put_price = function(self) {
+                self@.df() *
+                    (-self@f *
+                        pnorm(-self@.d1()) +
+                        self@option@strike * pnorm(-self@.d2()))
+            }
+        )
+
+        option <- VanillaEuropeanOption(
+            strike = 100,
+            maturity = as.Date("2026-01-01")
+        )
+
+        black76 <- Black76(
+            f = 100,
+            r = 0.05,
+            v = 0.2,
+            option = option
+        )
+    })
+
+    expect_equal(black76@call_price(), 5.901045)
+    expect_equal(black76@put_price(), 5.901045)
 })
 
 test_that("class.R - .self", {

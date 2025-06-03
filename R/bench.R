@@ -1,4 +1,4 @@
-.benchmark <- function(n) {
+.benchmark <- function(n, display = FALSE) {
     FooRS <- Class(
         "FooRS",
         a = t_int,
@@ -55,24 +55,62 @@
         where = globalenv()
     )
 
+    FooPy <- reticulate::PyClass(
+        "FooPy",
+        list(
+            a = NULL,
+            b = NULL,
+            c = NULL,
+            `__init__` = function(self, a, b, c) {
+                self$a <- a
+                self$b <- b
+                self$c <- c
+                invisible()
+            }
+        )
+    )
+
     .out <- bench::mark(
-        "RSUnval" = FooRSUnval(a = 1L, b = 2.0, c = "xxx"),
+        "RS (no validation)" = FooRSUnval(a = 1L, b = 2.0, c = "xxx"),
         "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
         "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
         "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),
         "S7" = FooS7(a = 1L, b = 2.0, c = "xxx"),
-        "Ref" = FooRef(a = 1L, b = 2.0, c = "xxx"),
+        "RefClass" = FooRef(a = 1L, b = 2.0, c = "xxx"),
+        "reticulate" = FooPy(a = 1L, b = 2.0, c = "xxx"),
 
         iterations = 1e4,
         check = FALSE
     )[, c(1, 3, 4, 5, 6, 8, 9)]
 
     .out$speedup <- sprintf("%f", .out$`itr/sec`[1] / .out$`itr/sec`)
-
     return(.out)
-    # .out |>
-    #     dplyr::mutate(expression = factor(expression, levels = expression)) |>
-    #     ggplot2::ggplot() +
-    #     ggplot2::aes(x = expression, y = `itr/sec`) |>
-    #         ggplot2::geom_bar(stat = "identity")
+}
+
+.benchplot <- function(benchmark) {
+    benchmark |>
+        dplyr::mutate(pkg = factor(expression, levels = expression)) |>
+        ggplot2::ggplot() +
+        ggplot2::aes(x = pkg, y = `itr/sec`, fill = pkg) +
+        ggplot2::geom_bar(stat = "identity") +
+        ggplot2::ggtitle(
+            "CLASS INITIALISATION: ITERATIONS / SECOND (higher is better)"
+        ) +
+        ggplot2::theme_classic() +
+        ggplot2::scale_fill_manual(
+            values = c(
+                "RS (no validation)" = "#1E2650",
+                "RS" = "#1E2650",
+                "R6" = "#cacaca",
+                "S4" = "#cacaca",
+                "S7" = "#cacaca",
+                "RefClass" = "#cacaca",
+                "reticulate" = "#cacaca"
+            )
+        ) +
+        ggplot2::labs(
+            x = "Package",
+            y = "Iterations per second",
+            fill = "Package"
+        )
 }

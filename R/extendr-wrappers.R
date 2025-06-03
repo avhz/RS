@@ -14,11 +14,7 @@ class_equality <- function(class1, class2) .Call(wrap__class_equality, class1, c
 
 ClassDefinition <- new.env(parent = emptyenv())
 
-ClassDefinition$name <- function() .Call(wrap__ClassDefinition__name, self)
-
 ClassDefinition$new <- function(name, methods, validate) .Call(wrap__ClassDefinition__new, name, methods, validate)
-
-ClassDefinition$print <- function() invisible(.Call(wrap__ClassDefinition__print, self))
 
 #' @export
 `$.ClassDefinition` <- function (self, name) { func <- ClassDefinition[[name]]; environment(func) <- environment(); func }
@@ -28,9 +24,11 @@ ClassDefinition$print <- function() invisible(.Call(wrap__ClassDefinition__print
 
 ClassInstance <- new.env(parent = emptyenv())
 
-ClassInstance$new <- function(name, fields, def) .Call(wrap__ClassInstance__new, name, fields, def)
+ClassInstance$new <- function(fields, def) .Call(wrap__ClassInstance__new, fields, def)
 
 ClassInstance$print <- function() invisible(.Call(wrap__ClassInstance__print, self))
+
+ClassInstance$name <- function() .Call(wrap__ClassInstance__name, self)
 
 ClassInstance$get <- function(key) .Call(wrap__ClassInstance__get, self, key)
 

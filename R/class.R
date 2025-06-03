@@ -26,7 +26,7 @@ Class <- function(.classname, ..., .validate = TRUE) {
     new_class <- function(...) {
         .Call(
             "wrap__ClassInstance__new",
-            name = .classname,
+            # name = .classname,
             fields = rlang::list2(...),
             def = .self,
             PACKAGE = "RS"
@@ -38,7 +38,8 @@ Class <- function(.classname, ..., .validate = TRUE) {
 
 #' @export
 print.ClassInstance <- function(x, ...) {
-    .print_rust_object(x)
+    x$print()
+    invisible(x)
 }
 
 #' @export
@@ -76,27 +77,20 @@ if (FALSE) {
     . <- function() {
         gc()
         remove(list = ls())
-        rextendr::clean()
+        # rextendr::clean()
         rextendr::document()
         devtools::load_all()
         devtools::test()
     }
     .()
 
-    (bm <- .benchmark(1e4))
+    (bm <- .benchmark(1e4, TRUE))
+    .benchplot(bm)
     ggplot2::autoplot(bm)
 
-    Class(
-        "Foo",
-        a = t_int,
-        b = t_dbl,
-        c = t_char
-    )
-
-    Foo(a = 1L, b = 2.0, c = "xxx")$print()
+    Class("Foo", a = t_int, b = t_dbl, c = t_char)
+    isS4(Foo(a = 1L, b = 2.0, c = "xxx"))
     Foo(a = 1L, b = 2.0, c = 1)
 
-    Foo(a = 1L, b = 2.0, c = "xxx") == Foo(a = 1L, b = 2.0, c = "xxx")
-
-    system.time(for (i in 1:1e6) Foo(a = 1L, b = 2.0, c = "xxx"))
+    system.time(for (i in 1:1e5) Foo(a = 1L, b = 2.0, c = "xxx"))
 }

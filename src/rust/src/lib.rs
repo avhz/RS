@@ -25,15 +25,17 @@ extendr_module! {
 // GLOBALS
 // ============================================================================
 
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+// #[global_allocator]
+// static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+type RobjMap = HashMap<String, Robj>;
 
 // ============================================================================
 // STRUCTS
 // ============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-struct RcRefMap(Rc<RefCell<HashMap<String, Robj>>>);
+struct RcRefMap(Rc<RefCell<RobjMap>>);
 
 #[derive(Debug, Clone, PartialEq)]
 struct RcClassDefinition(Rc<ClassDefinition>);
@@ -54,21 +56,20 @@ struct ClassDefinition {
 #[extendr]
 #[derive(Debug, PartialEq)]
 struct ClassInstance {
-    /// The name of the class.
-    name: Strings,
-
+    // /// The name of the class.
+    // name: Strings,
     /// The individual instance data.
     fields: RcRefMap,
 
     /// Pointer to the class definition this instance belongs to.
-    methods: RcClassDefinition,
+    definition: RcClassDefinition,
 }
 
 // ============================================================================
 // IMPLEMENTATIONS
 // ============================================================================
 
-fn list_to_hashmap(list: List) -> HashMap<String, Robj> {
+fn list_to_robjmap(list: List) -> RobjMap {
     list.into_hashmap()
         .into_iter()
         .map(|(k, v)| (k.into(), v))
@@ -82,21 +83,17 @@ fn class_equality(class1: ExternalPtr<ClassInstance>, class2: ExternalPtr<ClassI
 }
 
 impl RcRefMap {
-    fn from_hashmap(map: HashMap<String, Robj>) -> Self {
+    fn from_hashmap(map: RobjMap) -> Self {
         Self(Rc::new(RefCell::new(map)))
     }
 
     fn from_list(list: List) -> Self {
-        Self::from_hashmap(list_to_hashmap(list))
+        Self::from_hashmap(list_to_robjmap(list))
     }
 }
 
 #[extendr]
 impl ClassDefinition {
-    fn name(&self) -> Strings {
-        self.name.clone().into()
-    }
-
     fn new(name: Strings, methods: List, validate: bool) -> Robj {
         let class_definition = Rc::new(Self {
             name,
@@ -106,23 +103,16 @@ impl ClassDefinition {
 
         ExternalPtr::new(RcClassDefinition(class_definition)).into()
     }
-
-    fn print(&self) {
-        println!("ClassDefinition {{");
-        println!("    name: {:?}", self.name);
-        println!("    methods: {:?}", self.methods.0.borrow());
-        println!("}}");
-    }
 }
 
 #[extendr]
 impl ClassInstance {
-    fn new(name: Strings, fields: List, def: Robj) -> Result<Self> {
+    fn new(fields: List, def: Robj) -> Result<Self> {
         let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
         let def_ref = RcClassDefinition(Rc::clone(&def_ptr.0));
         let def_map = def_ref.0.methods.0.borrow();
 
-        let map = list_to_hashmap(fields);
+        let map = list_to_robjmap(fields);
 
         if def_ref.0.validate {
             for (key, value) in &map {
@@ -137,8 +127,8 @@ impl ClassInstance {
 
                     if !validator.call(arg)?.as_bool().unwrap_or(false) {
                         let msg = format!(
-                            "Invalid type <'{:?}'> passed for field <'{}'>.",
-                            value.rtype(),
+                            "Invalid type <'{}'> passed for field <'{}'>.",
+                            call!("typeof", value)?.as_str().unwrap_or("unknown"),
                             key
                         );
 
@@ -152,18 +142,24 @@ impl ClassInstance {
         drop(def_map);
 
         Ok(Self {
-            name: name,
             fields: RcRefMap::from_hashmap(map),
-            methods: def_ref,
+            definition: def_ref,
         })
     }
 
     fn print(&self) {
-        println!("ClassInstance {{");
-        println!("    name:   {:?}", self.name);
-        println!("    fields: {:?}", self.fields.0.borrow());
-        println!("    def:    {:?}", self.methods.0);
+        let name = &self.definition.0.name;
+        let fields = &self.fields.0.borrow();
+        let methods = self.definition.0.methods.0.borrow();
+
+        println!("ClassInstance {:?} @ {:p} {{", name, &self);
+        println!("    fields:  {:?}", fields);
+        println!("    methods: {:?}", methods.keys());
         println!("}}");
+    }
+
+    fn name(&self) -> Strings {
+        self.definition.0.name.clone().into()
     }
 
     fn get(&self, key: &str) -> Result<Robj> {
@@ -173,14 +169,14 @@ impl ClassInstance {
         }
 
         // 2. Check methods in the class definition
-        if let Some(method) = (&self.methods.0).methods.0.borrow().get(key) {
+        if let Some(method) = (&self.definition.0).methods.0.borrow().get(key) {
             return Ok(method.clone());
         }
 
         // 3. If not found
         let msg = format!(
             "Attribute '{}' not found in class instance '{:?}'",
-            key, self.name
+            key, self.definition.0.name
         );
         Err(Error::Other(msg.into()))
     }
@@ -198,9 +194,7 @@ impl ClassInstance {
 
         let msg = format!(
             "Unable to set attribute '{:?}' with key '{}' in class '{:?}'",
-            value.rtype(),
-            key,
-            self.name
+            &value, key, self.definition.0.name
         );
         Err(Error::Other(msg.into()))
     }
