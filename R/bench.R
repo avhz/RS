@@ -63,11 +63,16 @@
         "S7" = FooS7(a = 1L, b = 2.0, c = "xxx"),
         "Ref" = FooRef(a = 1L, b = 2.0, c = "xxx"),
 
-        iterations = n,
+        iterations = 1e4,
         check = FALSE
     )[, c(1, 3, 4, 5, 6, 8, 9)]
 
     .out$speedup <- sprintf("%f", .out$`itr/sec`[1] / .out$`itr/sec`)
 
     return(.out)
+    # .out |>
+    #     dplyr::mutate(expression = factor(expression, levels = expression)) |>
+    #     ggplot2::ggplot() +
+    #     ggplot2::aes(x = expression, y = `itr/sec`) |>
+    #         ggplot2::geom_bar(stat = "identity")
 }
