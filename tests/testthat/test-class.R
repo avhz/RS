@@ -187,17 +187,17 @@ test_that("class.R - Basic Class composition", {
         Class(
             "Foo",
             a = t_int,
-            qux = \(self) print(self@a)
+            qux = \(self) self@a
         )
         Class(
             "Bar",
             foo = Foo
         )
         foo <- Foo(a = 1L)
-        foo@qux() |> capture.output()
         bar <- Bar(foo = foo)
     })
 
+    expect_equal(foo@qux(), 1L)
     expect_equal(bar@foo@qux(), 1L)
     expect_equal(bar@foo@a, 1L)
 
@@ -327,86 +327,29 @@ test_that("class.R - Separation of maps", {
     expect_equal(foo2@a, 2L)
 })
 
-# test_that("class.R - Timings", {
-# Class(
-#     "FooRS",
-#     a = t_int,
-#     b = t_dbl,
-#     c = t_char
-# )
 
-# FooR6 <- R6::R6Class(
-#     "FooR6",
-#     public = list(
-#         a = NULL,
-#         b = NULL,
-#         c = NULL,
+test_that("class.R - Field Validation", {
+    expect_no_error({
+        Class("Validated", TRUE, a = t_int, b = t_dbl, c = t_char)
+        Class("Unvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
+    })
+    ## Should throw an error
+    testthat::expect_error(Validated(a = 1L, b = 2.0, c = NULL))
+    ## Should not throw an error
+    expect_no_error({
+        foo <- Validated(a = 1L, b = 2.0, c = "xxx")
+        foo <- Unvalidated(a = 1L, b = 2.0, c = "xxx")
+    })
+})
 
-#         initialize = function(a, b, c) {
-#             self$a <- a
-#             self$b <- b
-#             self$c <- c
-#         }
-#     )
-# )
+test_that("class.R - Timings", {
+    timings <- .benchmark(1e3)
 
-# FooRef <- setRefClass(
-#     "FooRef",
-#     fields = list(a = "integer", b = "numeric", c = "character"),
-#     where = globalenv()
-# )
+    # Expect RS to have least garbage collection
+    # Not really a reliable test, can fail maybe 10-20% of the time
+    # expect_true(all(diff(timings[["n_gc"]]) >= 0))
 
-# FooS7 <- S7::new_class(
-#     "FooS7",
-#     properties = list(
-#         a = S7::class_integer,
-#         b = S7::class_numeric,
-#         c = S7::class_character
-#     )
-# )
-
-# FooS4 <- setClass(
-#     "FooS4",
-#     slots = list(
-#         a = "integer",
-#         b = "numeric",
-#         c = "character"
-#     ),
-#     where = globalenv()
-# )
-
-# timings <- bench::mark(
-#     "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
-#     "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
-#     "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),
-#     "S7" = FooS7(a = 1L, b = 2.0, c = "xxx"),
-#     "Ref" = FooRef(a = 1L, b = 2.0, c = "xxx"),
-
-#     iterations = n,
-#     check = FALSE
-# )
-
-## Expect RS to have least garbage collection
-## Not really a reliable test, can fail maybe 10-20% of the time
-# expect_true(all(diff(timings[["n_gc"]]) >= 0))
-
-## Expect RS to be faster than R6 and RefClass
-## Can also fail, but much less likely than n_gc
-# expect_true(all(diff(timings[["itr/sec"]]) <= 0))
-
-# })
-
-# test_that("class.R - Field Validation", {
-#     expect_no_error({
-#         Class("Validated", TRUE, a = t_int, b = t_dbl, c = t_char)
-#         Class("Unvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
-#     })
-#     ## Should throw an error
-#     expect_error(Validated(a = 1L, b = 2.0, c = NULL))
-#     ## Should not throw an error
-#     expect_no_error({
-#         foo <- Validated(a = 1L, b = 2.0, c = "xxx")
-#         foo <- Unvalidated(a = 1L, b = 2.0, c = "xxx")
-#         foo <- Unvalidated(a = 1L, b = 2.0, c = NULL)
-#     })
-# })
+    # Expect RS to be faster than R6 and RefClass
+    # Can also fail, but much less likely than n_gc
+    expect_true(all(diff(timings[["itr/sec"]]) <= 0))
+})
