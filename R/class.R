@@ -15,10 +15,20 @@
 #'
 #' @export
 Class <- function(.classname, ..., .validate = TRUE) {
+    # .method <- function(.m) {
+    #     if (is.function(.m) && !inherits(.m, "ClassType")) {
+    #         return(structure(.m, class = c("ClassMethod", class(.m))))
+    #     }
+    #     return(.m)
+    # }
+
+    # .methods <- lapply(list(...), .method)
+
     .self <- .Call(
         "wrap__ClassDefinition__new",
         name = .classname,
         methods = list(...),
+        # methods = .methods,
         validate = .validate,
         PACKAGE = "RS"
     )
@@ -50,6 +60,10 @@ print.ClassInstance <- function(x, ...) {
 `@.ClassInstance` <- function(self, name) {
     .attr <- .Call("wrap__ClassInstance__get", self, name)
 
+    ## FIXME
+    # if (inherits(.attr, "ClassPrivateAttribute"))
+    #     stop("Attribute is private: ", name, call. = FALSE)
+
     if (is.function(.attr) && !inherits(.attr, "ClassStaticMethod"))
         return(function(...) .attr(self, ...))
 
@@ -76,12 +90,24 @@ print.extendr_error <- function(error) {
     stop("Both arguments must be `ClassInstance` objects.")
 }
 
-staticmethod <- function(.f) {
+#' @export
+static <- function(.attr) {
     ## TODO: Improve this....
-    if (!is.function(.f)) {
+    if (!is.function(.attr)) {
         stop("`static` must be called on a function.")
     }
-    structure(.f, class = "ClassStaticMethod")
+    structure(
+        .attr,
+        class = c("ClassStaticMethod", class(.attr))
+    )
+}
+
+#' @export
+private <- function(.attr) {
+    structure(
+        .attr,
+        class = c("ClassPrivateAttribute", class(.attr))
+    )
 }
 
 
@@ -104,33 +130,31 @@ if (FALSE) {
     # .benchplot(bm)
     # dev.off()
 
-    Class("Foo", a = t_int, b = t_dbl, c = t_char)
-    isS4(Foo(a = 1L, b = 2.0, c = "xxx"))
-    foo <- Foo(a = 1L, b = 2.0, c = "xxx")
-    foo@a
-    foo@b
-    foo@c
-    foo@a <- 2L
-    foo@b <- "wrong type"
-
     Class(
         "Foo",
         a = t_int,
+        b = private(t_dbl),
 
-        ## Method
-        bar = function(self, x) {
-            self@a + x
+        ## Methods
+        bar = private(function(self, x) {
+            self@a + x * self@b
+        }),
+        qux = function(self) {
+            print(class(self))
         },
 
-        ## Static method
-        baz = staticmethod(function(self, x) {
+        ## Static methods
+        baz = static(function(self, x) {
             self + x
         })
     )
 
+    bench::mark(Foo(a = 1L), iterations = 1e5)
+
     foo <- Foo(a = 1L)
+    foo@qux()
+    foo@a
+    foo@b
     foo@bar(2L)
     foo@baz(2L, 3L)
-
-    system.time(for (i in 1:1e5) Foo(a = 1L, b = 2.0, c = "xxx"))
 }
