@@ -49,7 +49,10 @@ print.ClassInstance <- function(x, ...) {
 #' @export
 `@.ClassInstance` <- function(self, name) {
     .attr <- .Call("wrap__ClassInstance__get", self, name)
-    if (is.function(.attr)) return(function(...) .attr(self, ...))
+
+    if (is.function(.attr) && !inherits(.attr, "ClassStaticMethod"))
+        return(function(...) .attr(self, ...))
+
     return(.attr)
 }
 
@@ -72,6 +75,15 @@ print.extendr_error <- function(error) {
     }
     stop("Both arguments must be `ClassInstance` objects.")
 }
+
+staticmethod <- function(.f) {
+    ## TODO: Improve this....
+    if (!is.function(.f)) {
+        stop("`static` must be called on a function.")
+    }
+    structure(.f, class = "ClassStaticMethod")
+}
+
 
 if (FALSE) {
     . <- function() {
@@ -100,6 +112,25 @@ if (FALSE) {
     foo@c
     foo@a <- 2L
     foo@b <- "wrong type"
+
+    Class(
+        "Foo",
+        a = t_int,
+
+        ## Method
+        bar = function(self, x) {
+            self@a + x
+        },
+
+        ## Static method
+        baz = staticmethod(function(self, x) {
+            self + x
+        })
+    )
+
+    foo <- Foo(a = 1L)
+    foo@bar(2L)
+    foo@baz(2L, 3L)
 
     system.time(for (i in 1:1e5) Foo(a = 1L, b = 2.0, c = "xxx"))
 }
