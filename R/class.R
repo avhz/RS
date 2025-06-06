@@ -84,38 +84,22 @@ if (FALSE) {
     }
     .()
 
-    (bm <- .benchmark(1e5))
+    (bm <- .benchmark(1e4))
     .benchplot(bm)
     ggplot2::autoplot(bm)
 
+    # png("benchmark.png", width = 800, height = 600)
+    # .benchplot(bm)
+    # dev.off()
+
     Class("Foo", a = t_int, b = t_dbl, c = t_char)
     isS4(Foo(a = 1L, b = 2.0, c = "xxx"))
-    Foo(a = 1L, b = 2.0, c = 1)
+    foo <- Foo(a = 1L, b = 2.0, c = "xxx")
+    foo@a
+    foo@b
+    foo@c
+    foo@a <- 2L
+    foo@b <- "wrong type"
 
     system.time(for (i in 1:1e5) Foo(a = 1L, b = 2.0, c = "xxx"))
-
-    Class("Foo", a = t_dataframe)
-    Class("Bar", a = t_dataframe)
-
-    df1 <- data.frame(x = 1:10)
-    df2 <- data.frame(x = 1:10000)
-    df3 <- data.frame(x = 1:10, y = 11:20)
-    df4 <- data.frame(x = 1:10000, y = 10001:20000)
-
-    foo1 <- Foo(a = df1)
-    foo2 <- Foo(a = df2)
-    bar1 <- Bar(a = df3)
-    bar2 <- Bar(a = df4)
-
-    lobstr::obj_sizes(foo1, foo2, bar1, bar2)
-    lobstr::obj_sizes(df1, df2, df3, df4)
-    object.size(foo1)
-    object.size(foo2)
-    object.size(bar1)
-    object.size(bar2)
-
-    class_object_size(foo1)
-    class_object_size(foo2)
-    class_object_size(bar1)
-    class_object_size(bar2)
 }

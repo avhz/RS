@@ -19,7 +19,7 @@ extendr_module! {
     impl ClassInstance;
 
     fn class_equality;
-    fn class_object_size;
+    // fn class_object_size;
 }
 
 // ============================================================================
@@ -69,41 +69,6 @@ struct ClassInstance {
 // ============================================================================
 // IMPLEMENTATIONS
 // ============================================================================
-
-// function to get the total size of a class instance
-#[extendr]
-fn class_object_size(instance: ExternalPtr<ClassInstance>) -> Result<usize> {
-    let mut total_size = std::mem::size_of::<ClassInstance>();
-
-    // Fields
-    let fields = instance.fields.0.borrow();
-    total_size += std::mem::size_of_val(&*fields);
-
-    for (key, value) in fields.iter() {
-        total_size += key.len(); // Rough key size in bytes
-
-        // Use R's object.size() to get real size of R object
-        let size: Robj = call!("object.size", value.clone())?;
-        if let Some(sz) = size.as_integer() {
-            total_size += sz as usize;
-        }
-    }
-
-    // Class definition
-    let class_def = &instance.definition;
-    total_size += std::mem::size_of_val(&*class_def.0);
-
-    let methods = class_def.0.methods.0.borrow();
-    for (key, value) in methods.iter() {
-        total_size += key.len(); // Rough key size
-        let size: Robj = call!("object.size", value.clone())?;
-        if let Some(sz) = size.as_integer() {
-            total_size += sz as usize;
-        }
-    }
-
-    Ok(total_size)
-}
 
 fn list_to_robjmap(list: List) -> RobjMap {
     list.into_hashmap()
@@ -218,14 +183,32 @@ impl ClassInstance {
     }
 
     fn set(&mut self, key: String, value: Robj) -> Result<Robj> {
-        let inserted = self
-            .fields
-            .0
-            .borrow_mut()
-            .insert(key.to_string(), value.clone());
+        let fields = &self.fields;
+        let methods = &self.definition.0.methods.0.clone();
 
-        if let Some(value) = inserted {
-            return Ok(value);
+        // Support composition of classes
+        if value.inherits("ClassInstance") {
+            let inserted = fields.0.borrow_mut().insert(key.to_string(), value.clone());
+            if let Some(value) = inserted {
+                return Ok(value);
+            }
+        }
+
+        if let Some(validator) = methods.borrow().get(&key).and_then(|v| v.as_function()) {
+            let arg = Pairlist::from_pairs([("", value.clone())]);
+
+            if validator.call(arg)?.as_bool().unwrap_or(false) {
+                let inserted = fields.0.borrow_mut().insert(key.to_string(), value.clone());
+                if let Some(value) = inserted {
+                    return Ok(value);
+                }
+            }
+            let msg = format!(
+                "Invalid type <'{}'> passed for field <'{}'>.",
+                call!("typeof", value)?.as_str().unwrap_or("unknown"),
+                key
+            );
+            return Err(Error::Other(msg.into()));
         }
 
         let msg = format!(

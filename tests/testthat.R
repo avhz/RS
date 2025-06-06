@@ -7,8 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(containers)
-
+library(RS)
 rextendr::document()
-
-test_check("containers")
+test_check("RS")

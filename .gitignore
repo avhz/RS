@@ -72,4 +72,4 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 docs
-man/
+# man/

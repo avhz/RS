@@ -12,8 +12,6 @@ NULL
 
 class_equality <- function(class1, class2) .Call(wrap__class_equality, class1, class2)
 
-class_object_size <- function(instance) .Call(wrap__class_object_size, instance)
-
 ClassDefinition <- new.env(parent = emptyenv())
 
 ClassDefinition$new <- function(name, methods, validate) .Call(wrap__ClassDefinition__new, name, methods, validate)
