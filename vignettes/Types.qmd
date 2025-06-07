@@ -1,11 +1,11 @@
 ---
-title: "Overview"
+title: "Types"
 format: html
 vignette: >
-  %\VignetteIndexEntry{Overview}
+  %\VignetteIndexEntry{Types}
   %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 
-# Overview
+# Types
 

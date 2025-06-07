@@ -2,16 +2,20 @@
 ## Class
 ## ============================================================================
 
-#' @title Class
+#' @title
+#' Define a new RS class.
 #'
-#' @description Create a new ClassInstance in R.
+#' @description
+#' Create a new ClassInstance in R.
 #'
 #' @details
 #' The Class function creates a new ClassInstance in R.
 #' It allows you to define fields and methods for the class.
 #'
-#' @param name The name of the class.
-#' @param ... The fields and methods of the class.
+#' @param .classname The name of the class.
+#' @param .validate Whether to validate the class attributes.
+#'     Note: setting this to `FALSE` gives a decent performance boost.
+#' @param ... The fields and methods of the class definition.
 #'
 #' @export
 Class <- function(.classname, ..., .validate = TRUE) {
@@ -21,14 +25,12 @@ Class <- function(.classname, ..., .validate = TRUE) {
     #     }
     #     return(.m)
     # }
-
     # .methods <- lapply(list(...), .method)
 
     .self <- .Call(
         "wrap__ClassDefinition__new",
         name = .classname,
-        methods = list(...),
-        # methods = .methods,
+        methods = rlang::list2(...),
         validate = .validate,
         PACKAGE = "RS"
     )
@@ -44,6 +46,62 @@ Class <- function(.classname, ..., .validate = TRUE) {
 
     assign(.classname, new_class, envir = parent.frame())
 }
+
+## ============================================================================
+## Decorators
+## These are used to decorate methods and attributes in a class definition.
+## ============================================================================
+
+#' @title
+#' Declare a method is a static method.
+#'
+#' @description
+#' Declare a method is a static method.
+#'
+#' @details
+#' The `static` function is used to declare a method as a static method
+#' in a class definition.
+#' Static methods do not refer to `self`,
+#' i.e. the first argument is not the instance of the class.
+#'
+#' @param .attr The function to be declared as a static method.
+#'
+#' @export
+static <- function(.attr) {
+    ## TODO: Improve this....
+    if (!is.function(.attr)) {
+        stop("`static` must be called on a function.")
+    }
+    structure(
+        .attr,
+        class = c("ClassStaticMethod", class(.attr))
+    )
+}
+
+#' @title
+#' Declare a method or attribute as private.
+#'
+#' @description
+#' Declare a method or attribute as private.
+#'
+#' @details
+#' The `private` function is used to declare a method or attribute as private
+#' in a class definition.
+#' Private methods and attributes are not accessible from outside the class.
+#'
+#' @param .attr The function or attribute to be declared as private.
+#'
+#' @export
+private <- function(.attr) {
+    structure(
+        .attr,
+        class = c("ClassPrivateAttribute", class(.attr))
+    )
+}
+
+## ============================================================================
+## Class utilities
+## ============================================================================
 
 #' @export
 print.ClassInstance <- function(x, ...) {
@@ -77,7 +135,7 @@ print.ClassInstance <- function(x, ...) {
 }
 
 #' @export
-print.extendr_error <- function(error) {
+print.extendr_error <- function(error, ...) {
     print(error$value)
     invisible(error)
 }
@@ -88,73 +146,4 @@ print.extendr_error <- function(error) {
         return(.Call("wrap__class_equality", cls1, cls2, PACKAGE = "RS"))
     }
     stop("Both arguments must be `ClassInstance` objects.")
-}
-
-#' @export
-static <- function(.attr) {
-    ## TODO: Improve this....
-    if (!is.function(.attr)) {
-        stop("`static` must be called on a function.")
-    }
-    structure(
-        .attr,
-        class = c("ClassStaticMethod", class(.attr))
-    )
-}
-
-#' @export
-private <- function(.attr) {
-    structure(
-        .attr,
-        class = c("ClassPrivateAttribute", class(.attr))
-    )
-}
-
-
-if (FALSE) {
-    . <- function() {
-        gc()
-        remove(list = ls())
-        # rextendr::clean()
-        rextendr::document()
-        devtools::load_all()
-        devtools::test()
-    }
-    .()
-
-    (bm <- .benchmark(1e4))
-    .benchplot(bm)
-    ggplot2::autoplot(bm)
-
-    # png("benchmark.png", width = 800, height = 600)
-    # .benchplot(bm)
-    # dev.off()
-
-    Class(
-        "Foo",
-        a = t_int,
-        b = private(t_dbl),
-
-        ## Methods
-        bar = private(function(self, x) {
-            self@a + x * self@b
-        }),
-        qux = function(self) {
-            print(class(self))
-        },
-
-        ## Static methods
-        baz = static(function(self, x) {
-            self + x
-        })
-    )
-
-    bench::mark(Foo(a = 1L), iterations = 1e5)
-
-    foo <- Foo(a = 1L)
-    foo@qux()
-    foo@a
-    foo@b
-    foo@bar(2L)
-    foo@baz(2L, 3L)
 }

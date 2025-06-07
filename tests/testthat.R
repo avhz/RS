@@ -8,5 +8,5 @@
 
 library(testthat)
 library(RS)
-rextendr::document()
+# rextendr::document()
 test_check("RS")

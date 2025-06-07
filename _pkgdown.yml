@@ -1,4 +1,16 @@
-url: avhz.github.io/RS/
+url: https://avhz.github.io/RS
+
 template:
   bootstrap: 5
 
+reference:
+- title: "Class"
+  contents:
+  - Class
+- title: "Decorators"
+  contents:
+  - private
+  - static
+- title: "Types"
+  contents:
+  - RSTypes

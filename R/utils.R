@@ -6,7 +6,10 @@
     if (typeof(.o) != "externalptr") {
         stop("Object is not a Rust object (externalptr).")
     }
-    cat(paste(capture.output(str(.o)), format(.o), sep = ""), "\n")
+    cat(
+        paste(utils::capture.output(utils::str(.o)), format(.o), sep = ""),
+        "\n"
+    )
     .o$print()
 }
 

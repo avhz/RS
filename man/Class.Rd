@@ -2,14 +2,17 @@
 % Please edit documentation in R/class.R
 \name{Class}
 \alias{Class}
-\title{Class}
+\title{Define a new RS class.}
 \usage{
 Class(.classname, ..., .validate = TRUE)
 }
 \arguments{
-\item{...}{The fields and methods of the class.}
+\item{.classname}{The name of the class.}
 
-\item{name}{The name of the class.}
+\item{...}{The fields and methods of the class definition.}
+
+\item{.validate}{Whether to validate the class attributes.
+Note: setting this to \code{FALSE} gives a decent performance boost.}
 }
 \description{
 Create a new ClassInstance in R.
