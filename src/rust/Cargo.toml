@@ -9,6 +9,8 @@ name = 'RS'
 
 [dependencies]
 extendr-api = { version = "0.8.0", features = ['non-api'] }
+# bincode = "2.0.1"
+# serde = { version = "1.0.219", features = ['derive'] }
 
 [profile.release]
 debug = true

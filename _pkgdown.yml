@@ -2,6 +2,12 @@ url: https://avhz.github.io/RS
 
 template:
   bootstrap: 5
+  bootswatch: slate
+  light-switch: true
+
+navbar:
+  structure:
+    right: [search, github, lightswitch]
 
 reference:
 - title: "Class"
