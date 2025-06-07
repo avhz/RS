@@ -153,10 +153,10 @@ impl ClassInstance {
         let fields = &self.fields.0.borrow();
         let methods = self.definition.0.methods.0.borrow();
 
-        println!("ClassInstance {:?} @ {:p} {{", name, &self);
-        println!("    fields:  {:?}", fields);
-        println!("    methods: {:?}", methods.keys());
-        println!("}}");
+        rprintln!("ClassInstance {:?} @ {:p} {{", name, &self);
+        rprintln!("    fields:  {:?}", fields);
+        rprintln!("    methods: {:?}", methods.keys());
+        rprintln!("}}");
     }
 
     fn name(&self) -> Strings {

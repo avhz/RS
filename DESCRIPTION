@@ -3,7 +3,7 @@ Title: Fast classes for R
 Description: Fast classes for R
 Depends: R (>= 4.1.0)
 Version: 0.0.0.9000
-URL: https://avhz.github.io/RS
+URL: https://github.com/avhz/RS/, https://avhz.github.io/RS/
 Maintainer: Amando Z <RustQuantContact@gmail.com>
 Author: Amando Z [aut, cre]
 License: MIT + file LICENSE
@@ -18,4 +18,4 @@ VignetteBuilder:
 Imports: 
     utils
 Suggests: 
-    testthat (>= 3.0.0), quarto, R6, bench, S7, reticulate
+    testthat (>= 3.0.0), quarto, R6, bench, S7, reticulate, purrr

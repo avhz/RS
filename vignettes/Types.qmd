@@ -9,3 +9,70 @@ vignette: >
 
 # Types
 
+`RS` provides a number of types that are meant to be used when
+defining a class.
+
+```{R}
+library(RS)
+
+Class(
+    "Foo",
+
+    a = t_any,
+    b = t_int,
+    c = t_char,
+    d = t_dataframe,
+    e = t_date,
+)
+```
+
+When initialising a class instance, you must provide a type that 
+matches the given validator.
+
+```{R}
+foo <- Foo(
+    a = raw(1), 
+    b = 1L, 
+    c = "c", 
+    d = data.frame(), 
+    e = as.Date("2025-01-01")
+)
+```
+
+Note that `t_any` is a catch-all type that skips validation for 
+a single field. 
+
+If you pass an incorrect value for a field, you will get an error like:
+
+```{R}
+#| eval: false
+foo <- Foo(
+    a = raw(1), 
+    b = 1L, 
+    c = "c", 
+    d = data.frame(), 
+    e = list()        ## Should be a t_date
+)
+```
+
+```R
+"Invalid type <'list'> passed for field <'e'>."
+```
+
+You can also turn off validation entirely for the class via:
+
+```{R}
+Class(
+    "Foo",
+    .validation = FALSE, ## Add this here 
+
+    a = t_any,
+    b = t_int,
+    c = t_char,
+    d = t_dataframe,
+    e = t_date,
+)
+```
+
+This gives a significant performance boost at the cost of 
+no type validation. 

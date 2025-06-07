@@ -90,17 +90,19 @@ test_that("class.R - Basic Asset class", {
             }
         )
 
-        asset <- Asset(
+        fields <- list(
             id = "AAPL",
             company = "Apple Inc.",
             type = "Equity",
             price = 150.0,
-            quantity = 10L,
+            quantity = 10L
         )
+
+        asset <- Asset(!!!fields)
 
         asset@print() |> capture.output()
 
-        df <- data.frame(
+        df <- tibble::tibble(
             id = c("AAPL", "GOOGL", "AMZN"),
             company = c("Apple Inc.", "Alphabet Inc.", "Amazon.com Inc."),
             type = c("Equity", "Equity", "Equity"),
@@ -109,20 +111,26 @@ test_that("class.R - Basic Asset class", {
         )
 
         ## The !!! doesn't work in testthat ???
+        # assets <- apply(df, 1, \(r) Asset(!!!r))
+        # assets <- apply(df, 1, \(r) print(r))
+
+        # assets <- purrr::pmap(df, Asset)
+
         # assets <- lapply(seq_len(nrow(df)), \(i) Asset(!!!df[i, ]))
         # lapply(apply(df, 1, as.list), \(row) Asset(!!!row))
 
-        assets <- lapply(
-            seq_len(nrow(df)),
-            \(i)
-                Asset(
-                    id = df[i, "id"],
-                    company = df[i, "company"],
-                    type = df[i, "type"],
-                    price = df[i, "price"],
-                    quantity = df[i, "quantity"]
-                )
-        )
+        # assets <- lapply(
+        #     seq_len(nrow(df)),
+        #     \(i) {
+        #         Asset(
+        #             id = df[i, "id"],
+        #             company = df[i, "company"],
+        #             type = df[i, "type"],
+        #             price = df[i, "price"],
+        #             quantity = df[i, "quantity"]
+        #         )
+        #     }
+        # )
     })
 })
 

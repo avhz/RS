@@ -63,107 +63,6 @@ Class <- function(.classname, ..., .validate = TRUE) {
 
 
 ## ============================================================================
-## Decorators
-## These are used to decorate methods and attributes in a class definition.
-## ============================================================================
-
-#' @title
-#' Declare a method is a static method.
-#'
-#' @description
-#' Declare a method is a static method.
-#'
-#' @details
-#' The `static` function is used to declare a method as a static method
-#' in a class definition.
-#' Static methods do not refer to `self`,
-#' i.e. the first argument is not the instance of the class.
-#'
-#' @param .attr The function to be declared as a static method.
-#'
-#' @export
-static <- function(.attr) {
-    ## TODO: Improve this....
-    if (!is.function(.attr)) {
-        stop("`static` must be called on a function.")
-    }
-    structure(
-        .attr,
-        class = c("ClassStaticMethod", class(.attr))
-    )
-}
-
-#' @title
-#' Declare a method or attribute as private.
-#'
-#' @description
-#' Declare a method or attribute as private.
-#'
-#' @details
-#' The `private` function is used to declare a method or attribute as private
-#' in a class definition.
-#' Private methods and attributes are not accessible from outside the class.
-#'
-#' @param .attr The function or attribute to be declared as private.
-#'
-#' @export
-private <- function(.attr) {
-    structure(
-        .attr,
-        class = c("ClassPrivateAttribute", class(.attr))
-    )
-}
-
-## ============================================================================
-## Class utilities
-## ============================================================================
-
-#' @export
-print.ClassInstance <- function(x, ...) {
-    x$print()
-    invisible(x)
-}
-
-#' @export
-.DollarNames.ClassInstance <- function(env, pattern = "") {
-    ls(ClassInstance, pattern = pattern)
-}
-
-#' @export
-`@.ClassInstance` <- function(self, name) {
-    .attr <- .Call("wrap__ClassInstance__get", self, name)
-
-    ## FIXME
-    # if (inherits(.attr, "ClassPrivateAttribute"))
-    #     stop("Attribute is private: ", name, call. = FALSE)
-
-    if (is.function(.attr) && !inherits(.attr, "ClassStaticMethod"))
-        return(function(...) .attr(self, ...))
-
-    return(.attr)
-}
-
-#' @export
-`@<-.ClassInstance` <- function(self, name, value) {
-    .Call("wrap__ClassInstance__set", self, name, value)
-    return(self)
-}
-
-#' @export
-print.extendr_error <- function(error, ...) {
-    print(error$value)
-    invisible(error)
-}
-
-#' @export
-`==.ClassInstance` <- function(cls1, cls2) {
-    if (inherits(cls1, "ClassInstance") && inherits(cls2, "ClassInstance")) {
-        return(.Call("wrap__class_equality", cls1, cls2, PACKAGE = "RS"))
-    }
-    stop("Both arguments must be `ClassInstance` objects.")
-}
-
-## ============================================================================
 ## PLAYGROUND
 ## ============================================================================
 
@@ -218,9 +117,9 @@ if (FALSE) {
     Class("Bar", foo = Foo)
 
     foo <- Foo(a = 1L, b = 2.0)
-    foo <- Foo(1L, 2.0)
-    bar <- Bar(foo = 1)
+    bar <- Bar(foo = foo)
 
+    foo
     foo@a
     bar@foo@a
     bar@foo@b

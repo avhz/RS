@@ -9,4 +9,91 @@ vignette: >
 
 # Dataframes
 
+A common pattern is reading tabular or document data from some source 
+and populating class instances from it. 
 
+If you're coming from Rust you may be familiar with something like 
+[serde](https://github.com/serde-rs/serde) for this sort of task. 
+
+With `RS`, it is fairly easy to create multiple class instances from a 
+table or JSON or similar source. 
+
+```{R}
+library(RS)
+
+Class(
+    "Asset",
+
+    # FIELDS
+    id       = t_char,
+    company  = t_char,
+    type     = t_char,
+    price    = t_dbl,
+    quantity = t_int,
+
+    # METHODS
+    value = function(.self) {
+        .self@price * .self@quantity
+    },
+    print = function(.self) {
+        cat("Asset ID:", .self@id, "\n")
+        cat("Name:", .self@company, "\n")
+        cat("Type:", .self@type, "\n")
+        cat("Price:", .self@price, "\n")
+        cat("Quantity:", .self@quantity, "\n")
+        cat("Total Value:", .self@value(), "\n")
+    }
+)
+```
+
+You can simply use the `!!!` operator to pass a list of fields 
+when initialising a class:
+
+```{R}
+fields <- list(
+    id = "AAPL",
+    company = "Apple Inc.",
+    type = "Equity",
+    price = 150.0,
+    quantity = 10L
+)
+
+asset <- Asset(!!!fields)
+
+asset@print()
+```
+
+This makes it simple to create multiple instances from a data-frame,
+for example:
+
+```{R}
+df <- data.frame(
+    id       = c("AAPL", "GOOGL", "AMZN"),
+    company  = c("Apple Inc.", "Alphabet Inc.", "Amazon.com Inc."),
+    type     = c("Equity", "Equity", "Equity"),
+    price    = c(150.0, 2800.0, 3400.0),
+    quantity = c(10L, 5L, 2L)
+)
+
+assets <- lapply(seq_len(nrow(df)), \(i) Asset(!!!df[i, ]))
+```
+
+Or if you like the `tidyverse`, even simpler:
+
+```{R}
+assets <- purrr::pmap(df, Asset)
+```
+
+You now have a list of `Asset` classes ready to use.
+
+```{R}
+#| echo: false
+# print(assets)
+# print(assets[1])
+
+purrr::walk(assets, \(a) {a@print(); cat("\n")} )
+```
+
+You can of course do the same thing from any data source that
+for which you can store in R `list`s, 
+a common one might be JSON for example. 

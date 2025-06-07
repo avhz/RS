@@ -11,7 +11,8 @@ Fast classes for R
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://avhz.github.io/RS}
+  \item \url{https://github.com/avhz/RS/}
+  \item \url{https://avhz.github.io/RS/}
 }
 
 }

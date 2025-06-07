@@ -1,9 +1,11 @@
-url: https://avhz.github.io/RS
+url: https://github.com/avhz/RS/, https://avhz.github.io/RS/
 
 template:
   bootstrap: 5
-  bootswatch: slate
+  # bootswatch: zephyr
   light-switch: true
+  theme: github-light
+  theme-dark: github-dark
 
 navbar:
   structure:
