@@ -45,6 +45,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/avhz/RS/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
@@ -67,7 +68,7 @@
 
 
 
-
+      <small class="dont-index">Source: <a href="https://github.com/avhz/RS/blob/main/vignettes/Dataframes.qmd" class="external-link"><code>vignettes/Dataframes.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -78,6 +79,104 @@
 
     <section class="section level2"><h2 id="dataframes">Dataframes<a class="anchor" aria-label="anchor" href="#dataframes"></a>
 </h2>
+<p>A common pattern is reading tabular or document data from some source and populating class instances from it.</p>
+<p>If you’re coming from Rust you may be familiar with something like <a href="https://github.com/serde-rs/serde" class="external-link">serde</a> for this sort of task.</p>
+<p>With <code>RS</code>, it is fairly easy to create multiple class instances from a table or JSON or similar source.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/avhz/RS/" class="external-link">RS</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/Class.html">Class</a></span><span class="op">(</span></span>
+<span>    <span class="st">"Asset"</span>,</span>
+<span></span>
+<span>    <span class="co"># FIELDS</span></span>
+<span>    id       <span class="op">=</span> <span class="va">t_char</span>,</span>
+<span>    company  <span class="op">=</span> <span class="va">t_char</span>,</span>
+<span>    type     <span class="op">=</span> <span class="va">t_char</span>,</span>
+<span>    price    <span class="op">=</span> <span class="va">t_dbl</span>,</span>
+<span>    quantity <span class="op">=</span> <span class="va">t_int</span>,</span>
+<span></span>
+<span>    <span class="co"># METHODS</span></span>
+<span>    value <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">.self</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="va">.self</span><span class="op">@</span><span class="va">price</span> <span class="op">*</span> <span class="va">.self</span><span class="op">@</span><span class="va">quantity</span></span>
+<span>    <span class="op">}</span>,</span>
+<span>    print <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">.self</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Asset ID:"</span>, <span class="va">.self</span><span class="op">@</span><span class="va">id</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Name:"</span>, <span class="va">.self</span><span class="op">@</span><span class="va">company</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Type:"</span>, <span class="va">.self</span><span class="op">@</span><span class="va">type</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Price:"</span>, <span class="va">.self</span><span class="op">@</span><span class="va">price</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Quantity:"</span>, <span class="va">.self</span><span class="op">@</span><span class="va">quantity</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Total Value:"</span>, <span class="va">.self</span><span class="op">@</span><span class="va">value</span><span class="op">(</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<p>You can simply use the <code>!!!</code> operator to pass a list of fields when initialising a class:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fields</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    id <span class="op">=</span> <span class="st">"AAPL"</span>,</span>
+<span>    company <span class="op">=</span> <span class="st">"Apple Inc."</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"Equity"</span>,</span>
+<span>    price <span class="op">=</span> <span class="fl">150.0</span>,</span>
+<span>    quantity <span class="op">=</span> <span class="fl">10L</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">asset</span> <span class="op">&lt;-</span> <span class="fu">Asset</span><span class="op">(</span><span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">fields</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">asset</span><span class="op">@</span><span class="va">print</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Asset ID: AAPL
+Name: Apple Inc.
+Type: Equity
+Price: 150
+Quantity: 10
+Total Value: 1500 </code></pre>
+</div>
+</div>
+<p>This makes it simple to create multiple instances from a data-frame, for example:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    id       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AAPL"</span>, <span class="st">"GOOGL"</span>, <span class="st">"AMZN"</span><span class="op">)</span>,</span>
+<span>    company  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Apple Inc."</span>, <span class="st">"Alphabet Inc."</span>, <span class="st">"Amazon.com Inc."</span><span class="op">)</span>,</span>
+<span>    type     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Equity"</span>, <span class="st">"Equity"</span>, <span class="st">"Equity"</span><span class="op">)</span>,</span>
+<span>    price    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">150.0</span>, <span class="fl">2800.0</span>, <span class="fl">3400.0</span><span class="op">)</span>,</span>
+<span>    quantity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10L</span>, <span class="fl">5L</span>, <span class="fl">2L</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">assets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span>, \<span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="fu">Asset</span><span class="op">(</span><span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">df</span><span class="op">[</span><span class="va">i</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<p>Or if you like the <code>tidyverse</code>, even simpler:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">assets</span> <span class="op">&lt;-</span> <span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/pmap.html" class="external-link">pmap</a></span><span class="op">(</span><span class="va">df</span>, <span class="va">Asset</span><span class="op">)</span></span></code></pre></div>
+</div>
+<p>You now have a list of <code>Asset</code> classes ready to use.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Asset ID: AAPL
+Name: Apple Inc.
+Type: Equity
+Price: 150
+Quantity: 10
+Total Value: 1500
+
+Asset ID: GOOGL
+Name: Alphabet Inc.
+Type: Equity
+Price: 2800
+Quantity: 5
+Total Value: 14000
+
+Asset ID: AMZN
+Name: Amazon.com Inc.
+Type: Equity
+Price: 3400
+Quantity: 2
+Total Value: 6800 </code></pre>
+</div>
+</div>
+<p>You can of course do the same thing from any data source that for which you can store in R <code>list</code>s, a common one might be JSON for example.</p>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
