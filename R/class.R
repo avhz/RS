@@ -81,6 +81,9 @@ if (FALSE) {
     .benchplot(bm)
     ggplot2::autoplot(bm)
 
+    Class("Foo", a = t_int)
+    profvis::profvis(foos <- lapply(1:1e5, \(.) Foo(a = 1L)))
+
     # png("benchmark.png", width = 800, height = 600)
     # .benchplot(bm)
     # dev.off()
@@ -115,6 +118,7 @@ if (FALSE) {
 
     Class("Foo", a = t_int, b = t_dbl)
     Class("Bar", foo = Foo)
+    Class("Foo", a = t_int, b = t_dbl)
 
     foo <- Foo(a = 1L, b = 2.0)
     bar <- Bar(foo = foo)

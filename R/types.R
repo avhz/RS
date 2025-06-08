@@ -57,7 +57,9 @@ NULL
 ## ============================================================================
 
 .new_type <- function(name, validator) {
-    structure(utils::removeSource(validator), class = c("ClassType", name))
+    validator |>
+        utils::removeSource() |>
+        structure(class = c("ClassType", name))
 }
 
 ## ============================================================================
@@ -76,16 +78,18 @@ t_any <- .new_type("t_any", \(.) TRUE)
 ## This doesn't have an "is.*" method, but it is a common type.
 ## ============================================================================
 
+.is_date <- function(.) inherits(., c("Date", "POSIXt"))
+
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_date <- .new_type("t_date", \(.) inherits(., "Date") && length(.) == 1L)
+t_date <- .new_type("t_date", \(.) .is_date(.) && length(.) == 1L)
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_dates <- .new_type("t_dates", \(.) inherits(., "Date") && length(.) > 1L)
+t_dates <- .new_type("t_dates", \(.) .is_date(.) && length(.) > 1L)
 
 ## ============================================================================
 ## BASIC TYPES
@@ -197,7 +201,7 @@ t_array <- .new_type("t_array", is.array)
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_vector <- .new_type("t_vector", \(.) is.vector(.)) # check() complained about .Internal call
+t_vector <- .new_type("t_vector", \(.) is.vector(.))
 #' @export
 #' @rdname RSTypes
 #' @format NULL

@@ -6,7 +6,7 @@
 \alias{RS-package}
 \title{RS: Fast classes for R}
 \description{
-Fast classes for R
+Fast classes for R, written in Rust.
 }
 \seealso{
 Useful links:

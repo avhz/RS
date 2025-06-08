@@ -3,3 +3,6 @@
 ^docs$
 ^pkgdown$
 .air.toml
+.github/
+.vscode/
+vignettes/.quarto

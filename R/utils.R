@@ -4,14 +4,14 @@
 
 #' @export
 print.ClassInstance <- function(x, ...) {
-    .Call("wrap__ClassInstance__print", x)
+    print(.Call("wrap__ClassInstance__print", x))
     # out <- capture.output(.Call("wrap__ClassInstance__print", x))
     # cat(out, sep = "\n")
-    # invisible(x)
+    invisible(x)
 }
 
 #' @export
-.DollarNames.ClassInstance <- function(env, pattern = "") {
+.DollarNames.ClassInstance <- function(x, pattern = "") {
     ls(ClassInstance, pattern = pattern)
 }
 
@@ -37,9 +37,9 @@ print.ClassInstance <- function(x, ...) {
 }
 
 #' @export
-print.extendr_error <- function(error, ...) {
-    print(error$value)
-    invisible(error)
+print.extendr_error <- function(x, ...) {
+    print(x$value)
+    invisible(x)
 }
 
 #' @export

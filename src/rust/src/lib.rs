@@ -19,21 +19,23 @@ extendr_module! {
     impl ClassInstance;
 
     fn class_equality;
-    // fn class_object_size;
 }
 
 // ============================================================================
 // GLOBALS
 // ============================================================================
 
-// #[global_allocator]
-// static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 type RobjMap = HashMap<String, Robj>;
 
 // ============================================================================
 // STRUCTS
 // ============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+struct RcMap(Rc<RobjMap>);
 
 #[derive(Debug, Clone, PartialEq)]
 struct RcRefMap(Rc<RefCell<RobjMap>>);

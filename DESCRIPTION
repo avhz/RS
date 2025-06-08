@@ -1,7 +1,6 @@
 Package: RS
 Title: Fast classes for R
-Description: Fast classes for R
-Depends: R (>= 4.1.0)
+Description: Fast classes for R, written in Rust. 
 Version: 0.0.0.9000
 URL: https://github.com/avhz/RS/, https://avhz.github.io/RS/
 Maintainer: Amando Z <RustQuantContact@gmail.com>
@@ -15,7 +14,16 @@ Config/testthat/edition: 3
 SystemRequirements: Cargo (Rust's package manager), rustc
 VignetteBuilder: 
     quarto
+Depends: 
+    R (>= 4.1.0)
 Imports: 
+    rlang,
     utils
 Suggests: 
-    testthat (>= 3.0.0), quarto, R6, bench, S7, reticulate, purrr
+    testthat (>= 3.0.0), 
+    quarto, 
+    R6, 
+    bench, 
+    S7, 
+    reticulate, 
+    purrr
