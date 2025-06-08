@@ -2,8 +2,10 @@
 // IMPORTS
 // ============================================================================
 
-use extendr_api::prelude::*;
+use extendr_api::{prelude::*, robj};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
+// use ahash::AHashMap as HashMap;
+// use std::{cell::RefCell, rc::Rc};
 
 // ============================================================================
 // EXTENDR MODULE
@@ -18,15 +20,15 @@ extendr_module! {
     impl ClassDefinition;
     impl ClassInstance;
 
-    fn class_equality;
+    impl ClassType;
 }
 
 // ============================================================================
 // GLOBALS
 // ============================================================================
 
-#[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+// #[global_allocator]
+// static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 type RobjMap = HashMap<String, Robj>;
 
@@ -50,7 +52,7 @@ struct ClassDefinition {
     name: Strings,
 
     /// The methods shared by the class instances.
-    methods: RcRefMap,
+    methods: RcMap,
 
     /// Whether to validate the class instance fields.
     validate: bool,
@@ -59,8 +61,6 @@ struct ClassDefinition {
 #[extendr]
 #[derive(Debug, PartialEq)]
 struct ClassInstance {
-    // /// The name of the class.
-    // name: Strings,
     /// The individual instance data.
     fields: RcRefMap,
 
@@ -79,19 +79,19 @@ fn list_to_robjmap(list: List) -> RobjMap {
         .collect()
 }
 
-// TODO: Fix this !
-#[extendr]
-fn class_equality(class1: ExternalPtr<ClassInstance>, class2: ExternalPtr<ClassInstance>) -> bool {
-    class1 == class2
+impl RcMap {
+    fn from_hashmap(map: RobjMap) -> Self {
+        Self(Rc::new(map))
+    }
+
+    fn from_list(list: List) -> Self {
+        Self::from_hashmap(list_to_robjmap(list))
+    }
 }
 
 impl RcRefMap {
     fn from_hashmap(map: RobjMap) -> Self {
         Self(Rc::new(RefCell::new(map)))
-    }
-
-    fn from_list(list: List) -> Self {
-        Self::from_hashmap(list_to_robjmap(list))
     }
 }
 
@@ -100,7 +100,7 @@ impl ClassDefinition {
     fn new(name: Strings, methods: List, validate: bool) -> Robj {
         let class_definition = Rc::new(Self {
             name,
-            methods: RcRefMap::from_list(methods),
+            methods: RcMap::from_list(methods),
             validate,
         });
 
@@ -112,12 +112,19 @@ impl ClassDefinition {
 impl ClassInstance {
     fn new(fields: List, def: Robj) -> Result<Self> {
         let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
-        let def_ref = RcClassDefinition(Rc::clone(&def_ptr.0));
-        let def_map = def_ref.0.methods.0.borrow();
+        let def_ref = RcClassDefinition(def_ptr.0.clone());
 
         let map = list_to_robjmap(fields);
 
         if def_ref.0.validate {
+            let def_map = def_ref.0.methods.0.clone();
+
+            // Only collect validator functions once
+            // let validators: HashMap<&String, Function> = def_map
+            //     .iter()
+            //     .filter_map(|(k, v)| v.as_function().map(|f| (k, f)))
+            //     .collect();
+
             for (key, value) in &map {
                 // Support composition of classes
                 if value.inherits("ClassInstance") {
@@ -126,9 +133,7 @@ impl ClassInstance {
 
                 // Only check validators if method exists
                 if let Some(validator) = def_map.get(key).and_then(|v| v.as_function()) {
-                    let arg = Pairlist::from_pairs([("", value)]);
-
-                    if !validator.call(arg)?.as_bool().unwrap_or(false) {
+                    if !validator.call(pairlist!(value))?.as_bool().unwrap_or(false) {
                         let msg = format!(
                             "Invalid type <'{}'> passed for field <'{}'>.",
                             call!("typeof", value)?.as_str().unwrap_or("unknown"),
@@ -141,9 +146,6 @@ impl ClassInstance {
             }
         }
 
-        // need to explicitly drop the borrow
-        drop(def_map);
-
         Ok(Self {
             fields: RcRefMap::from_hashmap(map),
             definition: def_ref,
@@ -153,7 +155,7 @@ impl ClassInstance {
     fn print(&self) {
         let name = &self.definition.0.name;
         let fields = &self.fields.0.borrow();
-        let methods = self.definition.0.methods.0.borrow();
+        let methods = self.definition.0.methods.0.clone();
 
         rprintln!("ClassInstance {:?} @ {:p} {{", name, &self);
         rprintln!("    fields:  {:?}", fields);
@@ -172,7 +174,7 @@ impl ClassInstance {
         }
 
         // 2. Check methods in the class definition
-        if let Some(method) = (&self.definition.0).methods.0.borrow().get(key) {
+        if let Some(method) = (&self.definition.0).methods.0.clone().get(key) {
             return Ok(method.clone());
         }
 
@@ -196,7 +198,7 @@ impl ClassInstance {
             }
         }
 
-        if let Some(validator) = methods.borrow().get(&key).and_then(|v| v.as_function()) {
+        if let Some(validator) = methods.clone().get(&key).and_then(|v| v.as_function()) {
             let arg = Pairlist::from_pairs([("", value.clone())]);
 
             if validator.call(arg)?.as_bool().unwrap_or(false) {
@@ -218,5 +220,146 @@ impl ClassInstance {
             &value, key, self.definition.0.name
         );
         Err(Error::Other(msg.into()))
+    }
+}
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+#[allow(non_camel_case_types)]
+#[extendr]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ClassType {
+    t_any,
+    t_date,
+    t_dates,
+    t_int,
+    t_ints,
+    t_dbl,
+    t_dbls,
+    t_num,
+    t_nums,
+    t_char,
+    t_chars,
+    t_bool,
+    t_bools,
+    t_cplx,
+    t_cplxs,
+    t_raw,
+    t_raws,
+    t_factor,
+    t_factors,
+    t_list,
+    t_array,
+    t_vector,
+    t_matrix,
+    t_dataframe,
+    t_hashtab,
+    t_environment,
+    t_pairlist,
+    t_func,
+    t_expr,
+    t_call,
+    t_sym,
+    t_lang,
+    t_obj,
+    t_prim,
+}
+
+fn is_date(robj: &Robj) -> bool {
+    robj.inherits(&"Date") || robj.inherits(&"POSIXt")
+}
+
+#[extendr]
+impl ClassType {
+    fn print(&self) {
+        rprintln!("ClassType: {:?} @ {:p}", &self, &self);
+    }
+
+    fn infer(robj: Robj) -> Self {
+        let is_scalar = robj.len() == 1;
+
+        match robj {
+            // BASIC TYPES (atomic vectors)
+            _ if robj.is_integer() && is_scalar => ClassType::t_int,
+            _ if robj.is_integer() && !is_scalar => ClassType::t_ints,
+            _ if robj.is_real() && is_scalar => ClassType::t_dbl,
+            _ if robj.is_real() && !is_scalar => ClassType::t_dbls,
+            _ if robj.is_number() && is_scalar => ClassType::t_num,
+            _ if robj.is_number() && !is_scalar => ClassType::t_nums,
+            _ if robj.is_char() && is_scalar => ClassType::t_char,
+            _ if robj.is_char() && !is_scalar => ClassType::t_chars,
+            _ if robj.is_logical() && is_scalar => ClassType::t_bool,
+            _ if robj.is_logical() && !is_scalar => ClassType::t_bools,
+            _ if robj.is_complex() && is_scalar => ClassType::t_cplx,
+            _ if robj.is_complex() && !is_scalar => ClassType::t_cplxs,
+            _ if robj.is_raw() && is_scalar => ClassType::t_raw,
+            _ if robj.is_raw() && !is_scalar => ClassType::t_raws,
+            _ if robj.is_factor() && is_scalar => ClassType::t_factor,
+            _ if robj.is_factor() && !is_scalar => ClassType::t_factors,
+            // DATES
+            _ if is_date(&robj) && is_scalar => ClassType::t_date,
+            _ if is_date(&robj) && !is_scalar => ClassType::t_dates,
+            // COMPOUND TYPES
+            _ if robj.inherits(&"list") => ClassType::t_list,
+            _ if robj.is_array() => ClassType::t_array,
+            _ if robj.is_vector_atomic() => ClassType::t_vector,
+            _ if robj.is_matrix() => ClassType::t_matrix,
+            _ if robj.inherits(&"data.frame") => ClassType::t_dataframe,
+            _ if robj.is_pairlist() => ClassType::t_pairlist,
+            _ if robj.inherits(&"hashtab") => ClassType::t_hashtab,
+            _ if robj.is_environment() => ClassType::t_environment,
+            // EXOTIC TYPES
+            _ if robj.is_function() => ClassType::t_func,
+            _ if robj.is_expressions() => ClassType::t_expr,
+            _ if robj.is_symbol() => ClassType::t_sym,
+            _ if robj.is_language() => ClassType::t_lang,
+            _ if robj.is_primitive() => ClassType::t_prim,
+            _ if robj.is_object() => ClassType::t_obj,
+            _ if robj.inherits(&"call") => ClassType::t_call,
+            // FALLBACK
+            _ => ClassType::t_any,
+        }
+    }
+
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "t_any" => Ok(ClassType::t_any),
+            "t_date" => Ok(ClassType::t_date),
+            "t_dates" => Ok(ClassType::t_dates),
+            "t_int" => Ok(ClassType::t_int),
+            "t_ints" => Ok(ClassType::t_ints),
+            "t_dbl" => Ok(ClassType::t_dbl),
+            "t_dbls" => Ok(ClassType::t_dbls),
+            "t_num" => Ok(ClassType::t_num),
+            "t_nums" => Ok(ClassType::t_nums),
+            "t_char" => Ok(ClassType::t_char),
+            "t_chars" => Ok(ClassType::t_chars),
+            "t_bool" => Ok(ClassType::t_bool),
+            "t_bools" => Ok(ClassType::t_bools),
+            "t_cplx" => Ok(ClassType::t_cplx),
+            "t_cplxs" => Ok(ClassType::t_cplxs),
+            "t_raw" => Ok(ClassType::t_raw),
+            "t_raws" => Ok(ClassType::t_raws),
+            "t_factor" => Ok(ClassType::t_factor),
+            "t_factors" => Ok(ClassType::t_factors),
+            "t_list" => Ok(ClassType::t_list),
+            "t_array" => Ok(ClassType::t_array),
+            "t_vector" => Ok(ClassType::t_vector),
+            "t_matrix" => Ok(ClassType::t_matrix),
+            "t_dataframe" => Ok(ClassType::t_dataframe),
+            "t_hashtab" => Ok(ClassType::t_hashtab),
+            "t_environment" => Ok(ClassType::t_environment),
+            "t_pairlist" => Ok(ClassType::t_pairlist),
+            "t_func" => Ok(ClassType::t_func),
+            "t_expr" => Ok(ClassType::t_expr),
+            "t_call" => Ok(ClassType::t_call),
+            "t_sym" => Ok(ClassType::t_sym),
+            "t_lang" => Ok(ClassType::t_lang),
+            "t_obj" => Ok(ClassType::t_obj),
+            "t_prim" => Ok(ClassType::t_prim),
+            _ => Err(Error::Other(format!("Unknown ClassType: {}", s).into())),
+        }
     }
 }

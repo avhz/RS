@@ -10,8 +10,6 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
-class_equality <- function(class1, class2) .Call(wrap__class_equality, class1, class2)
-
 ClassDefinition <- new.env(parent = emptyenv())
 
 ClassDefinition$new <- function(name, methods, validate) .Call(wrap__ClassDefinition__new, name, methods, validate)
@@ -39,6 +37,20 @@ ClassInstance$set <- function(key, value) .Call(wrap__ClassInstance__set, self, 
 
 #' @export
 `[[.ClassInstance` <- `$.ClassInstance`
+
+ClassType <- new.env(parent = emptyenv())
+
+ClassType$print <- function() invisible(.Call(wrap__ClassType__print, self))
+
+ClassType$infer <- function(robj) .Call(wrap__ClassType__infer, robj)
+
+ClassType$from_str <- function(s) .Call(wrap__ClassType__from_str, s)
+
+#' @export
+`$.ClassType` <- function (self, name) { func <- ClassType[[name]]; environment(func) <- environment(); func }
+
+#' @export
+`[[.ClassType` <- `$.ClassType`
 
 
 # nolint end

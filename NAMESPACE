@@ -2,11 +2,12 @@
 
 S3method("$",ClassDefinition)
 S3method("$",ClassInstance)
-S3method("==",ClassInstance)
+S3method("$",ClassType)
 S3method("@",ClassInstance)
 S3method("@<-",ClassInstance)
 S3method("[[",ClassDefinition)
 S3method("[[",ClassInstance)
+S3method("[[",ClassType)
 S3method(.DollarNames,ClassInstance)
 S3method(print,ClassInstance)
 S3method(print,extendr_error)

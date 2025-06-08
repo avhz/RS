@@ -42,14 +42,6 @@ print.extendr_error <- function(x, ...) {
     invisible(x)
 }
 
-#' @export
-`==.ClassInstance` <- function(cls1, cls2) {
-    if (inherits(cls1, "ClassInstance") && inherits(cls2, "ClassInstance")) {
-        return(.Call("wrap__class_equality", cls1, cls2, PACKAGE = "RS"))
-    }
-    stop("Both arguments must be `ClassInstance` objects.")
-}
-
 
 ## ============================================================================
 ## GENERAL UTILS

@@ -1,4 +1,4 @@
-# `RS` - Faster classes for R
+# `RS` - Fast classes for R 🔥
 
 The name `RS` is a combination of:
 

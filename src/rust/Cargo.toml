@@ -9,7 +9,8 @@ name = 'RS'
 
 [dependencies]
 extendr-api = { version = "0.8.0", features = ['non-api'] }
-mimalloc = "0.1.46"
+# mimalloc = "0.1.46"
+# ahash = "0.8.12"
 # bincode = "2.0.1"
 # serde = { version = "1.0.219", features = ['derive'] }
 

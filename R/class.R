@@ -26,17 +26,16 @@ Class <- function(.classname, ..., .validate = TRUE) {
     #     return(.m)
     # }
     # .methods <- lapply(list(...), .method)
-    .attrs <- rlang::list2(...)
-
-    .fields <- lapply(
-        .attrs,
-        function(.a) if (inherits(attr, "ClassType")) return(.a)
-    )
+    # .attrs <- rlang::list2(...)
+    # .fields <- lapply(
+    #     .attrs,
+    #     function(.a) if (inherits(attr, "ClassType")) return(.a)
+    # )
 
     .self <- .Call(
         "wrap__ClassDefinition__new",
         name = .classname,
-        methods = .attrs,
+        methods = rlang::list2(...),
         validate = .validate,
         PACKAGE = "RS"
     )
@@ -52,7 +51,6 @@ Class <- function(.classname, ..., .validate = TRUE) {
 
     ## Handle un-named arguments
     ## Need to handle 'fields' argument in wrap__ClassInstance__new
-
     # formals(new_class) <- do.call(
     #     alist,
     #     setNames(rep(list(quote(expr = )), length(.fields)), names(.fields))
@@ -80,6 +78,62 @@ if (FALSE) {
     (bm <- .benchmark(1e4))
     .benchplot(bm)
     ggplot2::autoplot(bm)
+
+    Class("Foo1", a = t_int)
+    Class("Foo2", FALSE, a = t_int)
+
+    system.time(
+        foos <- vapply(1:1e6, \(i) Foo1(a = "asdf"))
+    )
+    system.time(
+        foos <- replicate(1e6, Foo2(a = 1L))
+    )
+
+    reticulate::py_run_string(
+        "\
+import time 
+from dataclasses import dataclass
+
+@dataclass
+class Foo1:
+    a: int
+
+t = time.perf_counter()
+foos = [Foo1(a=1) for _ in range(1_000_000)]
+print(f'Python time: {time.perf_counter() - t:.2f} seconds')
+
+print(foos[0])
+"
+    )
+
+    bench::mark(
+        Foo1(a = 1L),
+        Foo2(a = 1L),
+
+        iterations = 1e5,
+        check = FALSE
+    )
+
+    print.ClassType <- function(x, ...) {
+        invisible(.Call("wrap__ClassType__print", x))
+    }
+
+    tt_int <- .Call("wrap__ClassType__from_str", "t_int")
+
+    .Call("wrap__ClassType__infer", 1L)$print()
+    .Call("wrap__ClassType__infer", data.frame())$print()
+
+    df <- data.frame(a = 1L, b = 2L)
+    bench::mark(
+        .Call("wrap__ClassType__infer", df),
+        t_dataframe(df),
+        check = FALSE
+    )
+
+    .Call("wrap__ClassType__infer", 1L)$print()
+    .Call("wrap__ClassType__infer", 1L)$print()
+    .Call("wrap__ClassType__validate", tt_int)
+    .Call("wrap__ClassType__validate", 1L)
 
     Class("Foo", a = t_int)
     profvis::profvis(foos <- lapply(1:1e5, \(.) Foo(a = 1L)))
