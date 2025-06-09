@@ -1,18 +1,18 @@
 .benchmark <- function(n) {
     FooRS <- Class(
         "FooRS",
-        a = t_int,
-        b = t_dbl,
-        c = t_char
+        a = tt_int,
+        b = tt_dbl,
+        c = tt_char
     )
 
     FooRSUnval <- Class(
         "FooRSUnval",
         .validate = FALSE,
 
-        a = t_int,
-        b = t_dbl,
-        c = t_char
+        a = tt_int,
+        b = tt_dbl,
+        c = tt_char
     )
 
     FooR6 <- R6::R6Class(
@@ -108,6 +108,7 @@
                 "reticulate" = "#cacaca"
             )
         ) +
+        ggplot2::scale_y_continuous(labels = scales::label_number()) +
         ggplot2::labs(
             x = "Package",
             y = "Iterations per second",

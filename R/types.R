@@ -271,3 +271,21 @@ t_prim <- .new_type("t_prim", is.primitive)
 ## ============================================================================
 ## E.O.F.
 ## ============================================================================
+
+# ClassType$from_str <- function(s) .Call(wrap__ClassType__from_str, s)
+
+# tt_any <- ClassType$from_str("t_any")
+
+tt_any <- .Call("wrap__ClassType__from_str", "t_any", PACKAGE = "RS")
+tt_date <- .Call("wrap__ClassType__from_str", "t_date")
+tt_dates <- .Call("wrap__ClassType__from_str", "t_dates")
+tt_int <- .Call("wrap__ClassType__from_str", "t_int")
+tt_ints <- .Call("wrap__ClassType__from_str", "t_ints")
+tt_dbl <- .Call("wrap__ClassType__from_str", "t_dbl")
+tt_dbls <- .Call("wrap__ClassType__from_str", "t_dbls")
+tt_char <- .Call("wrap__ClassType__from_str", "t_char")
+tt_chars <- .Call("wrap__ClassType__from_str", "t_chars")
+
+print.ClassType <- function(x, ...) {
+    invisible(.Call("wrap__ClassType__print", x))
+}

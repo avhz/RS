@@ -79,7 +79,16 @@ if (FALSE) {
     .benchplot(bm)
     ggplot2::autoplot(bm)
 
-    Class("Foo1", a = t_int)
+    .Call("wrap__validate", "robj", tt_char)
+    .Call("wrap__validate", c("robj"), tt_char)
+
+    # png("benchmark.png", width = 800, height = 700)
+    # .benchplot(bm)
+    # dev.off()
+
+    Class("Foo1", a = tt_int)
+    foo <- Foo1(a = 1L)
+
     Class("Foo2", FALSE, a = t_int)
 
     system.time(
@@ -114,13 +123,9 @@ print(foos[0])
         check = FALSE
     )
 
-    print.ClassType <- function(x, ...) {
-        invisible(.Call("wrap__ClassType__print", x))
-    }
-
     tt_int <- .Call("wrap__ClassType__from_str", "t_int")
 
-    .Call("wrap__ClassType__infer", 1L)$print()
+    .Call("wrap__ClassType__infer", "1L")$print()
     .Call("wrap__ClassType__infer", data.frame())$print()
 
     df <- data.frame(a = 1L, b = 2L)
@@ -137,10 +142,6 @@ print(foos[0])
 
     Class("Foo", a = t_int)
     profvis::profvis(foos <- lapply(1:1e5, \(.) Foo(a = 1L)))
-
-    # png("benchmark.png", width = 800, height = 600)
-    # .benchplot(bm)
-    # dev.off()
 
     Class(
         "Foo",

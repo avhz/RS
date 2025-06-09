@@ -2,10 +2,8 @@
 // IMPORTS
 // ============================================================================
 
-use extendr_api::{prelude::*, robj};
+use extendr_api::prelude::*;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
-// use ahash::AHashMap as HashMap;
-// use std::{cell::RefCell, rc::Rc};
 
 // ============================================================================
 // EXTENDR MODULE
@@ -19,18 +17,25 @@ extendr_module! {
 
     impl ClassDefinition;
     impl ClassInstance;
-
     impl ClassType;
+
+    // fn validate;
+    fn hashy;
+}
+
+#[extendr]
+fn hashy(list: List) -> ExternalPtr<RobjMap> {
+    ExternalPtr::new(list.into_hashmap())
 }
 
 // ============================================================================
 // GLOBALS
 // ============================================================================
 
-// #[global_allocator]
-// static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-type RobjMap = HashMap<String, Robj>;
+type RobjMap = HashMap<&'static str, Robj>;
 
 // ============================================================================
 // STRUCTS
@@ -72,20 +77,13 @@ struct ClassInstance {
 // IMPLEMENTATIONS
 // ============================================================================
 
-fn list_to_robjmap(list: List) -> RobjMap {
-    list.into_hashmap()
-        .into_iter()
-        .map(|(k, v)| (k.into(), v))
-        .collect()
-}
-
 impl RcMap {
     fn from_hashmap(map: RobjMap) -> Self {
         Self(Rc::new(map))
     }
 
     fn from_list(list: List) -> Self {
-        Self::from_hashmap(list_to_robjmap(list))
+        Self::from_hashmap(list.into_hashmap())
     }
 }
 
@@ -114,34 +112,43 @@ impl ClassInstance {
         let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
         let def_ref = RcClassDefinition(def_ptr.0.clone());
 
-        let map = list_to_robjmap(fields);
+        let map = fields.into_hashmap();
 
         if def_ref.0.validate {
             let def_map = def_ref.0.methods.0.clone();
 
-            // Only collect validator functions once
-            // let validators: HashMap<&String, Function> = def_map
-            //     .iter()
-            //     .filter_map(|(k, v)| v.as_function().map(|f| (k, f)))
-            //     .collect();
-
             for (key, value) in &map {
                 // Support composition of classes
-                if value.inherits("ClassInstance") {
+                if (&value).inherits("ClassInstance") {
                     continue;
                 }
 
-                // Only check validators if method exists
-                if let Some(validator) = def_map.get(key).and_then(|v| v.as_function()) {
-                    if !validator.call(pairlist!(value))?.as_bool().unwrap_or(false) {
+                // if let Some(validator) = def_map.get(key).and_then(|v| v.as_function()) {
+                if let Some(expected) = def_map.get(key).and_then(|v| {
+                    <ExternalPtr<ClassType>>::try_from(v.clone())
+                        .ok()
+                        .map(|p| *p)
+                }) {
+                    // println!("key: {:?}, value: {:?}", key, value);
+                    // println!("expected: {:?}", expected);
+
+                    if !validate(&value, &expected)? {
                         let msg = format!(
                             "Invalid type <'{}'> passed for field <'{}'>.",
                             call!("typeof", value)?.as_str().unwrap_or("unknown"),
                             key
                         );
-
                         return Err(Error::Other(msg.into()));
                     }
+                    // if !validator.call(pairlist!(value))?.as_bool().unwrap_or(false) {
+                    //     let msg = format!(
+                    //         "Invalid type <'{}'> passed for field <'{}'>.",
+                    //         call!("typeof", value)?.as_str().unwrap_or("unknown"),
+                    //         key
+                    //     );
+
+                    //     return Err(Error::Other(msg.into()));
+                    // }
                 }
             }
         }
@@ -186,23 +193,25 @@ impl ClassInstance {
         Err(Error::Other(msg.into()))
     }
 
-    fn set(&mut self, key: String, value: Robj) -> Result<Robj> {
+    fn set(&mut self, key: &'static str, value: Robj) -> Result<Robj> {
         let fields = &self.fields;
         let methods = &self.definition.0.methods.0.clone();
 
         // Support composition of classes
         if value.inherits("ClassInstance") {
-            let inserted = fields.0.borrow_mut().insert(key.to_string(), value.clone());
+            let inserted = fields.0.borrow_mut().insert(key, value.clone());
             if let Some(value) = inserted {
                 return Ok(value);
             }
         }
 
-        if let Some(validator) = methods.clone().get(&key).and_then(|v| v.as_function()) {
-            let arg = Pairlist::from_pairs([("", value.clone())]);
-
-            if validator.call(arg)?.as_bool().unwrap_or(false) {
-                let inserted = fields.0.borrow_mut().insert(key.to_string(), value.clone());
+        if let Some(validator) = methods.clone().get(key).and_then(|v| v.as_function()) {
+            if validator
+                .call(pairlist!(value.clone()))?
+                .as_bool()
+                .unwrap_or(false)
+            {
+                let inserted = fields.0.borrow_mut().insert(key, value.clone());
                 if let Some(value) = inserted {
                     return Ok(value);
                 }
@@ -226,6 +235,28 @@ impl ClassInstance {
 // ============================================================================
 // TYPES
 // ============================================================================
+
+// // Only check validators if method exists
+// if let Some(validator) = def_map.get(key).and_then(|v| {
+//     <ExternalPtr<ClassType>>::try_from(v.clone())
+//         .ok()
+//         .map(|p| *p)
+// }) {
+//     // println!("validator: {:?}", validator);
+//     // println!("value: {:?}", value);
+//     let value_type = ClassType::infer(value.clone());
+//     // println!("value_type: {:?}", value_type);
+//     if validator != value_type {
+//         let msg = format!(
+//             "Invalid type <'{}'> passed for field <'{}'>. Expected <'{:?}'>.",
+//             call!("typeof", value)?.as_str().unwrap_or("unknown"),
+//             key,
+//             validator
+//         );
+
+//         return Err(Error::Other(msg.into()));
+//     }
+// }
 
 #[allow(non_camel_case_types)]
 #[extendr]
@@ -271,95 +302,116 @@ fn is_date(robj: &Robj) -> bool {
     robj.inherits(&"Date") || robj.inherits(&"POSIXt")
 }
 
+// #[extendr]
+fn validate(
+    // The Robj is the value passed into the instance field.
+    robj: &Robj,
+    // The expected class type (contained in the class definition).
+    expected_type: &ClassType,
+) -> Result<bool> {
+    let is_scalar = robj.len() == 1;
+    // println!("is_scalar: {}", is_scalar);
+    // println!("is_char: {}", robj.is_char());
+    // println!("rtypeof: {:?}", call!("typeof", &robj));
+    // println!("rtype: {:?}", robj.rtype());
+    // println!("class: {:?}", robj.class());
+
+    match expected_type {
+        // CATCH-ALL
+        ClassType::t_any => Ok(true),
+
+        // DATES
+        ClassType::t_date => Ok(is_date(&robj) && is_scalar),
+        ClassType::t_dates => Ok(is_date(&robj) && !is_scalar),
+
+        // BASIC TYPES (atomic vectors)
+        ClassType::t_int => Ok(robj.is_integer() && is_scalar),
+        ClassType::t_ints => Ok(robj.is_integer() && !is_scalar),
+        ClassType::t_dbl => Ok(robj.is_real() && is_scalar),
+        ClassType::t_dbls => Ok(robj.is_real() && !is_scalar),
+        ClassType::t_num => Ok(robj.is_number() && is_scalar),
+        ClassType::t_nums => Ok(robj.is_number() && !is_scalar),
+        ClassType::t_char => Ok(robj.is_string() && is_scalar),
+        ClassType::t_chars => Ok(robj.is_string() && !is_scalar),
+        ClassType::t_bool => Ok(robj.is_logical() && is_scalar),
+        ClassType::t_bools => Ok(robj.is_logical() && !is_scalar),
+        ClassType::t_cplx => Ok(robj.is_complex() && is_scalar),
+        ClassType::t_cplxs => Ok(robj.is_complex() && !is_scalar),
+        ClassType::t_raw => Ok(robj.inherits("raw") && is_scalar),
+        ClassType::t_raws => Ok(robj.inherits("raw") && !is_scalar),
+        ClassType::t_factor => Ok(robj.is_factor() && is_scalar),
+        ClassType::t_factors => Ok(robj.is_factor() && !is_scalar),
+
+        // COMPOUND TYPES
+        ClassType::t_array => Ok(robj.is_array()),
+        ClassType::t_list => Ok(robj.is_list()),
+        ClassType::t_vector => Ok(robj.is_vector_atomic()),
+        ClassType::t_matrix => Ok(robj.is_matrix()),
+        ClassType::t_dataframe => Ok(robj.is_frame()),
+        ClassType::t_hashtab => Ok(robj.inherits(&"hashtab")),
+        ClassType::t_environment => Ok(robj.is_environment()),
+        ClassType::t_pairlist => Ok(robj.is_pairlist()),
+
+        // EXOTIC TYPES
+        ClassType::t_func => Ok(robj.is_function()),
+        ClassType::t_expr => Ok(robj.is_expressions()),
+        ClassType::t_call => Ok(robj.inherits(&"call")),
+        ClassType::t_sym => Ok(robj.is_symbol()),
+        ClassType::t_lang => Ok(robj.is_language()),
+        ClassType::t_obj => Ok(robj.is_object()),
+        ClassType::t_prim => Ok(robj.is_primitive()),
+    }
+}
+
 #[extendr]
 impl ClassType {
     fn print(&self) {
         rprintln!("ClassType: {:?} @ {:p}", &self, &self);
     }
 
-    fn infer(robj: Robj) -> Self {
-        let is_scalar = robj.len() == 1;
-
-        match robj {
-            // BASIC TYPES (atomic vectors)
-            _ if robj.is_integer() && is_scalar => ClassType::t_int,
-            _ if robj.is_integer() && !is_scalar => ClassType::t_ints,
-            _ if robj.is_real() && is_scalar => ClassType::t_dbl,
-            _ if robj.is_real() && !is_scalar => ClassType::t_dbls,
-            _ if robj.is_number() && is_scalar => ClassType::t_num,
-            _ if robj.is_number() && !is_scalar => ClassType::t_nums,
-            _ if robj.is_char() && is_scalar => ClassType::t_char,
-            _ if robj.is_char() && !is_scalar => ClassType::t_chars,
-            _ if robj.is_logical() && is_scalar => ClassType::t_bool,
-            _ if robj.is_logical() && !is_scalar => ClassType::t_bools,
-            _ if robj.is_complex() && is_scalar => ClassType::t_cplx,
-            _ if robj.is_complex() && !is_scalar => ClassType::t_cplxs,
-            _ if robj.is_raw() && is_scalar => ClassType::t_raw,
-            _ if robj.is_raw() && !is_scalar => ClassType::t_raws,
-            _ if robj.is_factor() && is_scalar => ClassType::t_factor,
-            _ if robj.is_factor() && !is_scalar => ClassType::t_factors,
-            // DATES
-            _ if is_date(&robj) && is_scalar => ClassType::t_date,
-            _ if is_date(&robj) && !is_scalar => ClassType::t_dates,
-            // COMPOUND TYPES
-            _ if robj.inherits(&"list") => ClassType::t_list,
-            _ if robj.is_array() => ClassType::t_array,
-            _ if robj.is_vector_atomic() => ClassType::t_vector,
-            _ if robj.is_matrix() => ClassType::t_matrix,
-            _ if robj.inherits(&"data.frame") => ClassType::t_dataframe,
-            _ if robj.is_pairlist() => ClassType::t_pairlist,
-            _ if robj.inherits(&"hashtab") => ClassType::t_hashtab,
-            _ if robj.is_environment() => ClassType::t_environment,
-            // EXOTIC TYPES
-            _ if robj.is_function() => ClassType::t_func,
-            _ if robj.is_expressions() => ClassType::t_expr,
-            _ if robj.is_symbol() => ClassType::t_sym,
-            _ if robj.is_language() => ClassType::t_lang,
-            _ if robj.is_primitive() => ClassType::t_prim,
-            _ if robj.is_object() => ClassType::t_obj,
-            _ if robj.inherits(&"call") => ClassType::t_call,
-            // FALLBACK
-            _ => ClassType::t_any,
-        }
+    fn from_str(s: &str) -> Self {
+        Self::from(s)
     }
+}
 
-    fn from_str(s: &str) -> Result<Self> {
+impl From<&str> for ClassType {
+    fn from(s: &str) -> Self {
         match s {
-            "t_any" => Ok(ClassType::t_any),
-            "t_date" => Ok(ClassType::t_date),
-            "t_dates" => Ok(ClassType::t_dates),
-            "t_int" => Ok(ClassType::t_int),
-            "t_ints" => Ok(ClassType::t_ints),
-            "t_dbl" => Ok(ClassType::t_dbl),
-            "t_dbls" => Ok(ClassType::t_dbls),
-            "t_num" => Ok(ClassType::t_num),
-            "t_nums" => Ok(ClassType::t_nums),
-            "t_char" => Ok(ClassType::t_char),
-            "t_chars" => Ok(ClassType::t_chars),
-            "t_bool" => Ok(ClassType::t_bool),
-            "t_bools" => Ok(ClassType::t_bools),
-            "t_cplx" => Ok(ClassType::t_cplx),
-            "t_cplxs" => Ok(ClassType::t_cplxs),
-            "t_raw" => Ok(ClassType::t_raw),
-            "t_raws" => Ok(ClassType::t_raws),
-            "t_factor" => Ok(ClassType::t_factor),
-            "t_factors" => Ok(ClassType::t_factors),
-            "t_list" => Ok(ClassType::t_list),
-            "t_array" => Ok(ClassType::t_array),
-            "t_vector" => Ok(ClassType::t_vector),
-            "t_matrix" => Ok(ClassType::t_matrix),
-            "t_dataframe" => Ok(ClassType::t_dataframe),
-            "t_hashtab" => Ok(ClassType::t_hashtab),
-            "t_environment" => Ok(ClassType::t_environment),
-            "t_pairlist" => Ok(ClassType::t_pairlist),
-            "t_func" => Ok(ClassType::t_func),
-            "t_expr" => Ok(ClassType::t_expr),
-            "t_call" => Ok(ClassType::t_call),
-            "t_sym" => Ok(ClassType::t_sym),
-            "t_lang" => Ok(ClassType::t_lang),
-            "t_obj" => Ok(ClassType::t_obj),
-            "t_prim" => Ok(ClassType::t_prim),
-            _ => Err(Error::Other(format!("Unknown ClassType: {}", s).into())),
+            "t_any" => Self::t_any,
+            "t_date" => Self::t_date,
+            "t_dates" => Self::t_dates,
+            "t_int" => Self::t_int,
+            "t_ints" => Self::t_ints,
+            "t_dbl" => Self::t_dbl,
+            "t_dbls" => Self::t_dbls,
+            "t_num" => Self::t_num,
+            "t_nums" => Self::t_nums,
+            "t_char" => Self::t_char,
+            "t_chars" => Self::t_chars,
+            "t_bool" => Self::t_bool,
+            "t_bools" => Self::t_bools,
+            "t_cplx" => Self::t_cplx,
+            "t_cplxs" => Self::t_cplxs,
+            "t_raw" => Self::t_raw,
+            "t_raws" => Self::t_raws,
+            "t_factor" => Self::t_factor,
+            "t_factors" => Self::t_factors,
+            "t_list" => Self::t_list,
+            "t_array" => Self::t_array,
+            "t_vector" => Self::t_vector,
+            "t_matrix" => Self::t_matrix,
+            "t_dataframe" => Self::t_dataframe,
+            "t_hashtab" => Self::t_hashtab,
+            "t_environment" => Self::t_environment,
+            "t_pairlist" => Self::t_pairlist,
+            "t_func" => Self::t_func,
+            "t_expr" => Self::t_expr,
+            "t_call" => Self::t_call,
+            "t_sym" => Self::t_sym,
+            "t_lang" => Self::t_lang,
+            "t_obj" => Self::t_obj,
+            "t_prim" => Self::t_prim,
+            _ => Self::t_any,
         }
     }
 }
