@@ -38,55 +38,55 @@
 \alias{t_prim}
 \title{RS types for validation of RS class attributes.}
 \usage{
-t_any(.)
+t_any()
 
-t_date(.)
+t_date()
 
-t_dates(.)
+t_dates()
 
-t_int(.)
+t_int()
 
-t_ints(.)
+t_ints()
 
-t_dbl(.)
+t_dbl()
 
-t_dbls(.)
+t_dbls()
 
-t_num(.)
+t_num()
 
-t_nums(.)
+t_nums()
 
-t_char(.)
+t_char()
 
-t_chars(.)
+t_chars()
 
-t_bool(.)
+t_bool()
 
-t_bools(.)
+t_bools()
 
-t_cplx(.)
+t_cplx()
 
-t_cplxs(.)
+t_cplxs()
 
-t_raw(.)
+t_raw()
 
-t_raws(.)
+t_raws()
 
-t_factor(.)
+t_factor()
 
-t_factors(.)
+t_factors()
 
 t_list()
 
 t_array()
 
-t_vector(.)
+t_vector()
 
 t_matrix()
 
-t_dataframe(x)
+t_dataframe()
 
-t_hashtab(x)
+t_hashtab()
 
 t_environment()
 
@@ -104,7 +104,7 @@ t_lang()
 
 t_obj()
 
-t_prim(x)
+t_prim()
 }
 \value{
 A new type object that can be used for validation in RS classes.

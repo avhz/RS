@@ -32,10 +32,20 @@ Class <- function(.classname, ..., .validate = TRUE) {
     #     function(.a) if (inherits(attr, "ClassType")) return(.a)
     # )
 
+    .attributes <- lapply(
+        rlang::list2(...),
+        function(attr) {
+            if (inherits(attr, "ClassTypeGenerator")) {
+                return(attr())
+            }
+            return(attr)
+        }
+    )
+
     .self <- .Call(
         "wrap__ClassDefinition__new",
         name = .classname,
-        methods = rlang::list2(...),
+        methods = .attributes, ## rlang::list2(...),
         validate = .validate,
         PACKAGE = "RS"
     )
@@ -78,9 +88,6 @@ if (FALSE) {
     (bm <- .benchmark(1e4))
     .benchplot(bm)
     ggplot2::autoplot(bm)
-
-    .Call("wrap__validate", "robj", tt_char)
-    .Call("wrap__validate", c("robj"), tt_char)
 
     # png("benchmark.png", width = 800, height = 700)
     # .benchplot(bm)

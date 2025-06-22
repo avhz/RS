@@ -10,8 +10,6 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
-hashy <- function(list) .Call(wrap__hashy, list)
-
 ClassDefinition <- new.env(parent = emptyenv())
 
 ClassDefinition$new <- function(name, methods, validate) .Call(wrap__ClassDefinition__new, name, methods, validate)

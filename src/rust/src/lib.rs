@@ -18,14 +18,6 @@ extendr_module! {
     impl ClassDefinition;
     impl ClassInstance;
     impl ClassType;
-
-    // fn validate;
-    fn hashy;
-}
-
-#[extendr]
-fn hashy(list: List) -> ExternalPtr<RobjMap> {
-    ExternalPtr::new(list.into_hashmap())
 }
 
 // ============================================================================
@@ -123,15 +115,11 @@ impl ClassInstance {
                     continue;
                 }
 
-                // if let Some(validator) = def_map.get(key).and_then(|v| v.as_function()) {
                 if let Some(expected) = def_map.get(key).and_then(|v| {
                     <ExternalPtr<ClassType>>::try_from(v.clone())
                         .ok()
                         .map(|p| *p)
                 }) {
-                    // println!("key: {:?}, value: {:?}", key, value);
-                    // println!("expected: {:?}", expected);
-
                     if !validate(&value, &expected)? {
                         let msg = format!(
                             "Invalid type <'{}'> passed for field <'{}'>.",
@@ -140,15 +128,6 @@ impl ClassInstance {
                         );
                         return Err(Error::Other(msg.into()));
                     }
-                    // if !validator.call(pairlist!(value))?.as_bool().unwrap_or(false) {
-                    //     let msg = format!(
-                    //         "Invalid type <'{}'> passed for field <'{}'>.",
-                    //         call!("typeof", value)?.as_str().unwrap_or("unknown"),
-                    //         key
-                    //     );
-
-                    //     return Err(Error::Other(msg.into()));
-                    // }
                 }
             }
         }
@@ -205,17 +184,18 @@ impl ClassInstance {
             }
         }
 
-        if let Some(validator) = methods.clone().get(key).and_then(|v| v.as_function()) {
-            if validator
-                .call(pairlist!(value.clone()))?
-                .as_bool()
-                .unwrap_or(false)
-            {
+        if let Some(expected) = methods.get(key).and_then(|v| {
+            <ExternalPtr<ClassType>>::try_from(v.clone())
+                .ok()
+                .map(|p| *p)
+        }) {
+            if validate(&value, &expected)? {
                 let inserted = fields.0.borrow_mut().insert(key, value.clone());
                 if let Some(value) = inserted {
                     return Ok(value);
                 }
             }
+
             let msg = format!(
                 "Invalid type <'{}'> passed for field <'{}'>.",
                 call!("typeof", value)?.as_str().unwrap_or("unknown"),
@@ -223,6 +203,25 @@ impl ClassInstance {
             );
             return Err(Error::Other(msg.into()));
         }
+
+        // if let Some(validator) = methods.clone().get(key).and_then(|v| v.as_function()) {
+        //     if validator
+        //         .call(pairlist!(value.clone()))?
+        //         .as_bool()
+        //         .unwrap_or(false)
+        //     {
+        //         let inserted = fields.0.borrow_mut().insert(key, value.clone());
+        //         if let Some(value) = inserted {
+        //             return Ok(value);
+        //         }
+        //     }
+        //     let msg = format!(
+        //         "Invalid type <'{}'> passed for field <'{}'>.",
+        //         call!("typeof", value)?.as_str().unwrap_or("unknown"),
+        //         key
+        //     );
+        //     return Err(Error::Other(msg.into()));
+        // }
 
         let msg = format!(
             "Unable to set attribute '{:?}' with key '{}' in class '{:?}'",
@@ -236,35 +235,18 @@ impl ClassInstance {
 // TYPES
 // ============================================================================
 
-// // Only check validators if method exists
-// if let Some(validator) = def_map.get(key).and_then(|v| {
-//     <ExternalPtr<ClassType>>::try_from(v.clone())
-//         .ok()
-//         .map(|p| *p)
-// }) {
-//     // println!("validator: {:?}", validator);
-//     // println!("value: {:?}", value);
-//     let value_type = ClassType::infer(value.clone());
-//     // println!("value_type: {:?}", value_type);
-//     if validator != value_type {
-//         let msg = format!(
-//             "Invalid type <'{}'> passed for field <'{}'>. Expected <'{:?}'>.",
-//             call!("typeof", value)?.as_str().unwrap_or("unknown"),
-//             key,
-//             validator
-//         );
-
-//         return Err(Error::Other(msg.into()));
-//     }
-// }
-
 #[allow(non_camel_case_types)]
 #[extendr]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ClassType {
+    // CATCH-ALL
     t_any,
+
+    // DATES
     t_date,
     t_dates,
+
+    // BASIC TYPES (atomic vectors)
     t_int,
     t_ints,
     t_dbl,
@@ -281,6 +263,8 @@ enum ClassType {
     t_raws,
     t_factor,
     t_factors,
+
+    // COMPOUND TYPES
     t_list,
     t_array,
     t_vector,
@@ -289,6 +273,8 @@ enum ClassType {
     t_hashtab,
     t_environment,
     t_pairlist,
+
+    // EXOTIC TYPES
     t_func,
     t_expr,
     t_call,
@@ -310,11 +296,6 @@ fn validate(
     expected_type: &ClassType,
 ) -> Result<bool> {
     let is_scalar = robj.len() == 1;
-    // println!("is_scalar: {}", is_scalar);
-    // println!("is_char: {}", robj.is_char());
-    // println!("rtypeof: {:?}", call!("typeof", &robj));
-    // println!("rtype: {:?}", robj.rtype());
-    // println!("class: {:?}", robj.class());
 
     match expected_type {
         // CATCH-ALL
