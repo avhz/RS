@@ -12,7 +12,7 @@ NULL
 
 ClassDefinition <- new.env(parent = emptyenv())
 
-ClassDefinition$new <- function(name, methods, validate) .Call(wrap__ClassDefinition__new, name, methods, validate)
+ClassDefinition$new <- function(name, methods) .Call(wrap__ClassDefinition__new, name, methods)
 
 #' @export
 `$.ClassDefinition` <- function (self, name) { func <- ClassDefinition[[name]]; environment(func) <- environment(); func }

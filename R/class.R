@@ -18,35 +18,27 @@
 #' @param ... The fields and methods of the class definition.
 #'
 #' @export
-Class <- function(.classname, ..., .validate = TRUE) {
-    # .method <- function(.m) {
-    #     if (is.function(.m) && !inherits(.m, "ClassType")) {
-    #         return(structure(.m, class = c("ClassMethod", class(.m))))
-    #     }
-    #     return(.m)
-    # }
-    # .methods <- lapply(list(...), .method)
-    # .attrs <- rlang::list2(...)
-    # .fields <- lapply(
-    #     .attrs,
-    #     function(.a) if (inherits(attr, "ClassType")) return(.a)
-    # )
+Class <- function(.classname, ...) {
+    .attributes <- rlang::list2(...)
 
-    .attributes <- lapply(
-        rlang::list2(...),
-        function(attr) {
-            if (inherits(attr, "ClassTypeGenerator")) {
-                return(attr())
-            }
-            return(attr)
+    .resolve_type_generators <- function(attr) {
+        if (inherits(attr, "ClassTypeGenerator")) {
+            return(attr())
         }
-    )
+        return(attr)
+    }
+
+    .attributes <- lapply(.attributes, .resolve_type_generators)
+
+    # .is_method <- function(attr) TRUE ## PLACEHOLDER
+    # .is_field <- function(attr) TRUE ## PLACEHOLDER
+    # .fields <- Filter(.is_field, .attributes)
+    # .methods <- Filter(.is_method, .attributes)
 
     .self <- .Call(
         "wrap__ClassDefinition__new",
         name = .classname,
-        methods = .attributes, ## rlang::list2(...),
-        validate = .validate,
+        methods = .attributes,
         PACKAGE = "RS"
     )
 
@@ -58,13 +50,6 @@ Class <- function(.classname, ..., .validate = TRUE) {
             PACKAGE = "RS"
         )
     }
-
-    ## Handle un-named arguments
-    ## Need to handle 'fields' argument in wrap__ClassInstance__new
-    # formals(new_class) <- do.call(
-    #     alist,
-    #     setNames(rep(list(quote(expr = )), length(.fields)), names(.fields))
-    # )
 
     assign(.classname, new_class, envir = parent.frame())
 }
@@ -93,18 +78,6 @@ if (FALSE) {
     # .benchplot(bm)
     # dev.off()
 
-    Class("Foo1", a = tt_int)
-    foo <- Foo1(a = 1L)
-
-    Class("Foo2", FALSE, a = t_int)
-
-    system.time(
-        foos <- vapply(1:1e6, \(i) Foo1(a = "asdf"))
-    )
-    system.time(
-        foos <- replicate(1e6, Foo2(a = 1L))
-    )
-
     reticulate::py_run_string(
         "\
 import time 
@@ -121,34 +94,6 @@ print(f'Python time: {time.perf_counter() - t:.2f} seconds')
 print(foos[0])
 "
     )
-
-    bench::mark(
-        Foo1(a = 1L),
-        Foo2(a = 1L),
-
-        iterations = 1e5,
-        check = FALSE
-    )
-
-    tt_int <- .Call("wrap__ClassType__from_str", "t_int")
-
-    .Call("wrap__ClassType__infer", "1L")$print()
-    .Call("wrap__ClassType__infer", data.frame())$print()
-
-    df <- data.frame(a = 1L, b = 2L)
-    bench::mark(
-        .Call("wrap__ClassType__infer", df),
-        t_dataframe(df),
-        check = FALSE
-    )
-
-    .Call("wrap__ClassType__infer", 1L)$print()
-    .Call("wrap__ClassType__infer", 1L)$print()
-    .Call("wrap__ClassType__validate", tt_int)
-    .Call("wrap__ClassType__validate", 1L)
-
-    Class("Foo", a = t_int)
-    profvis::profvis(foos <- lapply(1:1e5, \(.) Foo(a = 1L)))
 
     Class(
         "Foo",
@@ -170,72 +115,19 @@ print(foos[0])
     )
 
     bench::mark(Foo(a = 1L), iterations = 1e5)
-
     foo <- Foo(a = 1L, b = 2.0)
     foo@qux()
     foo@a
     foo@b
     foo@bar(2L)
     foo@baz(2L, 3L)
-
     Class("Foo", a = t_int, b = t_dbl)
     Class("Bar", foo = Foo)
     Class("Foo", a = t_int, b = t_dbl)
-
     foo <- Foo(a = 1L, b = 2.0)
     bar <- Bar(foo = foo)
-
     foo
     foo@a
     bar@foo@a
     bar@foo@b
-
-    ## Define class
-    Class(
-        "FooParallel",
-        a = t_int,
-
-        ## Methods
-        bar = function(self, x) self@a + x,
-    )
-
-    foo <- FooParallel(a = 1L)
-    foo@a
-    foo@bar(2L)
-
-    ## Create classes in parallel via Mirai
-    mirai::daemons(0L)
-    cfg <- mirai::serial_config(
-        c("ClassDefinition", "ClassInstance"),
-        list(function(x) serialize(x, NULL), function(x) serialize(x, NULL)),
-        list(base::unserialize, base::unserialize)
-    )
-
-    mirai::daemons(4L, dispatcher = FALSE, serial = cfg)
-    e <- mirai::everywhere({
-        devtools::load_all()
-        Class(
-            "FooParallel",
-            a = t_int,
-
-            ## Methods
-            bar = function(self, x) self@a + x,
-        )
-    })
-
-    m <- mirai::mirai(
-        {
-            FooParallel(a = 1L)
-        }
-        # FooParallel = FooParallel
-    )[]
-
-    m
-    (foos <- mirai::mirai_map(
-        1:3,
-        \(i) FooParallel(a = as.integer(i)),
-        # FooParallel = FooParallel
-    )[])
-
-    foos[1]$data
 }

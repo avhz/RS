@@ -50,9 +50,6 @@ struct ClassDefinition {
 
     /// The methods shared by the class instances.
     methods: RcMap,
-
-    /// Whether to validate the class instance fields.
-    validate: bool,
 }
 
 #[extendr]
@@ -87,11 +84,10 @@ impl RcRefMap {
 
 #[extendr]
 impl ClassDefinition {
-    fn new(name: Strings, methods: List, validate: bool) -> Robj {
+    fn new(name: Strings, methods: List) -> Robj {
         let class_definition = Rc::new(Self {
             name,
             methods: RcMap::from_list(methods),
-            validate,
         });
 
         ExternalPtr::new(RcClassDefinition(class_definition)).into()
@@ -106,28 +102,26 @@ impl ClassInstance {
 
         let map = fields.into_hashmap();
 
-        if def_ref.0.validate {
-            let def_map = def_ref.0.methods.0.clone();
+        let def_map = def_ref.0.methods.0.clone();
 
-            for (key, value) in &map {
-                // Support composition of classes
-                if (&value).inherits("ClassInstance") {
-                    continue;
-                }
+        for (key, value) in &map {
+            // Support composition of classes
+            if (&value).inherits("ClassInstance") {
+                continue;
+            }
 
-                if let Some(expected) = def_map.get(key).and_then(|v| {
-                    <ExternalPtr<ClassType>>::try_from(v.clone())
-                        .ok()
-                        .map(|p| *p)
-                }) {
-                    if !validate(&value, &expected)? {
-                        let msg = format!(
-                            "Invalid type <'{}'> passed for field <'{}'>.",
-                            call!("typeof", value)?.as_str().unwrap_or("unknown"),
-                            key
-                        );
-                        return Err(Error::Other(msg.into()));
-                    }
+            if let Some(expected) = def_map.get(key).and_then(|v| {
+                <ExternalPtr<ClassType>>::try_from(v.clone())
+                    .ok()
+                    .map(|p| *p)
+            }) {
+                if !validate(&value, &expected)? {
+                    let msg = format!(
+                        "Invalid type <'{}'> passed for field <'{}'>.",
+                        call!("typeof", value)?.as_str().unwrap_or("unknown"),
+                        key
+                    );
+                    return Err(Error::Other(msg.into()));
                 }
             }
         }
@@ -203,25 +197,6 @@ impl ClassInstance {
             );
             return Err(Error::Other(msg.into()));
         }
-
-        // if let Some(validator) = methods.clone().get(key).and_then(|v| v.as_function()) {
-        //     if validator
-        //         .call(pairlist!(value.clone()))?
-        //         .as_bool()
-        //         .unwrap_or(false)
-        //     {
-        //         let inserted = fields.0.borrow_mut().insert(key, value.clone());
-        //         if let Some(value) = inserted {
-        //             return Ok(value);
-        //         }
-        //     }
-        //     let msg = format!(
-        //         "Invalid type <'{}'> passed for field <'{}'>.",
-        //         call!("typeof", value)?.as_str().unwrap_or("unknown"),
-        //         key
-        //     );
-        //     return Err(Error::Other(msg.into()));
-        // }
 
         let msg = format!(
             "Unable to set attribute '{:?}' with key '{}' in class '{:?}'",

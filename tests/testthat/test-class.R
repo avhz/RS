@@ -332,17 +332,10 @@ test_that("class.R - Separation of maps", {
 
 
 test_that("class.R - Field Validation", {
-    expect_no_error({
-        Class("Validated", TRUE, a = t_int, b = t_dbl, c = t_char)
-        Class("Unvalidated", FALSE, a = t_int, b = t_dbl, c = t_char)
-    })
-    ## Should throw an error
-    testthat::expect_error(Validated(a = 1L, b = 2.0, c = NULL))
-    ## Should not throw an error
-    expect_no_error({
-        foo <- Validated(a = 1L, b = 2.0, c = "xxx")
-        foo <- Unvalidated(a = 1L, b = 2.0, c = "xxx")
-    })
+    expect_no_error(Class("Foo", a = t_int, b = t_dbl, c = t_char))
+
+    expect_error(Foo(a = 1L, b = 2.0, c = NULL))
+    expect_no_error(Foo(a = 1L, b = 2.0, c = "xxx"))
 })
 
 test_that("class.R - Timings", {
