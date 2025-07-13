@@ -27,12 +27,12 @@ Class(
     "Dog",
  
     # Fields
-    name  = t_char,
-    age   = t_int,
-    breed = t_char,
+    name  := t_char,
+    age   := t_int,
+    breed := t_char,
  
     # Methods
-    bark = function(.self) cat(.self@name, "goes woof!\n")
+    bark := function(.self) cat(.self@name, "goes woof!\n")
 )
  
 fluffy <- Dog(name = "Fluffy", age = 3L, breed = "Golden Retriever")
