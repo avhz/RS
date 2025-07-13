@@ -3,6 +3,7 @@
 // ============================================================================
 
 use extendr_api::prelude::*;
+use serde_json;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 // ============================================================================
@@ -18,6 +19,11 @@ extendr_module! {
     impl ClassDefinition;
     impl ClassInstance;
     impl ClassType;
+
+    fn private_;
+    fn is_private;
+    fn static_;
+    fn is_static;
 }
 
 // ============================================================================
@@ -50,6 +56,9 @@ struct ClassDefinition {
 
     /// The methods shared by the class instances.
     methods: RcMap,
+
+    /// Whether to validate the class instance fields.
+    validate: bool,
 }
 
 #[extendr]
@@ -84,10 +93,11 @@ impl RcRefMap {
 
 #[extendr]
 impl ClassDefinition {
-    fn new(name: Strings, methods: List) -> Robj {
+    fn new(name: Strings, methods: List, validate: bool) -> Robj {
         let class_definition = Rc::new(Self {
             name,
             methods: RcMap::from_list(methods),
+            validate,
         });
 
         ExternalPtr::new(RcClassDefinition(class_definition)).into()
@@ -96,32 +106,35 @@ impl ClassDefinition {
 
 #[extendr]
 impl ClassInstance {
+    #[inline(always)]
     fn new(fields: List, def: Robj) -> Result<Self> {
         let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
         let def_ref = RcClassDefinition(def_ptr.0.clone());
 
         let map = fields.into_hashmap();
 
-        let def_map = def_ref.0.methods.0.clone();
+        let def_map = &def_ref.0.methods.0;
 
-        for (key, value) in &map {
-            // Support composition of classes
-            if (&value).inherits("ClassInstance") {
-                continue;
-            }
+        if def_ref.0.validate {
+            for (key, value) in &map {
+                // Support composition of classes
+                if (&value).inherits("ClassInstance") {
+                    continue;
+                }
 
-            if let Some(expected) = def_map.get(key).and_then(|v| {
-                <ExternalPtr<ClassType>>::try_from(v.clone())
-                    .ok()
-                    .map(|p| *p)
-            }) {
-                if !validate(&value, &expected)? {
-                    let msg = format!(
-                        "Invalid type <'{}'> passed for field <'{}'>.",
-                        call!("typeof", value)?.as_str().unwrap_or("unknown"),
-                        key
-                    );
-                    return Err(Error::Other(msg.into()));
+                if let Some(expected) = def_map.get(key).and_then(|v| {
+                    <ExternalPtr<ClassType>>::try_from(v.clone())
+                        .ok()
+                        .map(|p| *p)
+                }) {
+                    if !validate(&value, &expected)? {
+                        let msg = format!(
+                            "Invalid type <'{}'> passed for field <'{}'>.",
+                            call!("typeof", value)?.as_str().unwrap_or("unknown"),
+                            key
+                        );
+                        return Err(Error::Other(msg.into()));
+                    }
                 }
             }
         }
@@ -135,11 +148,30 @@ impl ClassInstance {
     fn print(&self) {
         let name = &self.definition.0.name;
         let fields = &self.fields.0.borrow();
-        let methods = self.definition.0.methods.0.clone();
+        let methods = &self.definition.0.methods.0;
 
         rprintln!("ClassInstance {:?} @ {:p} {{", name, &self);
-        rprintln!("    fields:  {:?}", fields);
-        rprintln!("    methods: {:?}", methods.keys());
+        for (key, value) in fields.iter() {
+            rprintln!("    {}: {:?}", key, value);
+        }
+        for (key, value) in methods.iter() {
+            if value.inherits("ClassType") {
+                continue;
+            }
+
+            let value_str = format!("{:?}", value);
+            let trimmed_value = if value_str.starts_with("function") {
+                if let Some(end) = value_str.find(')') {
+                    format!("{}", &value_str[..=end]) //, " [method]")
+                } else {
+                    format!("{}", value_str)
+                }
+            } else {
+                format!("{:?}", value)
+            };
+
+            rprintln!("    {}: {}", key, trimmed_value);
+        }
         rprintln!("}}");
     }
 
@@ -148,6 +180,14 @@ impl ClassInstance {
     }
 
     fn get(&self, key: &str) -> Result<Robj> {
+        // self.fields
+        //     .0
+        //     .borrow()
+        //     .get(key)
+        //     .cloned()
+        //     .or_else(|| self.definition.0.methods.0.get(key).cloned())
+        //     .ok_or_else(|| Error::Other(format!("Key '{}' not found", key).into()));
+
         // 1. Check instance fields
         if let Some(value) = self.fields.0.borrow().get(key) {
             return Ok(value.clone());
@@ -168,12 +208,11 @@ impl ClassInstance {
 
     fn set(&mut self, key: &'static str, value: Robj) -> Result<Robj> {
         let fields = &self.fields;
-        let methods = &self.definition.0.methods.0.clone();
+        let methods = &self.definition.0.methods.0;
 
         // Support composition of classes
-        if value.inherits("ClassInstance") {
-            let inserted = fields.0.borrow_mut().insert(key, value.clone());
-            if let Some(value) = inserted {
+        if (&value).inherits("ClassInstance") {
+            if let Some(value) = fields.0.borrow_mut().insert(key, value.clone()) {
                 return Ok(value);
             }
         }
@@ -203,6 +242,11 @@ impl ClassInstance {
             &value, key, self.definition.0.name
         );
         Err(Error::Other(msg.into()))
+    }
+
+    fn to_json_string(&self) -> Result<String> {
+        let fields = self.fields.0.borrow().clone();
+        serde_json::to_string_pretty(&fields).map_err(|e| Error::Other(e.to_string().into()))
     }
 }
 
@@ -370,4 +414,44 @@ impl From<&str> for ClassType {
             _ => Self::t_any,
         }
     }
+}
+
+// ============================================================================
+// DECORATORS
+// ============================================================================
+
+/// Decorator to mark a class attribute as private.
+///
+/// A private attribute is not accessible from outside the class.
+/// It is used to encapsulate data that should not be modified directly.
+#[extendr]
+fn private_(attribute: Robj) -> Result<Robj> {
+    let mut attr = attribute.clone();
+    attr.set_class(["ClassPrivateAttribute"])?;
+    Ok(attr)
+}
+
+/// Check if an attribute is private.
+#[extendr]
+fn is_private(attribute: Robj) -> bool {
+    attribute.inherits("ClassPrivateAttribute")
+}
+
+/// Decorator to mark a method as static.
+///
+/// A static method is a method that belongs to the class itself,
+/// rather than to instances of the class.
+/// It can be called without creating an instance of the class,
+/// and it does not have access to instance-specific data (self).
+#[extendr]
+fn static_(attribute: Robj) -> Result<Robj> {
+    let mut attr = attribute.clone();
+    attr.set_class(["ClassStaticAttribute"])?;
+    Ok(attr)
+}
+
+/// Check if a method is static.
+#[extendr]
+fn is_static(attribute: Robj) -> bool {
+    attribute.inherits("ClassStaticAttribute")
 }

@@ -1,5 +1,5 @@
 ## ============================================================================
-## Class utilities
+## CLASS UTILITIES
 ## ============================================================================
 
 #' @export
@@ -17,7 +17,7 @@ print.ClassInstance <- function(x, ...) {
 
 #' @export
 `@.ClassInstance` <- function(self, name) {
-    .attr <- .Call("wrap__ClassInstance__get", self, name)
+    .attr <- .Call(wrap__ClassInstance__get, self, name)
 
     ## FIXME
     # if (inherits(.attr, "ClassPrivateAttribute"))

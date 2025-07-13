@@ -1,9 +1,18 @@
 .benchmark <- function(n) {
     FooRS <- Class(
         "FooRS",
-        a = t_int,
-        b = t_dbl,
-        c = t_char
+        a := t_int,
+        b := t_dbl,
+        c := t_char
+    )
+
+    FooRSUnval <- Class(
+        "FooRSUnval",
+        .validate = FALSE,
+
+        a := t_int,
+        b := t_dbl,
+        c := t_char
     )
 
     FooR6 <- R6::R6Class(
@@ -62,6 +71,7 @@
     )
 
     .out <- bench::mark(
+        "RS (no validation)" = FooRSUnval(a = 1L, b = 2.0, c = "xxx"),
         "RS" = FooRS(a = 1L, b = 2.0, c = "xxx"),
         "R6" = FooR6$new(a = 1L, b = 2.0, c = "xxx"),
         "S4" = FooS4(a = 1L, b = 2.0, c = "xxx"),

@@ -1,15 +1,56 @@
+test_that("class.R - Argument injection (unpacking)", {
+    Class(
+        "Foo",
+
+        ## Fields
+        a := t_int,
+        b := t_dbl,
+        c := t_char,
+
+        ## Methods
+        bar := function(.self, x) {
+            cat("Arg 'x' is", x, "\n")
+            cat("Field 'a' is", .self@a, "\n")
+            cat("Field 'b' is", .self@b, "\n")
+            cat("Field 'c' is", .self@c, "\n")
+            cat("Updating field 'c' to 'new value'\n")
+            .self@c <- "new value"
+        }
+    ) |>
+        expect_no_error(message = "Class definition should not throw an error")
+
+    # testthat::expect_no_error(
+    #     eval(parse(text = "Foo(!!!list(a = 1L, b = 2.0, c = 'xxx'))"))
+    # )
+
+    expect_no_error(foo <- Foo(!!!list(a = 1L, b = 2.0, c = "xxx")))
+    testthat::expect_no_failure({
+        print(foo)
+        expect_equal(foo@a, 1L)
+        expect_equal(foo@b, 2.0)
+        expect_equal(foo@c, "xxx")
+    })
+    expect_no_error({
+        foo@a |> capture.output()
+        foo@b |> capture.output()
+        foo@bar(10) |> capture.output()
+        foo@c |> capture.output()
+        foo@c <- "new value"
+        foo@c |> capture.output()
+    })
+})
+
 test_that("class.R - Basic Foo class", {
     Class(
         "Foo",
 
         ## Fields
-        a = t_int,
-        b = t_dbl,
-        c = t_char,
+        a := t_int,
+        b := t_dbl,
+        c := t_char,
 
         ## Methods
-        bar = function(.self, x) {
-            # browser()
+        bar := function(.self, x) {
             cat("Arg 'x' is", x, "\n")
             cat("Field 'a' is", .self@a, "\n")
             cat("Field 'b' is", .self@b, "\n")
@@ -19,7 +60,7 @@ test_that("class.R - Basic Foo class", {
         }
 
         ## Static methods
-        # baz = function(a, b, c = data.frame(x = 1:5)) {
+        # baz := function(a, b, c = data.frame(x = 1:5)) {
         #     cat("Arg 'a' is", a, "\n")
         #     cat("Arg 'b' is", b, "\n")
         #     print(c)
@@ -27,24 +68,14 @@ test_that("class.R - Basic Foo class", {
     ) |>
         expect_no_error(message = "Class definition should not throw an error")
 
-    expect_no_error({
-        foo <- Foo(a = 1L, b = 2.0, c = "xxx")
-        foo <- Foo(!!!list(a = 1L, b = 2.0, c = "xxx"))
-        foo
-        foo@a
-        foo@b
-        foo@c
-        # foo@baz(1, 2)
-        foo@bar(10)
-    }) |>
-        capture.output()
-
-    testthat::expect_equal(foo@a, 1L)
-    testthat::expect_equal(foo@b, 2.0)
-
-    testthat::expect_equal(foo@bar(10), foo@c) |> capture.output()
-    testthat::expect_equal(foo@c, "new value")
+    expect_no_error(foo <- Foo(a = 1L, b = 2.0, c = "xxx"))
+    # expect_no_error(foo <- Foo(!!!list(a = 1L, b = 2.0, c = "xxx")))
+    expect_equal(foo@a, 1L)
+    expect_equal(foo@b, 2.0)
+    expect_equal(foo@bar(10), foo@c) |> capture.output()
+    expect_equal(foo@c, "new value")
 })
+
 
 test_that("class.R - Empty class", {
     expect_no_error({
@@ -54,7 +85,7 @@ test_that("class.R - Empty class", {
 })
 
 test_that("class.R - Validation", {
-    expect_no_error(Class("Whatever", a = t_int, b = t_dbl, c = t_char))
+    expect_no_error(Class("Whatever", a := t_int, b := t_dbl, c := t_char))
     expect_no_error(Whatever(a = 1L, b = 2.0, c = "test"))
 
     ## Need to figure out error handling in extendr..
@@ -70,17 +101,17 @@ test_that("class.R - Basic Asset class", {
             "Asset",
 
             # FIELDS
-            id = t_char,
-            company = t_char,
-            type = t_char,
-            price = t_dbl,
-            quantity = t_int,
+            id := t_char,
+            company := t_char,
+            type := t_char,
+            price := t_dbl,
+            quantity := t_int,
 
             # METHODS
-            value = function(.self) {
+            value := function(.self) {
                 .self@price * .self@quantity
             },
-            print = function(.self) {
+            print := function(.self) {
                 cat("Asset ID:", .self@id, "\n")
                 cat("Name:", .self@company, "\n")
                 cat("Type:", .self@type, "\n")
@@ -136,51 +167,51 @@ test_that("class.R - Black76 pricer class", {
             "Black76",
 
             ## Fields
-            F = t_dbl,
-            K = t_dbl,
-            T = t_dbl,
-            r = t_dbl,
-            v = t_dbl,
+            F := t_dbl,
+            K := t_dbl,
+            T := t_dbl,
+            r := t_dbl,
+            v := t_dbl,
 
             ## Methods
-            call = function(.self) {
+            call := function(.self) {
                 .self@.df() *
                     (pnorm(.self@.d1()) *
                         .self@F -
                         pnorm(.self@.d2()) * .self@K)
             },
-            put = function(.self) {
+            put := function(.self) {
                 .self@.df() *
                     (pnorm(-.self@.d2()) *
                         .self@K -
                         pnorm(-.self@.d1()) * .self@F)
             },
-            .df = function(.self) {
+            .df := function(.self) {
                 exp(-.self@r * .self@T)
             },
-            .d1 = function(.self) {
+            .d1 := function(.self) {
                 (log(.self@F / .self@K) + 0.5 * (.self@v)^2 * .self@T) /
                     (.self@v * sqrt(.self@T))
             },
-            .d2 = function(.self) {
+            .d2 := function(.self) {
                 (log(.self@F / .self@K) - 0.5 * (.self@v)^2 * .self@T) /
                     (.self@v * sqrt(.self@T))
             }
         )
     })
 
-    testthat::expect_no_error({
+    expect_no_error({
         black76 <- Black76(F = 55, K = 100, T = 1, r = 0.05, v = 0.2)
     })
 
-    testthat::expect_equal(black76@call(), 0.005577321615771232282688)
-    testthat::expect_equal(black76@put(), 42.81090142414790733483)
+    expect_equal(black76@call(), 0.005577321615771232282688)
+    expect_equal(black76@put(), 42.81090142414790733483)
 })
 
 test_that("class.R - Basic Class composition", {
-    testthat::expect_no_error({
-        Class("Foo", a = t_int, b = t_dbl, c = t_char)
-        Class("Bar", foo = Foo, baz = t_dbl)
+    expect_no_error({
+        Class("Foo", a := t_int, b := t_dbl, c := t_char)
+        Class("Bar", foo := Foo, baz := t_dbl)
 
         foo <- Foo(a = 1L, b = 2.0, c = "xxx")
         bar <- Bar(foo = foo, baz = 3.0)
@@ -189,12 +220,12 @@ test_that("class.R - Basic Class composition", {
     expect_no_error({
         Class(
             "Foo",
-            a = t_int,
-            qux = \(self) self@a
+            a := t_int,
+            qux := \(self) self@a
         )
         Class(
             "Bar",
-            foo = Foo
+            foo := Foo
         )
         foo <- Foo(a = 1L)
         bar <- Bar(foo = foo)
@@ -205,10 +236,14 @@ test_that("class.R - Basic Class composition", {
     expect_equal(bar@foo@a, 1L)
 
     expect_no_error({
-        Class("Foo", a = t_int)
-        Class("Bar", b = t_dbl, baz = function(self, foo) {
-            self@b + foo@a
-        })
+        Class("Foo", a := t_int)
+        Class(
+            "Bar",
+            b := t_dbl,
+            baz := function(self, foo) {
+                self@b + foo@a
+            }
+        )
 
         foo <- Foo(a = 1L)
         bar <- Bar(b = 2.0)
@@ -219,11 +254,10 @@ test_that("class.R - Basic Class composition", {
     expect_no_error({
         Class(
             "VanillaEuropeanOption",
-            strike = t_dbl,
-            maturity = t_date,
+            strike := t_dbl,
+            maturity := t_date,
 
-            year_fraction = function(self) {
-                # as.numeric(self@maturity - Sys.Date()) / 365
+            year_fraction := function(self) {
                 as.numeric(self@maturity - as.Date("2025-06-03")) / 365
             }
         )
@@ -231,38 +265,37 @@ test_that("class.R - Basic Class composition", {
         Class(
             "Black76",
 
-            f = t_dbl,
-            r = t_dbl,
-            v = t_dbl,
-            option = VanillaEuropeanOption,
+            f := t_dbl,
+            r := t_dbl,
+            v := t_dbl,
+            option := VanillaEuropeanOption,
 
-            t = function(self) {
+            k := function(self) {
+                self@option@strike
+            },
+            t := function(self) {
                 self@option@year_fraction()
             },
-            .df = function(self) {
+            .df := function(self) {
                 exp(-self@r * self@t())
             },
-            .d1 = function(self) {
-                (log(self@f / self@option@strike) +
-                    0.5 * (self@v)^2 * self@t()) /
+            .d1 := function(self) {
+                (log(self@f / self@k()) + 0.5 * (self@v)^2 * self@t()) /
                     (self@v * sqrt(self@t()))
             },
-            .d2 = function(self) {
-                (log(self@f / self@option@strike) -
-                    0.5 * (self@v)^2 * self@t()) /
+            .d2 := function(self) {
+                (log(self@f / self@k()) - 0.5 * (self@v)^2 * self@t()) /
                     (self@v * sqrt(self@t()))
             },
-            call_price = function(self) {
+            call_price := function(self) {
                 self@.df() *
-                    (self@f *
-                        pnorm(self@.d1()) -
-                        self@option@strike * pnorm(self@.d2()))
+                    (self@f * pnorm(self@.d1()) - self@k() * pnorm(self@.d2()))
             },
-            put_price = function(self) {
+            put_price := function(self) {
                 self@.df() *
                     (-self@f *
                         pnorm(-self@.d1()) +
-                        self@option@strike * pnorm(-self@.d2()))
+                        self@k() * pnorm(-self@.d2()))
             }
         )
 
@@ -284,20 +317,20 @@ test_that("class.R - Basic Class composition", {
 })
 
 test_that("class.R - .self", {
-    testthat::expect_no_error({
+    expect_no_error({
         Class(
             "Foo",
 
-            a = t_int,
-            b = t_dbl,
-            c = t_char,
+            a := t_int,
+            b := t_dbl,
+            c := t_char,
 
-            bar = function(.self, a, b) {
+            bar := function(.self, a, b) {
                 .self@a <- a
                 .self@b <- b
             },
 
-            baz = function(.self, a, b) {
+            baz := function(.self, a, b) {
                 .self@bar(a, b)
 
                 return(.self@a + .self@b)
@@ -305,23 +338,21 @@ test_that("class.R - .self", {
         )
     })
 
-    testthat::expect_no_error({
+    expect_no_error({
         foo <- Foo(a = 1L, b = 2.0, c = "xxx")
-
         foo@bar(10L, 20.0)
-        expect_equal(foo@a, 10L)
-        expect_equal(foo@b, 20.0)
-
-        expect_equal(foo@baz(30L, 40.0), 70.0)
-
-        expect_equal(foo@a, 30L)
-        expect_equal(foo@b, 40.0)
     })
+
+    expect_equal(foo@a, 10L)
+    expect_equal(foo@b, 20.0)
+    expect_equal(foo@baz(30L, 40.0), 70.0)
+    expect_equal(foo@a, 30L)
+    expect_equal(foo@b, 40.0)
 })
 
 
 test_that("class.R - Separation of maps", {
-    Class("Foo", a = t_int)
+    Class("Foo", a := t_int)
 
     foo1 <- Foo(a = 1L)
     foo2 <- Foo(a = 2L)
@@ -332,7 +363,7 @@ test_that("class.R - Separation of maps", {
 
 
 test_that("class.R - Field Validation", {
-    expect_no_error(Class("Foo", a = t_int, b = t_dbl, c = t_char))
+    expect_no_error(Class("Foo", a := t_int, b := t_dbl, c := t_char))
 
     expect_error(Foo(a = 1L, b = 2.0, c = NULL))
     expect_no_error(Foo(a = 1L, b = 2.0, c = "xxx"))

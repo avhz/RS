@@ -4,7 +4,7 @@
 \alias{Class}
 \title{Define a new RS class.}
 \usage{
-Class(.classname, ...)
+Class(.classname, ..., .validate = TRUE)
 }
 \arguments{
 \item{.classname}{The name of the class.}

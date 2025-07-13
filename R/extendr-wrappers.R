@@ -10,9 +10,29 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
+#' Decorator to mark a class attribute as private.
+#'
+#' A private attribute is not accessible from outside the class.
+#' It is used to encapsulate data that should not be modified directly.
+private_ <- function(attribute) .Call(wrap__private_, attribute)
+
+#' Check if an attribute is private.
+is_private <- function(attribute) .Call(wrap__is_private, attribute)
+
+#' Decorator to mark a method as static.
+#'
+#' A static method is a method that belongs to the class itself,
+#' rather than to instances of the class.
+#' It can be called without creating an instance of the class,
+#' and it does not have access to instance-specific data (self).
+static_ <- function(attribute) .Call(wrap__static_, attribute)
+
+#' Check if a method is static.
+is_static <- function(attribute) .Call(wrap__is_static, attribute)
+
 ClassDefinition <- new.env(parent = emptyenv())
 
-ClassDefinition$new <- function(name, methods) .Call(wrap__ClassDefinition__new, name, methods)
+ClassDefinition$new <- function(name, methods, validate) .Call(wrap__ClassDefinition__new, name, methods, validate)
 
 #' @export
 `$.ClassDefinition` <- function (self, name) { func <- ClassDefinition[[name]]; environment(func) <- environment(); func }
@@ -31,6 +51,8 @@ ClassInstance$name <- function() .Call(wrap__ClassInstance__name, self)
 ClassInstance$get <- function(key) .Call(wrap__ClassInstance__get, self, key)
 
 ClassInstance$set <- function(key, value) .Call(wrap__ClassInstance__set, self, key, value)
+
+ClassInstance$to_json_string <- function() .Call(wrap__ClassInstance__to_json_string, self)
 
 #' @export
 `$.ClassInstance` <- function (self, name) { func <- ClassInstance[[name]]; environment(func) <- environment(); func }
