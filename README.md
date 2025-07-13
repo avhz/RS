@@ -1,5 +1,7 @@
 # `RS` - Fast classes for R 🔥
 
+> Contributions are welcome! If you have a feature request, or find a bug, feel free to open an issue or PR ✅
+
 ![](https://img.shields.io/github/r-package/v/avhz/RS)
 
 `RS` is an R package that implements classes for R. 
@@ -8,12 +10,13 @@ It is centered around *type validation* of attributes,
 so you can be confident your classes contain the right data.
 
 Despite the cost of providing type validation, 
-it is about *700% faster* than the next fastest OOP package.
+it is about *700-800% faster* than the next fastest OOP package.
 
 The name `RS` is a combination of:
 
 - The R and S languages (S is R's predecessor).
 - `.rs` - the file extension used for Rust files, and the TLD of Rust websites.
+
 
 ## Install
 
@@ -78,6 +81,8 @@ rather than a list, dataframe, environment, R6 class, etc.
 ## Benchmarks
 
 The following shows the iterations per second for class instances for a number of R OOP libraries.
+
+You can see that `RS` offers at least a 7-8x performance gain over the other offerings. 
 
 [<img src="man/figures/bench.png">](https://github.com/avhz/RS/blob/main/man/figures/bench.png)
 
