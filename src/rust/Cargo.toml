@@ -1,17 +1,23 @@
 [package]
 name = 'RS'
 version = '0.1.0'
-edition = '2021'
+edition = '2024'
+
 
 [lib]
 crate-type = ['staticlib']
 name = 'RS'
 
+
+[dependencies.extendr-api]
+version = '0.8.0'
+features = ['non-api', 'serde']
+
+
 [dependencies]
-extendr-api = { version = "0.8.0", features = ['non-api'] }
 mimalloc = "0.1.46"
-# bincode = "2.0.1"
-# serde = { version = "1.0.219", features = ['derive'] }
+serde_json = "1.0.140"
+
 
 [profile.release]
 debug = true

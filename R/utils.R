@@ -1,5 +1,5 @@
 ## ============================================================================
-## Class utilities
+## CLASS UTILITIES
 ## ============================================================================
 
 #' @export
@@ -17,7 +17,7 @@ print.ClassInstance <- function(x, ...) {
 
 #' @export
 `@.ClassInstance` <- function(self, name) {
-    .attr <- .Call("wrap__ClassInstance__get", self, name)
+    .attr <- .Call(wrap__ClassInstance__get, self, name)
 
     ## FIXME
     # if (inherits(.attr, "ClassPrivateAttribute"))
@@ -40,14 +40,6 @@ print.ClassInstance <- function(x, ...) {
 print.extendr_error <- function(x, ...) {
     print(x$value)
     invisible(x)
-}
-
-#' @export
-`==.ClassInstance` <- function(cls1, cls2) {
-    if (inherits(cls1, "ClassInstance") && inherits(cls2, "ClassInstance")) {
-        return(.Call("wrap__class_equality", cls1, cls2, PACKAGE = "RS"))
-    }
-    stop("Both arguments must be `ClassInstance` objects.")
 }
 
 

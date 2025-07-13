@@ -25,11 +25,11 @@ Class(
     "Asset",
 
     # FIELDS
-    id       = t_char,
-    company  = t_char,
-    type     = t_char,
-    price    = t_dbl,
-    quantity = t_int,
+    id       := t_char,
+    company  := t_char,
+    type     := t_char,
+    price    := t_dbl,
+    quantity := t_int,
 
     # METHODS
     value = function(.self) {

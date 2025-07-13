@@ -62,6 +62,17 @@ NULL
         structure(class = c("ClassType", name))
 }
 
+.new_type_generator <- function(name) {
+    structure(
+        function() .Call(wrap__ClassType__from_str, name, PACKAGE = "RS"),
+        class = c("ClassTypeGenerator")
+    )
+}
+
+print.ClassType <- function(x, ...) {
+    invisible(.Call("wrap__ClassType__print", x))
+}
+
 ## ============================================================================
 ## ANY TYPE
 ## This is a catch-all type that will match anything.
@@ -71,7 +82,7 @@ NULL
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_any <- .new_type("t_any", \(.) TRUE)
+t_any <- .new_type_generator("t_any")
 
 ## ============================================================================
 ## DATE TYPE
@@ -84,12 +95,12 @@ t_any <- .new_type("t_any", \(.) TRUE)
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_date <- .new_type("t_date", \(.) .is_date(.) && length(.) == 1L)
+t_date <- .new_type_generator("t_date")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_dates <- .new_type("t_dates", \(.) .is_date(.) && length(.) > 1L)
+t_dates <- .new_type_generator("t_dates")
 
 ## ============================================================================
 ## BASIC TYPES
@@ -99,89 +110,89 @@ t_dates <- .new_type("t_dates", \(.) .is_date(.) && length(.) > 1L)
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_int <- .new_type("t_int", \(.) is.integer(.) && length(.) == 1L)
+t_int <- .new_type_generator("t_int")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_ints <- .new_type("t_ints", \(.) is.integer(.) && length(.) > 1L)
+t_ints <- .new_type_generator("t_ints")
 
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_dbl <- .new_type("t_dbl", \(.) is.double(.) && length(.) == 1L)
+t_dbl <- .new_type_generator("t_dbl")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_dbls <- .new_type("t_dbls", \(.) is.double(.) && length(.) > 1L)
+t_dbls <- .new_type_generator("t_dbls")
 
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_num <- .new_type("t_num", \(.) is.numeric(.) && length(.) == 1L)
+t_num <- .new_type_generator("t_num")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_nums <- .new_type("t_nums", \(.) is.numeric(.) && length(.) > 1L)
+t_nums <- .new_type_generator("t_nums")
 
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_char <- .new_type("t_char", \(.) is.character(.) && length(.) == 1L)
+t_char <- .new_type_generator("t_char")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_chars <- .new_type("t_chars", \(.) is.character(.) && length(.) > 1L)
+t_chars <- .new_type_generator("t_chars")
 
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_bool <- .new_type("t_bool", \(.) is.logical(.) && length(.) == 1L)
+t_bool <- .new_type_generator("t_bool")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_bools <- .new_type("t_bools", \(.) is.logical(.) && length(.) > 1L)
+t_bools <- .new_type_generator("t_bools")
 
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_cplx <- .new_type("t_cplx", \(.) is.complex(.) && length(.) == 1L)
+t_cplx <- .new_type_generator("t_cplx")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_cplxs <- .new_type("t_cplxs", \(.) is.complex(.) && length(.) > 1L)
+t_cplxs <- .new_type_generator("t_cplxs")
 
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_raw <- .new_type("t_raw", \(.) is.raw(.) && length(.) == 1L)
+t_raw <- .new_type_generator("t_raw")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_raws <- .new_type("t_raws", \(.) is.raw(.) && length(.) > 1L)
+t_raws <- .new_type_generator("t_raws")
 
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_factor <- .new_type("t_factor", \(.) is.factor(.) && length(.) == 1L)
+t_factor <- .new_type_generator("t_factor")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_factors <- .new_type("t_factors", \(.) is.factor(.) && length(.) > 1L)
+t_factors <- .new_type_generator("t_factors")
 
 ## ============================================================================
 ## COMPOUND TYPES
@@ -191,42 +202,42 @@ t_factors <- .new_type("t_factors", \(.) is.factor(.) && length(.) > 1L)
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_list <- .new_type("t_list", is.list)
+t_list <- .new_type_generator("t_list")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_array <- .new_type("t_array", is.array)
+t_array <- .new_type_generator("t_array")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_vector <- .new_type("t_vector", \(.) is.vector(.))
+t_vector <- .new_type_generator("t_vector")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_matrix <- .new_type("t_matrix", is.matrix)
+t_matrix <- .new_type_generator("t_matrix")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_dataframe <- .new_type("t_dataframe", is.data.frame)
+t_dataframe <- .new_type_generator("t_dataframe")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_hashtab <- .new_type("t_hashtab", is.hashtab)
+t_hashtab <- .new_type_generator("t_hashtab")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_environment <- .new_type("t_environment", is.environment)
+t_environment <- .new_type_generator("t_environment")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_pairlist <- .new_type("t_pairlist", is.pairlist)
+t_pairlist <- .new_type_generator("t_pairlist")
 
 ## ============================================================================
 ## EXOTIC TYPES
@@ -236,37 +247,37 @@ t_pairlist <- .new_type("t_pairlist", is.pairlist)
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_func <- .new_type("t_func", is.function)
+t_func <- .new_type_generator("t_func")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_expr <- .new_type("t_expr", is.expression)
+t_expr <- .new_type_generator("t_expr")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_call <- .new_type("t_call", is.call)
+t_call <- .new_type_generator("t_call")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_sym <- .new_type("t_sym", is.symbol)
+t_sym <- .new_type_generator("t_sym")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_lang <- .new_type("t_lang", is.language)
+t_lang <- .new_type_generator("t_lang")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_obj <- .new_type("t_obj", is.object)
+t_obj <- .new_type_generator("t_obj")
 #' @export
 #' @rdname RSTypes
 #' @format NULL
 #' @order 1
-t_prim <- .new_type("t_prim", is.primitive)
+t_prim <- .new_type_generator("t_prim")
 
 ## ============================================================================
 ## E.O.F.
