@@ -101,7 +101,7 @@ if (FALSE) {
         devtools::load_all()
         devtools::test()
         devtools::document()
-        pkgdown::build_site()
+        pkgdown::build_site_github_pages()
     }
     .()
 

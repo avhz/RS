@@ -3,9 +3,7 @@
 on:
   push:
     branches: [main]
-
 name: site.yaml
-
 permissions: read-all
 
 jobs:

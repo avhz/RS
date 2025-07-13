@@ -32,10 +32,10 @@ Class(
     quantity := t_int,
 
     # METHODS
-    value = function(.self) {
+    value := function(.self) {
         .self@price * .self@quantity
     },
-    print = function(.self) {
+    print := function(.self) {
         cat("Asset ID:", .self@id, "\n")
         cat("Name:", .self@company, "\n")
         cat("Type:", .self@type, "\n")
@@ -58,9 +58,9 @@ fields <- list(
     quantity = 10L
 )
 
-asset <- Asset(!!!fields)
+#asset <- Asset(!!!fields)
 
-asset@print()
+#asset@print()
 ```
 
 This makes it simple to create multiple instances from a data-frame,
@@ -75,12 +75,6 @@ df <- data.frame(
     quantity = c(10L, 5L, 2L)
 )
 
-assets <- lapply(seq_len(nrow(df)), \(i) Asset(!!!df[i, ]))
-```
-
-Or if you like the `tidyverse`, even simpler:
-
-```{R}
 assets <- purrr::pmap(df, Asset)
 ```
 

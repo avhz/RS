@@ -18,11 +18,11 @@ library(RS)
 Class(
     "Foo",
 
-    a = t_any,
-    b = t_int,
-    c = t_char,
-    d = t_dataframe,
-    e = t_date,
+    a := t_any,
+    b := t_int,
+    c := t_char,
+    d := t_dataframe,
+    e := t_date
 )
 ```
 
@@ -64,15 +64,17 @@ You can also turn off validation entirely for the class via:
 ```{R}
 Class(
     "Foo",
-    .validation = FALSE, ## Add this here 
 
-    a = t_any,
-    b = t_int,
-    c = t_char,
-    d = t_dataframe,
-    e = t_date,
+    a := t_any,
+    b := t_int,
+    c := t_char,
+    d := t_dataframe,
+    e := t_date,
+
+    .validate = FALSE ## Add this here 
 )
 ```
 
-This gives a significant performance boost at the cost of 
+This can give a slight (~10-20%) performance boost at the cost of 
 no type validation. 
+
