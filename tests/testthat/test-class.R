@@ -25,7 +25,6 @@ test_that("class.R - Argument injection (unpacking)", {
 
     expect_no_error(foo <- Foo(!!!list(a = 1L, b = 2.0, c = "xxx")))
     testthat::expect_no_failure({
-        print(foo)
         expect_equal(foo@a, 1L)
         expect_equal(foo@b, 2.0)
         expect_equal(foo@c, "xxx")

@@ -1,54 +1,165 @@
-# test_that("types.R", {
-#     ## All should have one T and one F result
+test_that("types.R - t_any", {
+    Class("tAny", a := t_any)
 
-#     expect <- c(FALSE, TRUE)
+    expect_no_error({
+        tAny(a = 1L)
+        tAny(a = 1.0)
+        tAny(a = "x")
+        tAny(a = TRUE)
+        tAny(a = 1 + 0i)
+        tAny(a = as.raw(1))
+        tAny(a = factor("x"))
+        tAny(a = list(1, 2))
+        tAny(a = array(1:10, dim = c(2, 5)))
+        tAny(a = matrix(1:10, nrow = 2))
+        tAny(a = data.frame(x = 1:5))
+        tAny(a = hashtab())
+        tAny(a = environment())
+        tAny(a = pairlist())
+        tAny(a = function(x) x)
+        tAny(a = expression(x + 1))
+        tAny(a = call("x", 1))
+        tAny(a = quote(x))
+    })
+})
 
-#     expect_equal(c(t_any(1L), t_any()), c(T, T))
-#     expect_equal(c(t_int(1), t_int(1L)), expect)
-#     expect_equal(c(t_ints(c(1, 2)), t_ints(c(1L, 2L))), expect)
-#     expect_equal(c(t_dbl(1L), t_dbl(1)), expect)
-#     expect_equal(c(t_dbls(c(1L, 2L)), t_dbls(c(1, 2))), expect)
-#     expect_equal(c(t_num("1L"), t_num(1L)), expect)
-#     expect_equal(c(t_nums(c(1L, "2L")), t_nums(c(1, 2))), expect)
-#     expect_equal(c(t_char(1L), t_char("x")), expect)
-#     expect_equal(c(t_chars(c(1L, 2L)), t_chars(c("1", "1"))), expect)
-#     expect_equal(c(t_bool(1L), t_bool(TRUE)), expect)
-#     expect_equal(c(t_bools(c(1L, 2L)), t_bools(c(TRUE, TRUE))), expect)
-#     expect_equal(c(t_cplx(1L), t_cplx(1 + 0i)), expect)
-#     expect_equal(c(t_cplxs(c(1L, 2L)), t_cplxs(c(1, 1 + 0i))), expect)
-#     expect_equal(c(t_raw(raw()), t_raw(as.raw(1))), expect)
-#     expect_equal(c(t_raws(c(1L)), t_raws(raw(2L))), expect)
-#     expect_equal(c(t_factor(1L), t_factor(factor("x"))), expect)
-#     expect_equal(c(t_factors(c(1L)), t_factors(factor(c("x", "y")))), expect)
-#     expect_equal(c(t_list(1L), t_list(list(1))), expect)
-#     expect_equal(c(t_array(1L), t_array(array(1))), expect)
-#     expect_equal(c(t_vector(c()), t_vector(c(1))), expect)
-#     expect_equal(c(t_matrix(1L), t_matrix(matrix(1))), expect)
-#     expect_equal(c(t_dataframe(1L), t_dataframe(data.frame(x = 1))), expect)
-#     expect_equal(c(t_hashtab(1L), t_hashtab(hashtab())), expect)
-#     expect_equal(c(t_environment(1L), t_environment(environment())), expect)
-#     expect_equal(c(t_pairlist(1L), t_pairlist(pairlist())), expect)
-#     expect_equal(c(t_func(1L), t_func(c)), expect)
-#     expect_equal(c(t_expr(1L), t_expr(expression(x + 1))), expect)
-#     expect_equal(c(t_call(1L), t_call(call("x", 1))), expect)
-#     expect_equal(c(t_sym(1L), t_sym(quote(x))), expect)
-#     lang <- languageEl(
-#         function() {
-#         },
-#         1
-#     )
-#     expect_equal(c(t_lang(1L), t_lang(lang)), expect)
-#     obj <- structure(1, class = "foo")
-#     expect_equal(c(t_obj(1L), t_obj(obj)), expect)
-#     expect_equal(c(t_prim(1L), t_prim(c)), expect)
+test_that("types.R - t_int", {
+    Class("tInt", a := t_int, b := t_ints)
+    expect_no_error(tInt(a = 1L, b = c(1L, 2L)))
+    expect_error(tInt(a = 1.0, b = c(1.0, 2.0)))
+})
+
+test_that("types.R - t_dbl", {
+    Class("tDbl", a := t_dbl, b := t_dbls)
+    expect_no_error(tDbl(a = 1.0, b = c(1.0, 2.0)))
+    expect_error(tDbl(a = 1L, b = c(1L, 2L)))
+})
+
+test_that("types.R - t_num", {
+    Class("tNum", a := t_num, b := t_nums)
+    expect_no_error(tNum(a = 1L, b = c(1L, 2L)))
+    expect_no_error(tNum(a = 1.0, b = c(1.0, 2.0)))
+    expect_error(tNum(a = "x", b = c("x", "y")))
+})
+
+test_that("types.R - t_char", {
+    Class("tChar", a := t_char, b := t_chars)
+    expect_no_error(tChar(a = "x", b = c("x", "y")))
+    expect_error(tChar(a = 1L, b = c(1L, 2L)))
+})
+
+test_that("types.R - t_bool", {
+    Class("tBool", a := t_bool, b := t_bools)
+    expect_no_error(tBool(a = TRUE, b = c(TRUE, FALSE)))
+    expect_error(tBool(a = 1L, b = c(1L, 2L)))
+})
+
+test_that("types.R - t_cplx", {
+    Class("tCplx", a := t_cplx, b := t_cplxs)
+    expect_no_error(tCplx(a = 1 + 0i, b = c(1 + 0i, 2 + 0i)))
+    expect_error(tCplx(a = 1L, b = c(1L, 2L)))
+})
+
+# test_that("types.R - t_raw", {
+#     Class("tRaw", a := t_raw, b := t_raws)
+#     expect_no_error(tRaw(a = as.raw(1), b = c(as.raw(1), as.raw(2))))
+#     expect_error(tRaw(a = 1L, b = c(1L, 2L)))
 # })
 
-# test_that("types.R - t_any", {
-#     expect_equal(t_any(1L), TRUE)
-#     expect_equal(t_any(), TRUE)
-#     expect_equal(t_any(1:10), TRUE)
-#     expect_equal(t_any(list()), TRUE)
-#     expect_equal(t_any(list(1, 2)), TRUE)
-#     expect_equal(t_any(c(1, 2)), TRUE)
-#     expect_equal(t_any(c(TRUE, FALSE)), TRUE)
+test_that("types.R - t_factor", {
+    Class("tFactor", a := t_factor, b := t_factors)
+    expect_no_error(tFactor(a = factor("x"), b = factor(c("x", "y"))))
+    expect_error(tFactor(a = 1L, b = c(1L, 2L)))
+})
+
+test_that("types.R - t_list", {
+    Class("tList", a := t_list)
+    expect_no_error(tList(a = list(1, 2)))
+    expect_error(tList(a = 1L))
+})
+
+test_that("types.R - t_array", {
+    Class("tArray", a := t_array)
+    expect_no_error(tArray(a = array(1:10, dim = c(2, 5))))
+    expect_error(tArray(a = 1L))
+})
+
+test_that("types.R - t_vector", {
+    Class("tVector", a := t_vector)
+    expect_no_error(tVector(a = c(1, 2)))
+    expect_error(tVector(a = data.frame()))
+})
+
+test_that("types.R - t_matrix", {
+    Class("tMatrix", a := t_matrix)
+    expect_no_error(tMatrix(a = matrix(1:10, nrow = 2)))
+    expect_error(tMatrix(a = 1L))
+})
+
+test_that("types.R - t_dataframe", {
+    Class("tDataFrame", a := t_dataframe)
+    expect_no_error(tDataFrame(a = data.frame(x = 1:5)))
+    expect_error(tDataFrame(a = 1L))
+})
+
+test_that("types.R - t_hashtab", {
+    Class("tHashtab", a := t_hashtab)
+    expect_no_error(tHashtab(a = hashtab()))
+    expect_error(tHashtab(a = 1L))
+})
+
+test_that("types.R - t_environment", {
+    Class("tEnvironment", a := t_environment)
+    expect_no_error(tEnvironment(a = environment()))
+    expect_error(tEnvironment(a = 1L))
+})
+
+test_that("types.R - t_pairlist", {
+    Class("tPairlist", a := t_pairlist)
+    expect_no_error(tPairlist(a = pairlist()))
+    expect_error(tPairlist(a = 1L))
+})
+
+test_that("types.R - t_func", {
+    Class("tFunc", a := t_func)
+    expect_no_error(tFunc(a = function(x) x))
+    expect_error(tFunc(a = 1L))
+})
+
+test_that("types.R - t_expr", {
+    Class("tExpr", a := t_expr)
+    expect_no_error(tExpr(a = expression(x + 1)))
+    expect_error(tExpr(a = 1L))
+})
+
+# test_that("types.R - t_call", {
+#     Class("tCall", a := t_call)
+#     expect_no_error(tCall(a = call("x", 1)))
+#     expect_error(tCall(a = 1L))
 # })
+
+test_that("types.R - t_sym", {
+    Class("tSym", a := t_sym)
+    expect_no_error(tSym(a = quote(x)))
+    expect_error(tSym(a = 1L))
+})
+
+test_that("types.R - t_lang", {
+    Class("tLang", a := t_lang)
+    lang <- languageEl(function() {}, 1)
+    expect_no_error(tLang(a = lang))
+    expect_error(tLang(a = 1L))
+})
+
+test_that("types.R - t_obj", {
+    Class("tObj", a := t_obj)
+    obj <- structure(1, class = "foo")
+    expect_no_error(tObj(a = obj))
+    expect_error(tObj(a = 1L))
+})
+
+test_that("types.R - t_prim", {
+    Class("tPrim", a := t_prim)
+    expect_no_error(tPrim(a = c))
+    expect_error(tPrim(a = 1L))
+})
