@@ -8,6 +8,8 @@ The name `RS` is a combination of:
 - The R and S languages (S is R's predecessor).
 - `.rs` - the file extension used for Rust files, and the TLD of Rust websites.
 
+> Contributions are welcome! If you have a feature request, or find a bug, feel free to open an issue or PR ✅
+
 ## Install
 
 Any of the following should work:
