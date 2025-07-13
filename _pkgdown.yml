@@ -19,6 +19,10 @@ reference:
   contents:
   - private
   - static
+  - private_ 
+  - static_
+  - is_private
+  - is_static
 - title: "Types"
   contents:
   - RSTypes

@@ -1,0 +1,60 @@
+---
+title: "Operators"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Operators}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Operators
+
+This is a brief note about the use of two operators within the `RS` package.
+
+
+## `@` - Slot Operator
+
+The `@` operator is used in R to access slots in S4 and S7 classes. 
+
+I decided to use this operator in `RS` because the `$` is so pervasive in R code,
+and I wanted an operator that would help the user identify that the object on the 
+left-hand side is an `RS` class, rather than a list, R6 class, environment, dataframe, etc. 
+
+For example, when I see:
+
+```R
+x$y <- 1
+```
+
+it's a little ambiguous what `x` is. 
+
+However, when you see:
+
+```R 
+x@y <- 1
+```
+
+`x` can only be an `RS` class, or an S4/S7 class if that is also in your project. 
+
+I hope this makes reading the code a bit easier. 
+
+## `:=` - Attribute Assignment Operator 
+
+The `:=` is used when defining a class' attributes. 
+
+For example:
+
+```R
+Class(
+    "Foo",
+
+    a := t_int,
+    x := t_cplx
+)
+```
+
+`a` is assigned the `t_int` type, while `x` is assigned the `t_cplx` type. 
+
+Like the `@` operator, I primarily did this for readability 
+(i.e. to differentiate from a common assignment like `x = 1`), 
+however, it also allows me to add futher assignment features in the future. 

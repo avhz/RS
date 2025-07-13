@@ -69,6 +69,7 @@ NULL
     )
 }
 
+#' @export
 print.ClassType <- function(x, ...) {
     invisible(.Call("wrap__ClassType__print", x))
 }

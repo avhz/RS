@@ -100,6 +100,8 @@ if (FALSE) {
         rextendr::document()
         devtools::load_all()
         devtools::test()
+        devtools::document()
+        pkgdown::build_site()
     }
     .()
 

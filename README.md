@@ -1,7 +1,14 @@
 # `RS` - Fast classes for R 🔥
 
-![GitHub R package version](https://img.shields.io/github/r-package/v/avhz/RS)
+![](https://img.shields.io/github/r-package/v/avhz/RS)
 
+`RS` is an R package that implements classes for R. 
+
+It is centered around *type validation* of attributes, 
+so you can be confident your classes contain the right data.
+
+Despite the cost of providing type validation, 
+it is about *700% faster* than the next fastest OOP package.
 
 The name `RS` is a combination of:
 
