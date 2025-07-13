@@ -125,6 +125,9 @@ if (FALSE) {
     (bm <- .benchmark(1e4))
     .benchplot(bm)
     ggplot2::autoplot(bm)
+    png("benchmark.png", width = 800, height = 700)
+    .benchplot(bm)
+    dev.off()
 
     bench::mark(
         list("a" = 1L, "b" = "test"),
@@ -133,10 +136,6 @@ if (FALSE) {
 
         iterations = 1e6
     )
-
-    png("benchmark.png", width = 800, height = 700)
-    .benchplot(bm)
-    dev.off()
 
     reticulate::py_run_string(
         "\
