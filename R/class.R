@@ -6,15 +6,15 @@
 #' Define a new RS class.
 #'
 #' @description
-#' Create a new ClassInstance in R.
+#' Create a new ClassDefinition in R.
 #'
 #' @details
-#' The Class function creates a new ClassInstance in R.
+#' The Class function creates a new ClassDefinition in R.
 #' It allows you to define fields and methods for the class.
 #'
 #' @param .classname The name of the class.
 #' @param .validate Whether to validate the class attributes.
-#'     Note: setting this to `FALSE` gives a decent performance boost.
+#'     Note: setting this to `FALSE` gives a slight performance boost.
 #' @param ... The fields and methods of the class definition.
 #'
 #' @export
@@ -47,7 +47,6 @@ Class <- function(.classname, ..., .validate = TRUE) {
     new_class <- function(...) {
         .Call(
             wrap__ClassInstance__new,
-            # fields = rlang::list2(...),
             fields = list(...),
             def = .self,
             PACKAGE = "RS"
@@ -100,15 +99,16 @@ if (FALSE) {
         rextendr::document()
         devtools::load_all()
         devtools::test()
-        devtools::document()
-        pkgdown::build_site_github_pages()
+        # devtools::document()
+        # pkgdown::build_site_github_pages()
+        # devtools::build_readme()
     }
     .()
 
     (bm <- .benchmark(1e4))
     .benchplot(bm)
     ggplot2::autoplot(bm)
-    png("benchmark.png", width = 800, height = 700)
+    png("benchmark.png", width = 800, height = 600)
     .benchplot(bm)
     dev.off()
 }

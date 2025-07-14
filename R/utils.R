@@ -4,10 +4,7 @@
 
 #' @export
 print.ClassInstance <- function(x, ...) {
-    print(.Call("wrap__ClassInstance__print", x))
-    # out <- capture.output(.Call("wrap__ClassInstance__print", x))
-    # cat(out, sep = "\n")
-    invisible(x)
+    cat(.Call(wrap__ClassInstance__print, x))
 }
 
 #' @export
@@ -51,11 +48,9 @@ print.extendr_error <- function(x, ...) {
     if (typeof(.o) != "externalptr") {
         stop("Object is not a Rust object (externalptr).")
     }
-    cat(
-        paste(utils::capture.output(utils::str(.o)), format(.o), sep = ""),
-        "\n"
-    )
-    .o$print()
+    .str <- utils::capture.output(utils::str(.o))
+    .fmt <- format(.o)
+    cat(paste(.str, .fmt, sep = ""), "\n")
 }
 
 .compile <- function(.f) {

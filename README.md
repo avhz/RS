@@ -1,28 +1,35 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # `RS` - Fast classes for R 🔥
 
-> Contributions are welcome! If you have a feature request, or find a bug, feel free to open an issue or PR ✅
+> Contributions are welcome! If you have a feature request, or find a
+> bug, feel free to open an issue or PR ✅
+
+<!-- badges: start -->
 
 ![](https://img.shields.io/github/r-package/v/avhz/RS)
+<!-- badges: end -->
 
-`RS` is an R package that implements classes for R. 
+`RS` is an R package that implements classes for R.
 
-It is centered around *type validation* of attributes, 
-so you can be confident your classes contain the right data.
+It is centered around *type validation* of attributes, so you can be
+confident your classes contain the right data.
 
-Despite the cost of providing type validation, 
-it is about *700-800% faster* than the next fastest OOP package.
+Despite the cost of providing type validation, it is about *700-800%
+faster* than the next fastest OOP package.
 
 The name `RS` is a combination of:
 
-- The R and S languages (S is R's predecessor).
-- `.rs` - the file extension used for Rust files, and the TLD of Rust websites.
-
+- The R and S languages (S is R’s predecessor).
+- `.rs` - the file extension used for Rust files, and the TLD of Rust
+  websites.
 
 ## Install
 
 Any of the following should work:
 
-```R
+``` r
 pak::pak("avhz/RS")
 ## or
 renv::install("avhz/RS")
@@ -30,9 +37,14 @@ renv::install("avhz/RS")
 devtools::install_github("avhz/RS")
 ```
 
+This installs the latest development version of `RS` from GitHub. `RS`
+is not yet on CRAN, but hopefully will be soon.
+
 ## Usage
 
-```R
+``` r
+library(RS)
+
 Class(
     "Dog",
  
@@ -51,42 +63,48 @@ fluffy <- Dog(name = "Fluffy", age = 3L, breed = "Golden Retriever")
 Note that the fields are special objects like `t_int`, `t_char`, etc.
 These objects allow for attribute type validation.
 
-If you pass an incorrect type for one of the fields, you will get an error like:
+If you pass an incorrect type for one of the fields, you will get an
+error like:
 
-```R
+``` r
 fluffy <- Dog(name = 1, age = 3L, breed = "Golden Retriever")
 "Invalid type <'double'> passed for field <'name'>."
 ```
 
-```R
-> fluffy@name
-[1] "Fluffy"
-> fluffy@age
-[1] 3
-> fluffy@breed
-[1] "Golden Retriever"
-> fluffy@bark()
-Fluffy goes woof!
+``` r
+fluffy@name
+#> [1] "Fluffy"
+fluffy@age
+#> [1] 3
+fluffy@breed
+#> [1] "Golden Retriever"
+fluffy@bark()
+#> Fluffy goes woof!
 ```
 
-I used the slot operator `@` for accessing attributes in `RS`, because the common `$` operator
-is so pervasive in R code that I wanted an operator that made
-it more obvious that the object is an `RS` class,
+I used the slot operator `@` for accessing attributes in `RS`, because
+the common `$` operator is so pervasive in R code that I wanted an
+operator that made it more obvious that the object is an `RS` class,
 rather than a list, dataframe, environment, R6 class, etc.
 
-> Note:
-> Inheritance is not currently supported and most likely won't be unless there is overwhelming demand for it.
-> Instead, composition is supported and preferred.
+> Note: Inheritance is not currently supported and most likely won’t be
+> unless there is overwhelming demand for it. Instead, composition is
+> supported and preferred.
 
 ## Benchmarks
 
-The following shows the iterations per second for class instances for a number of R OOP libraries.
+The following shows the iterations per second for class instances for a
+number of R OOP libraries.
 
-You can see that `RS` offers at least a 7-8x performance gain over the other offerings. 
+You can see that `RS` offers at least a 7-8x performance gain over the
+other offerings.
 
 [<img src="man/figures/bench.png">](https://github.com/avhz/RS/blob/main/man/figures/bench.png)
 
-> Note #1: the other libraries may provide more features and are currently more mature/complete offerings, in particular `R6`.
+> Note \#1: the other libraries may provide more features and are
+> currently more mature/complete offerings, in particular `R6`.
 
-> Note #2: creating Python class instances via `reticulate` inside the R interpreter is *significantly* slower than doing it directly in Python.
-> Python classes are still much, much faster than my `RS` package (~30-40x faster when I last checked).
+> Note \#2: creating Python class instances via `reticulate` inside the
+> R interpreter is *significantly* slower than doing it directly in
+> Python. Python classes are still much, much faster than my `RS`
+> package (~30-40x faster when I last checked).

@@ -6,3 +6,4 @@
 .github/
 .vscode/
 vignettes/.quarto
+^README\.Rmd$

@@ -88,11 +88,35 @@
 }
 
 .benchplot <- function(benchmark) {
+    # browser()
+    baseline <- benchmark |>
+        dplyr::filter(as.character(expression) == "RS (no validation)") |>
+        dplyr::pull(`itr/sec`)
+
     benchmark |>
-        dplyr::mutate(pkg = factor(expression, levels = expression)) |>
+        dplyr::mutate(
+            expr_chr = as.character(expression),
+            pkg = factor(expr_chr, levels = expr_chr),
+            baseline = benchmark |>
+                dplyr::mutate(expr_chr = as.character(expression)) |>
+                dplyr::filter(expr_chr == "RS (no validation)") |>
+                dplyr::pull(`itr/sec`),
+            speedup = baseline / `itr/sec`,
+            speedup_label = dplyr::if_else(
+                !expr_chr %in% c("RS", "RS (no validation)"),
+                paste0(round(speedup, 0), "x"),
+                NA_character_
+            )
+        ) |>
         ggplot2::ggplot() +
         ggplot2::aes(x = pkg, y = `itr/sec`, fill = pkg) +
         ggplot2::geom_bar(stat = "identity") +
+        ggplot2::geom_text(
+            ggplot2::aes(label = speedup_label),
+            vjust = -0.5,
+            na.rm = TRUE,
+            size = 6,
+        ) +
         ggplot2::ggtitle(
             "CLASS INITIALISATION: ITERATIONS / SECOND (higher is better)"
         ) +
