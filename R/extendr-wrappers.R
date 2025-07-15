@@ -30,6 +30,9 @@ static_ <- function(attribute) .Call(wrap__static_, attribute)
 #' Check if a method is static.
 is_static <- function(attribute) .Call(wrap__is_static, attribute)
 
+#' Function to structure an R object with a class and attributes.
+structure_ <- function(robj, class, attribs) .Call(wrap__structure_, robj, class, attribs)
+
 ClassDefinition <- new.env(parent = emptyenv())
 
 ClassDefinition$new <- function(name, methods, validate) .Call(wrap__ClassDefinition__new, name, methods, validate)

@@ -17,10 +17,11 @@ print.ClassInstance <- function(x, ...) {
     .attr <- .Call(wrap__ClassInstance__get, self, name)
 
     ## FIXME
-    # if (inherits(.attr, "ClassPrivateAttribute"))
-    #     stop("Attribute is private: ", name, call. = FALSE)
+    if (inherits(.attr, .RS[[".private"]])) {
+        stop("Attribute is private: ", name, call. = FALSE)
+    }
 
-    if (is.function(.attr) && !inherits(.attr, "ClassStaticMethod")) {
+    if (is.function(.attr) && !inherits(.attr, .RS[[".static"]])) {
         return(function(...) .attr(self, ...))
     }
 
@@ -29,7 +30,7 @@ print.ClassInstance <- function(x, ...) {
 
 #' @export
 `@<-.ClassInstance` <- function(self, name, value) {
-    .Call("wrap__ClassInstance__set", self, name, value)
+    .Call(wrap__ClassInstance__set, self, name, value)
     return(self)
 }
 

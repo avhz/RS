@@ -9,15 +9,16 @@ Class(.classname, ..., .validate = TRUE)
 \arguments{
 \item{.classname}{The name of the class.}
 
-\item{...}{The fields and methods of the class definition.}
+\item{...}{The fields and methods of the class definition,
+supplied as pairs of names and types using the \link{:=} operator.}
 
 \item{.validate}{Whether to validate the class attributes.
 Note: setting this to \code{FALSE} gives a slight performance boost.}
 }
 \description{
-Create a new ClassDefinition in R.
+Create a new \link{ClassDefinition} in R.
 }
 \details{
-The Class function creates a new ClassDefinition in R.
+The Class function creates a new \link{ClassDefinition} in R.
 It allows you to define fields and methods for the class.
 }

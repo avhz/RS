@@ -59,7 +59,7 @@ NULL
 .new_type_generator <- function(name) {
     .structure(
         function() .Call(wrap__ClassType__from_str, name, PACKAGE = "RS"),
-        "TypeGenerator"
+        .RS[[".typegen"]]
     )
 }
 

@@ -24,6 +24,7 @@ extendr_module! {
     fn is_private;
     fn static_;
     fn is_static;
+    fn structure_;
 }
 
 // ============================================================================
@@ -446,12 +447,31 @@ fn is_private(attribute: Robj) -> bool {
 #[extendr]
 fn static_(attribute: Robj) -> Result<Robj> {
     let mut attr = attribute.clone();
-    attr.set_class(["ClassStaticAttribute"])?;
+    attr.set_class(["StaticAttribute"])?;
     Ok(attr)
 }
 
 /// Check if a method is static.
 #[extendr]
 fn is_static(attribute: Robj) -> bool {
-    attribute.inherits("ClassStaticAttribute")
+    attribute.inherits("StaticAttribute")
+}
+
+/// Function to structure an R object with a class and attributes.
+#[extendr]
+fn structure_(robj: Robj, class: Strings, attribs: List) -> Result<Robj> {
+    let mut obj = robj.clone();
+
+    // Set classes
+    let mut class_vec: Vec<&str> = obj.class().into_iter().flatten().collect();
+    class_vec.extend(class.iter().map(Rstr::as_str));
+    class_vec.push("RS"); // Ensure "RS" is always included
+    obj.set_class(&class_vec)?;
+
+    // Set attributes
+    for (name, value) in attribs.iter() {
+        obj.set_attrib(name, value)?;
+    }
+
+    Ok(obj)
 }

@@ -6,24 +6,28 @@
 #' Define a new RS class.
 #'
 #' @description
-#' Create a new ClassDefinition in R.
+#' Create a new [ClassDefinition] in R.
 #'
 #' @details
-#' The Class function creates a new ClassDefinition in R.
+#' The Class function creates a new [ClassDefinition] in R.
 #' It allows you to define fields and methods for the class.
 #'
 #' @param .classname The name of the class.
 #' @param .validate Whether to validate the class attributes.
 #'     Note: setting this to `FALSE` gives a slight performance boost.
-#' @param ... The fields and methods of the class definition.
+#' @param ... The fields and methods of the class definition,
+#'     supplied as pairs of names and types using the [:=] operator.
 #'
 #' @export
 Class <- function(.classname, ..., .validate = TRUE) {
+    # browser()
+    # .classname <- as.character(sys.call()[[2]])
+    # print(.classname)
     .assert_pairlist_arguments(...)
     .attributes <- do.call(c, list(...))
 
     .resolve_type_generators <- function(attr) {
-        if (inherits(attr, "TypeGenerator")) {
+        if (inherits(attr, .RS[[".typegen"]])) {
             return(attr())
         }
         return(attr)
@@ -55,18 +59,28 @@ Class <- function(.classname, ..., .validate = TRUE) {
 
     new_class <- .structure(
         new_class,
-        c("ClassDefinition", .classname),
+        c(.RS[[".definition"]], .classname),
         name = .classname,
         validate = .validate
     )
     assign(.classname, new_class, envir = parent.frame())
 }
 
+
+#' @title
+#' Declare a new class attribute.
+#'
+#' @description
+#' Declare a new class attribute using the `:=` operator.
+#'
+#' @param lhs The name of the attribute.
+#' @param rhs The type of the attribute.
+#'
 #' @export
 `:=` <- function(lhs, rhs) {
     .valid <- c(
-        "ClassDefinition",
-        "TypeGenerator",
+        .RS[[".definition"]],
+        .RS[[".typegen"]],
         "function"
     )
     if (!any(class(rhs) %in% .valid)) {
@@ -74,11 +88,11 @@ Class <- function(.classname, ..., .validate = TRUE) {
     }
     pl <- pairlist()
     pl[[deparse(substitute(lhs))]] <- rhs
-    .structure(pl, "ClassPairlist")
+    .structure(pl, .RS[[".pairlist"]])
 }
 
 .assert_pairlist_arguments <- function(...) {
-    if (any(sapply(list(...), Negate(inherits), "ClassPairlist"))) {
+    if (any(sapply(list(...), Negate(inherits), .RS[[".pairlist"]]))) {
         stop(
             "Class attributes must be defined using `:=` operator.",
             call. = FALSE
@@ -97,6 +111,7 @@ if (FALSE) {
         remove(list = ls())
         rextendr::clean()
         devtools::document()
+        devtools::check()
         devtools::build_readme()
         pkgdown::build_site()
         pkgdown::build_site_github_pages()
@@ -114,15 +129,34 @@ if (FALSE) {
     dev.off()
 
     Class(
-        "FooRS",
+        "Foo",
+
         a := t_int,
         b := t_dbl,
         c := t_char
     )
 
-    foo <- FooRS(a = 1L, b = 2.0, c = "hello")
+    foo <- Foo(a = 1L, b = 2.0, c = "hello")
     print(foo)
     foo@a
     foo@b
     foo@c
+    devtools::load_all()
+    bench::mark(
+        private(\(x) x),
+        private_(\(x) x),
+        static(\(x) x),
+        static_(\(x) x),
+
+        iterations = 1e4,
+        check = FALSE
+    )
+
+    bench::mark(
+        .structure(list(x = 1), "FooFoo"),
+        structure_(list(x = 1), "FooFoo", list()),
+
+        iterations = 1e4,
+        # check = FALSE
+    )
 }

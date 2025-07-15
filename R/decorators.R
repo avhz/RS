@@ -23,7 +23,7 @@ static <- function(.attr) {
     if (!is.function(.attr)) {
         stop("`static` must be called on a function.")
     }
-    .structure(.attr, "StaticMethod")
+    .structure(.attr, .RS[[".static"]])
 }
 
 #' @title
@@ -41,5 +41,5 @@ static <- function(.attr) {
 #'
 #' @export
 private <- function(.attr) {
-    .structure(.attr, "PrivateAttribute")
+    .structure(.attr, .RS[[".private"]])
 }
