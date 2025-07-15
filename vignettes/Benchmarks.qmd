@@ -159,5 +159,5 @@ library(RS)
 }
 ```
 
-[<img src="man/figures/bench.png">](https://github.com/avhz/RS/blob/main/man/figures/bench.png)
+[](https://github.com/avhz/RS/blob/main/man/figures/bench.png)
 

@@ -15,6 +15,7 @@ reference:
 - title: "Class"
   contents:
   - Class
+  - ":="
 - title: "Decorators"
   contents:
   - private

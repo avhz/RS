@@ -9,3 +9,4 @@ structure_(robj, class, attribs)
 \description{
 Function to structure an R object with a class and attributes.
 }
+\keyword{internal}

@@ -458,6 +458,8 @@ fn is_static(attribute: Robj) -> bool {
 }
 
 /// Function to structure an R object with a class and attributes.
+///
+/// @keywords internal
 #[extendr]
 fn structure_(robj: Robj, class: Strings, attribs: List) -> Result<Robj> {
     let mut obj = robj.clone();
