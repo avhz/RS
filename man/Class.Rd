@@ -12,12 +12,12 @@ Class(.classname, ..., .validate = TRUE)
 \item{...}{The fields and methods of the class definition.}
 
 \item{.validate}{Whether to validate the class attributes.
-Note: setting this to \code{FALSE} gives a decent performance boost.}
+Note: setting this to \code{FALSE} gives a slight performance boost.}
 }
 \description{
-Create a new ClassInstance in R.
+Create a new ClassDefinition in R.
 }
 \details{
-The Class function creates a new ClassInstance in R.
+The Class function creates a new ClassDefinition in R.
 It allows you to define fields and methods for the class.
 }

@@ -56,22 +56,16 @@ NULL
 ## Basically anything with an "is.*" method, plus maybe some other stuff.
 ## ============================================================================
 
-.new_type <- function(name, validator) {
-    validator |>
-        utils::removeSource() |>
-        structure(class = c("ClassType", name))
-}
-
 .new_type_generator <- function(name) {
-    structure(
+    .structure(
         function() .Call(wrap__ClassType__from_str, name, PACKAGE = "RS"),
-        class = c("ClassTypeGenerator")
+        "TypeGenerator"
     )
 }
 
 #' @export
 print.ClassType <- function(x, ...) {
-    invisible(.Call("wrap__ClassType__print", x))
+    invisible(.Call(wrap__ClassType__print, x, PACKAGE = "RS"))
 }
 
 ## ============================================================================

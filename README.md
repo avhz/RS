@@ -93,6 +93,10 @@ rather than a list, dataframe, environment, R6 class, etc.
 
 ## Benchmarks
 
+> See the [Benchmarks
+> vignette](https://avhz.github.io/RS/articles/Benchmarks.html) for
+> benchmark code.
+
 The following shows the iterations per second for class instances for a
 number of R OOP libraries.
 

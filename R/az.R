@@ -56,3 +56,8 @@ print.extendr_error <- function(x, ...) {
 .compile <- function(.f) {
     compiler::cmpfun(.f, options = list(optimize = 3L))
 }
+
+.structure <- function(.x, .class, ...) {
+    .classes <- c(.class, class(.x), "RS")
+    structure(.x, class = .classes, ...)
+}

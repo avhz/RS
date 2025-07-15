@@ -23,7 +23,7 @@ Class <- function(.classname, ..., .validate = TRUE) {
     .attributes <- do.call(c, list(...))
 
     .resolve_type_generators <- function(attr) {
-        if (inherits(attr, "ClassTypeGenerator")) {
+        if (inherits(attr, "TypeGenerator")) {
             return(attr())
         }
         return(attr)
@@ -53,9 +53,9 @@ Class <- function(.classname, ..., .validate = TRUE) {
         )
     }
 
-    new_class <- structure(
+    new_class <- .structure(
         new_class,
-        class = c("ClassDefinition", .classname),
+        c("ClassDefinition", .classname),
         name = .classname,
         validate = .validate
     )
@@ -65,8 +65,8 @@ Class <- function(.classname, ..., .validate = TRUE) {
 #' @export
 `:=` <- function(lhs, rhs) {
     .valid <- c(
-        "ClassTypeGenerator",
         "ClassDefinition",
+        "TypeGenerator",
         "function"
     )
     if (!any(class(rhs) %in% .valid)) {
@@ -74,7 +74,7 @@ Class <- function(.classname, ..., .validate = TRUE) {
     }
     pl <- pairlist()
     pl[[deparse(substitute(lhs))]] <- rhs
-    structure(pl, class = "ClassPairlist")
+    .structure(pl, "ClassPairlist")
 }
 
 .assert_pairlist_arguments <- function(...) {
@@ -95,13 +95,14 @@ if (FALSE) {
     . <- function() {
         gc()
         remove(list = ls())
-        # rextendr::clean()
+        rextendr::clean()
+        devtools::document()
+        devtools::build_readme()
+        pkgdown::build_site()
+        pkgdown::build_site_github_pages()
         rextendr::document()
         devtools::load_all()
         devtools::test()
-        # devtools::document()
-        # pkgdown::build_site_github_pages()
-        # devtools::build_readme()
     }
     .()
 
@@ -111,4 +112,17 @@ if (FALSE) {
     png("benchmark.png", width = 800, height = 600)
     .benchplot(bm)
     dev.off()
+
+    Class(
+        "FooRS",
+        a := t_int,
+        b := t_dbl,
+        c := t_char
+    )
+
+    foo <- FooRS(a = 1L, b = 2.0, c = "hello")
+    print(foo)
+    foo@a
+    foo@b
+    foo@c
 }
