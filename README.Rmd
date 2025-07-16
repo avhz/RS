@@ -21,13 +21,18 @@ knitr::opts_chunk$set(
 ![](https://img.shields.io/github/r-package/v/avhz/RS)
 <!-- badges: end -->
 
-`RS` is an R package that implements classes for R. 
+`RS` is an **R** package that implements fast, validated classes,
+with the underlying implementation written in Rust.
 
-It is centered around *type validation* of attributes, 
-so you can be confident your classes contain the right data.
+It is centered around:
 
-Despite the cost of providing type validation, 
-it is about *700-800% faster* than the next fastest OOP package.
+1. **Performance**:
+    - ~700-800% faster than the next fastest R classes.
+2. **Type validation**:
+    - Gives you confidence that your classes contain the right data.
+3. **Reference semantics**:
+    - The underlying storage is a reference counted hashmap, allowing in-place modification of classes.
+
 
 The name `RS` is a combination of:
 

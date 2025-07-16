@@ -20,9 +20,6 @@
 #'
 #' @export
 Class <- function(.classname, ..., .validate = TRUE) {
-    # browser()
-    # .classname <- as.character(sys.call()[[2]])
-    # print(.classname)
     .assert_pairlist_arguments(...)
     .attributes <- do.call(c, list(...))
 
@@ -78,21 +75,21 @@ Class <- function(.classname, ..., .validate = TRUE) {
 #'
 #' @export
 `:=` <- function(lhs, rhs) {
-    .valid <- c(
-        .RS[[".definition"]],
-        .RS[[".typegen"]],
-        "function"
-    )
+    .valid <- c(.RS[[".definition"]], .RS[[".typegen"]], "function")
+
     if (!any(class(rhs) %in% .valid)) {
         stop("`:=` can only be used with RS types.")
     }
+
     pl <- pairlist()
     pl[[deparse(substitute(lhs))]] <- rhs
     .structure(pl, .RS[[".pairlist"]])
 }
 
 .assert_pairlist_arguments <- function(...) {
-    if (any(sapply(list(...), Negate(inherits), .RS[[".pairlist"]]))) {
+    .valid_classes <- c(.RS[[".pairlist"]])
+
+    if (any(sapply(list(...), Negate(inherits), .valid_classes))) {
         stop(
             "Class attributes must be defined using `:=` operator.",
             call. = FALSE
@@ -147,6 +144,9 @@ if (FALSE) {
         private_(\(x) x),
         static(\(x) x),
         static_(\(x) x),
+        is_private(\(x) x),
+        is_static(\(x) x),
+        inherits(\(x) x, "StaticMethod"),
 
         iterations = 1e4,
         check = FALSE
@@ -159,4 +159,30 @@ if (FALSE) {
         iterations = 1e4,
         # check = FALSE
     )
+}
+
+if (F) {
+    gc()
+    remove(list = ls())
+    rextendr::document()
+    devtools::load_all()
+
+    baz <- function(.obj, .new_x) {
+        .obj@x <- .new_x
+    }
+
+    Class(
+        "Foo",
+
+        x := t_int,
+
+        bar := function(self, new_x) {
+            baz(self, new_x)
+        }
+    )
+
+    foo <- Foo(x = 1L)
+    foo
+    foo@bar(555L)
+    foo
 }

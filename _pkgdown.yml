@@ -18,8 +18,6 @@ reference:
   - ":="
 - title: "Decorators"
   contents:
-  - private
-  - static
   - private_ 
   - static_
   - is_private

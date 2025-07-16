@@ -6,9 +6,16 @@
 \usage{
 static_(attribute)
 }
+\arguments{
+\item{attribute}{The function to be declared as a static method.}
+}
 \description{
+The \code{static_} decorator is used to declare a method
+as a static method in a class definition.
+Static methods do not refer to \code{self},
+i.e. the first argument is not the instance of the class.
+
 A static method is a method that belongs to the class itself,
 rather than to instances of the class.
-It can be called without creating an instance of the class,
-and it does not have access to instance-specific data (self).
+TO-DO: It can be called without creating an instance of the class.
 }

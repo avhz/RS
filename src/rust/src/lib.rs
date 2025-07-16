@@ -109,10 +109,19 @@ impl ClassDefinition {
 impl ClassInstance {
     #[inline(always)]
     fn new(fields: List, def: Robj) -> Result<Self> {
+        let map = fields.into_hashmap();
+
+        // Need to check that all fields are named.
+        // i.e. NOT a list like: list(x = 1, 2, 3)
+        // Seems that emtpy keys are "NA" despite docs saying they are "".
+        // See: https://extendr.github.io/extendr/extendr_api/wrapper/list/struct.List.html#method.into_hashmap
+
+        if map.keys().any(|k| *k == "NA") {
+            return Err(Error::Other("ClassInstance fields must be named.".into()));
+        }
+
         let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
         let def_ref = RcClassDefinition(def_ptr.0.clone());
-
-        let map = fields.into_hashmap();
 
         let def_map = &def_ref.0.methods.0;
 
@@ -421,40 +430,64 @@ impl From<&str> for ClassType {
 // DECORATORS
 // ============================================================================
 
+/// @title
 /// Decorator to mark a class attribute as private.
 ///
-/// A private attribute is not accessible from outside the class.
-/// It is used to encapsulate data that should not be modified directly.
+/// @description
+/// Declare a method or attribute as private.
+///
+/// The `private` function is used to declare a method or attribute as private
+/// in a class definition.
+///
+/// Private methods and attributes are not accessible from outside the class,
+/// and are used to encapsulate data that should not be modified directly.
+///
+/// @param attribute The function or attribute to be declared as private.
+///
+/// @export
 #[extendr]
 fn private_(attribute: Robj) -> Result<Robj> {
-    let mut attr = attribute.clone();
-    attr.set_class(["ClassPrivateAttribute"])?;
-    Ok(attr)
+    let mut attribute = attribute.clone();
+    attribute.set_attrib(class_symbol(), "PrivateAttribute")?;
+    Ok(attribute)
 }
 
 /// Check if an attribute is private.
 #[extendr]
 fn is_private(attribute: Robj) -> bool {
-    attribute.inherits("ClassPrivateAttribute")
+    attribute.inherits("PrivateAttribute")
 }
 
+/// @title
 /// Decorator to mark a method as static.
+///
+/// @description
+/// The `static_` decorator is used to declare a method
+/// as a static method in a class definition.
+/// Static methods do not refer to `self`,
+/// i.e. the first argument is not the instance of the class.
 ///
 /// A static method is a method that belongs to the class itself,
 /// rather than to instances of the class.
-/// It can be called without creating an instance of the class,
-/// and it does not have access to instance-specific data (self).
+/// TO-DO: It can be called without creating an instance of the class.
+///
+/// @param attribute The function to be declared as a static method.
+///
+/// @export
 #[extendr]
-fn static_(attribute: Robj) -> Result<Robj> {
-    let mut attr = attribute.clone();
-    attr.set_class(["StaticAttribute"])?;
-    Ok(attr)
+pub fn static_(attribute: Robj) -> Result<Robj> {
+    if !attribute.is_function() {
+        return Err(Error::Other("Attribute must be a function.".into()));
+    }
+    let mut attribute = attribute.clone();
+    attribute.set_attrib(class_symbol(), "StaticMethod")?;
+    Ok(attribute)
 }
 
 /// Check if a method is static.
 #[extendr]
 fn is_static(attribute: Robj) -> bool {
-    attribute.inherits("StaticAttribute")
+    attribute.inherits("StaticMethod")
 }
 
 /// Function to structure an R object with a class and attributes.

@@ -10,21 +10,42 @@
 #' @useDynLib RS, .registration = TRUE
 NULL
 
+#' @title
 #' Decorator to mark a class attribute as private.
 #'
-#' A private attribute is not accessible from outside the class.
-#' It is used to encapsulate data that should not be modified directly.
+#' @description
+#' Declare a method or attribute as private.
+#'
+#' The `private` function is used to declare a method or attribute as private
+#' in a class definition.
+#'
+#' Private methods and attributes are not accessible from outside the class,
+#' and are used to encapsulate data that should not be modified directly.
+#'
+#' @param attribute The function or attribute to be declared as private.
+#'
+#' @export
 private_ <- function(attribute) .Call(wrap__private_, attribute)
 
 #' Check if an attribute is private.
 is_private <- function(attribute) .Call(wrap__is_private, attribute)
 
+#' @title
 #' Decorator to mark a method as static.
+#'
+#' @description
+#' The `static_` decorator is used to declare a method
+#' as a static method in a class definition.
+#' Static methods do not refer to `self`,
+#' i.e. the first argument is not the instance of the class.
 #'
 #' A static method is a method that belongs to the class itself,
 #' rather than to instances of the class.
-#' It can be called without creating an instance of the class,
-#' and it does not have access to instance-specific data (self).
+#' TO-DO: It can be called without creating an instance of the class.
+#'
+#' @param attribute The function to be declared as a static method.
+#'
+#' @export
 static_ <- function(attribute) .Call(wrap__static_, attribute)
 
 #' Check if a method is static.

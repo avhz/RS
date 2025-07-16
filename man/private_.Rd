@@ -6,7 +6,15 @@
 \usage{
 private_(attribute)
 }
+\arguments{
+\item{attribute}{The function or attribute to be declared as private.}
+}
 \description{
-A private attribute is not accessible from outside the class.
-It is used to encapsulate data that should not be modified directly.
+Declare a method or attribute as private.
+
+The \code{private} function is used to declare a method or attribute as private
+in a class definition.
+
+Private methods and attributes are not accessible from outside the class,
+and are used to encapsulate data that should not be modified directly.
 }
