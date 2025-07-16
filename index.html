@@ -71,9 +71,28 @@
 </blockquote>
 <!-- badges: start -->
 <p><img src="https://img.shields.io/github/r-package/v/avhz/RS"><!-- badges: end --></p>
-<p><code>RS</code> is an R package that implements classes for R.</p>
-<p>It is centered around <em>type validation</em> of attributes, so you can be confident your classes contain the right data.</p>
-<p>Despite the cost of providing type validation, it is about <em>700-800% faster</em> than the next fastest OOP package.</p>
+<p><code>RS</code> is an <strong>R</strong> package that implements fast, validated classes, with the underlying implementation written in Rust.</p>
+<p>It is centered around:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Performance</strong>:
+<ul>
+<li>~700-800% faster than the next fastest R classes.</li>
+</ul>
+</li>
+<li>
+<strong>Type validation</strong>:
+<ul>
+<li>Gives you confidence that your classes contain the right data.</li>
+</ul>
+</li>
+<li>
+<strong>Reference semantics</strong>:
+<ul>
+<li>The underlying storage is a reference counted hashmap, allowing in-place modification of classes.</li>
+</ul>
+</li>
+</ol>
 <p>The name <code>RS</code> is a combination of:</p>
 <ul>
 <li>The R and S languages (S is R’s predecessor).</li>
