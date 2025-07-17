@@ -3,8 +3,10 @@
 
 # `RS` - Fast classes for R 🔥
 
-> Contributions are welcome! If you have a feature request, or find a
-> bug, feel free to open an issue or PR ✅
+> [!IMPORTANT]
+> `RS` is in early development, and not quite ready for production use.
+> You may encounter bugs or missing features. Feel free to open an issue or PR if you do!
+> Contributions are definitely welcome! ✅
 
 <!-- badges: start -->
 
