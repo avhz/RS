@@ -19,7 +19,7 @@ the underlying implementation written in Rust.
 It is centered around:
 
 1.  **Performance**:
-    - ~700-800% faster than the next fastest R classes.
+    - ~700% faster than the next fastest R classes.
 2.  **Type validation**:
     - Gives you confidence that your classes contain the right data.
 3.  **Reference semantics**:
@@ -107,7 +107,7 @@ rather than a list, dataframe, environment, R6 class, etc.
 The following shows the iterations per second for class instances for a
 number of R OOP libraries.
 
-You can see that `RS` offers at least a 7-8x performance gain over the
+You can see that `RS` offers around a 7x performance gain over the
 other offerings.
 
 [<img src="man/figures/bench.png">](https://github.com/avhz/RS/blob/main/man/figures/bench.png)
@@ -118,4 +118,4 @@ other offerings.
 > Note \#2: creating Python class instances via `reticulate` inside the
 > R interpreter is *significantly* slower than doing it directly in
 > Python. Python classes are still much, much faster than my `RS`
-> package (~30-40x faster when I last checked).
+> package (~8-10x faster than `RS` when I last checked).
