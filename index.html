@@ -77,7 +77,7 @@
 <li>
 <strong>Performance</strong>:
 <ul>
-<li>~700-800% faster than the next fastest R classes.</li>
+<li>~700% faster than the next fastest R classes.</li>
 </ul>
 </li>
 <li>
@@ -156,13 +156,13 @@
 <p>See the <a href="https://avhz.github.io/RS/articles/Benchmarks.html" class="external-link">Benchmarks vignette</a> for benchmark code.</p>
 </blockquote>
 <p>The following shows the iterations per second for class instances for a number of R OOP libraries.</p>
-<p>You can see that <code>RS</code> offers at least a 7-8x performance gain over the other offerings.</p>
+<p>You can see that <code>RS</code> offers around a 7x performance gain over the other offerings.</p>
 <p><a href="https://github.com/avhz/RS/blob/main/man/figures/bench.png" class="external-link"><img src="reference/figures/bench.png"></a></p>
 <blockquote>
 <p>Note #1: the other libraries may provide more features and are currently more mature/complete offerings, in particular <code>R6</code>.</p>
 </blockquote>
 <blockquote>
-<p>Note #2: creating Python class instances via <code>reticulate</code> inside the R interpreter is <em>significantly</em> slower than doing it directly in Python. Python classes are still much, much faster than my <code>RS</code> package (~30-40x faster when I last checked).</p>
+<p>Note #2: creating Python class instances via <code>reticulate</code> inside the R interpreter is <em>significantly</em> slower than doing it directly in Python. Python classes are still much, much faster than my <code>RS</code> package (~8-10x faster than <code>RS</code> when I last checked).</p>
 </blockquote>
 </div>
 </div>
