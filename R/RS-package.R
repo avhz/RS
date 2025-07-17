@@ -2,7 +2,6 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom rlang !!!
 #' @importFrom utils .DollarNames
 ## usethis namespace: end
 NULL
@@ -15,7 +14,8 @@ NULL
         .instance = "ClassInstance",
         .definition = "ClassDefinition",
         .pairlist = "AttributePairlist",
-        .typegen = "TypeGenerator"
+        .typegen = "TypeGenerator",
+        .type = "Type"
     ),
     hash = TRUE
 )

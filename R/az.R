@@ -2,6 +2,29 @@
 ## CLASS UTILITIES
 ## ============================================================================
 
+#' @title
+#' Declare a new class attribute.
+#'
+#' @description
+#' Declare a new class attribute using the `:=` operator.
+#'
+#' @param lhs The name of the attribute.
+#' @param rhs The type of the attribute.
+#'
+#' @export
+`:=` <- function(lhs, rhs) {
+    .valid <- c(.RS[[".definition"]], .RS[[".typegen"]], "function", "RS")
+
+    if (!any(class(rhs) %in% .valid)) {
+        stop("`:=` can only be used with RS types.")
+    }
+
+    pl <- pairlist()
+    pl[[deparse(substitute(lhs))]] <- rhs
+    structure_(pl, .RS[[".pairlist"]], list())
+}
+
+
 #' @export
 print.ClassInstance <- function(x, ...) {
     cat(.Call(wrap__ClassInstance__print, x))
@@ -16,11 +39,7 @@ print.ClassInstance <- function(x, ...) {
 `@.ClassInstance` <- function(self, name) {
     .attr <- .Call(wrap__ClassInstance__get, self, name)
 
-    ## FIXME
-    if (inherits(.attr, .RS[[".private"]])) {
-        stop("Attribute is private: ", name, call. = FALSE)
-    }
-
+    ## TODO: Move to Rust ClassInstance.get()
     if (is.function(.attr) && !inherits(.attr, .RS[[".static"]])) {
         return(function(...) .attr(self, ...))
     }
@@ -59,6 +78,5 @@ print.extendr_error <- function(x, ...) {
 }
 
 .structure <- function(.x, .class, ...) {
-    .classes <- c(.class, class(.x), "RS")
-    structure(.x, class = .classes, ...)
+    structure(.x, class = c(.class, class(.x), "RS"), ...)
 }

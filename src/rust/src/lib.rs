@@ -3,7 +3,6 @@
 // ============================================================================
 
 use extendr_api::prelude::*;
-use serde_json;
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 // ============================================================================
@@ -18,7 +17,7 @@ extendr_module! {
 
     impl ClassDefinition;
     impl ClassInstance;
-    impl ClassType;
+    impl Type;
 
     fn private_;
     fn is_private;
@@ -114,7 +113,8 @@ impl ClassInstance {
         // Need to check that all fields are named.
         // i.e. NOT a list like: list(x = 1, 2, 3)
         // Seems that emtpy keys are "NA" despite docs saying they are "".
-        // See: https://extendr.github.io/extendr/extendr_api/wrapper/list/struct.List.html#method.into_hashmap
+        // See:
+        // https://extendr.github.io/extendr/extendr_api/wrapper/list/struct.List.html#method.into_hashmap
 
         if map.keys().any(|k| *k == "NA") {
             return Err(Error::Other("ClassInstance fields must be named.".into()));
@@ -122,21 +122,40 @@ impl ClassInstance {
 
         let def_ptr: ExternalPtr<RcClassDefinition> = def.try_into()?;
         let def_ref = RcClassDefinition(def_ptr.0.clone());
-
         let def_map = &def_ref.0.methods.0;
+
+        // Closure to compare classes for a given key
+        // i.e. check the class of the passed value is the
+        // same as the expected class in the class definition.
+        let both_inherit = |key: &str, class: &str| {
+            // Get the value in the definition map
+            let mut c1 = def_map
+                .get(key)
+                .and_then(|v| v.class())
+                .unwrap_or(StrIter::default());
+
+            // Get the value in the instance map
+            let mut c2 = map
+                .get(key)
+                .and_then(|v| v.class())
+                .unwrap_or(StrIter::default());
+
+            // Compare the classes (RstrIter's)
+            // This is basically the same as: c.inherits(class)
+            c1.any(|c| c == class) && c2.any(|c| c == class)
+        };
 
         if def_ref.0.validate {
             for (key, value) in &map {
-                // Support composition of classes
-                if (&value).inherits("ClassInstance") {
+                // Class composition
+                if both_inherit(key, "ClassInstance") {
                     continue;
                 }
 
-                if let Some(expected) = def_map.get(key).and_then(|v| {
-                    <ExternalPtr<ClassType>>::try_from(v.clone())
-                        .ok()
-                        .map(|p| *p)
-                }) {
+                if let Some(expected) = def_map
+                    .get(key)
+                    .and_then(|v| <ExternalPtr<Type>>::try_from(v.clone()).ok().map(|p| *p))
+                {
                     if !validate(&value, &expected)? {
                         let msg = format!(
                             "Invalid type <'{}'> passed for field <'{}'>.",
@@ -165,10 +184,9 @@ impl ClassInstance {
             rprintln!("    {}: {:?}", key, value);
         }
         for (key, value) in methods.iter() {
-            if value.inherits("ClassType") {
+            if value.inherits("Type") {
                 continue;
             }
-
             let value_str = format!("{:?}", value);
             let trimmed_value = if value_str.starts_with("function") {
                 if let Some(end) = value_str.find(')') {
@@ -179,7 +197,6 @@ impl ClassInstance {
             } else {
                 format!("{:?}", value)
             };
-
             rprintln!("    {}: {}", key, trimmed_value);
         }
         rprintln!("}}");
@@ -190,21 +207,24 @@ impl ClassInstance {
     }
 
     fn get(&self, key: &str) -> Result<Robj> {
-        // self.fields
-        //     .0
-        //     .borrow()
-        //     .get(key)
-        //     .cloned()
-        //     .or_else(|| self.definition.0.methods.0.get(key).cloned())
-        //     .ok_or_else(|| Error::Other(format!("Key '{}' not found", key).into()));
+        // Private attributes start with a "."
+        // Need to be careful here:
+        //  - Should still be accessible from within the class itself
+        if key.starts_with('.') {
+            let msg = format!("Attribute '{}' is private, or does not exist.", key);
+            return Err(Error::Other(msg.into()));
+        }
 
-        // 1. Check instance fields
-        if let Some(value) = self.fields.0.borrow().get(key) {
-            return Ok(value.clone());
+        let definition = &self.definition.0.methods.0;
+        let instance = &self.fields.0.borrow();
+
+        // 1. Check instance fields first
+        if let Some(field) = instance.get(key) {
+            return Ok(field.clone());
         }
 
         // 2. Check methods in the class definition
-        if let Some(method) = (&self.definition.0).methods.0.clone().get(key) {
+        if let Some(method) = definition.get(key) {
             return Ok(method.clone());
         }
 
@@ -227,11 +247,10 @@ impl ClassInstance {
             }
         }
 
-        if let Some(expected) = methods.get(key).and_then(|v| {
-            <ExternalPtr<ClassType>>::try_from(v.clone())
-                .ok()
-                .map(|p| *p)
-        }) {
+        if let Some(expected) = methods
+            .get(key)
+            .and_then(|v| <ExternalPtr<Type>>::try_from(v.clone()).ok().map(|p| *p))
+        {
             if validate(&value, &expected)? {
                 let inserted = fields.0.borrow_mut().insert(key, value.clone());
                 if let Some(value) = inserted {
@@ -254,10 +273,11 @@ impl ClassInstance {
         Err(Error::Other(msg.into()))
     }
 
-    fn to_json_string(&self) -> Result<String> {
-        let fields = self.fields.0.borrow().clone();
-        serde_json::to_string_pretty(&fields).map_err(|e| Error::Other(e.to_string().into()))
-    }
+    // fn to_json_string(&self) -> Result<String> {
+    //     use serde_json;
+    //     let fields = self.fields.0.borrow().clone();
+    //     serde_json::to_string_pretty(&fields).map_err(|e| Error::Other(e.to_string().into()))
+    // }
 }
 
 // ============================================================================
@@ -267,7 +287,7 @@ impl ClassInstance {
 #[allow(non_camel_case_types)]
 #[extendr]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ClassType {
+enum Type {
     // CATCH-ALL
     t_any,
 
@@ -313,6 +333,21 @@ enum ClassType {
     t_prim,
 }
 
+#[extendr]
+impl Type {
+    fn print(&self) {
+        rprintln!("Type: {:?} @ {:p}", &self, &self);
+    }
+
+    fn from_str(s: &str) -> Self {
+        Self::from(s)
+    }
+
+    fn as_str(&self) -> &'static str {
+        Self::into(*self)
+    }
+}
+
 fn is_date(robj: &Robj) -> bool {
     robj.inherits(&"Date") || robj.inherits(&"POSIXt")
 }
@@ -322,69 +357,58 @@ fn validate(
     // The Robj is the value passed into the instance field.
     robj: &Robj,
     // The expected class type (contained in the class definition).
-    expected_type: &ClassType,
+    expected_type: &Type,
 ) -> Result<bool> {
     let is_scalar = robj.len() == 1;
 
     match expected_type {
         // CATCH-ALL
-        ClassType::t_any => Ok(true),
+        Type::t_any => Ok(true),
 
         // DATES
-        ClassType::t_date => Ok(is_date(&robj) && is_scalar),
-        ClassType::t_dates => Ok(is_date(&robj) && !is_scalar),
+        Type::t_date => Ok(is_date(&robj) && is_scalar),
+        Type::t_dates => Ok(is_date(&robj) && !is_scalar),
 
         // BASIC TYPES (atomic vectors)
-        ClassType::t_int => Ok(robj.is_integer() && is_scalar),
-        ClassType::t_ints => Ok(robj.is_integer() && !is_scalar),
-        ClassType::t_dbl => Ok(robj.is_real() && is_scalar),
-        ClassType::t_dbls => Ok(robj.is_real() && !is_scalar),
-        ClassType::t_num => Ok(robj.is_number() && is_scalar),
-        ClassType::t_nums => Ok(robj.is_number() && !is_scalar),
-        ClassType::t_char => Ok(robj.is_string() && is_scalar),
-        ClassType::t_chars => Ok(robj.is_string() && !is_scalar),
-        ClassType::t_bool => Ok(robj.is_logical() && is_scalar),
-        ClassType::t_bools => Ok(robj.is_logical() && !is_scalar),
-        ClassType::t_cplx => Ok(robj.is_complex() && is_scalar),
-        ClassType::t_cplxs => Ok(robj.is_complex() && !is_scalar),
-        ClassType::t_raw => Ok(robj.inherits("raw") && is_scalar),
-        ClassType::t_raws => Ok(robj.inherits("raw") && !is_scalar),
-        ClassType::t_factor => Ok(robj.is_factor() && is_scalar),
-        ClassType::t_factors => Ok(robj.is_factor() && !is_scalar),
+        Type::t_int => Ok(robj.is_integer() && is_scalar),
+        Type::t_ints => Ok(robj.is_integer() && !is_scalar),
+        Type::t_dbl => Ok(robj.is_real() && is_scalar),
+        Type::t_dbls => Ok(robj.is_real() && !is_scalar),
+        Type::t_num => Ok(robj.is_number() && is_scalar),
+        Type::t_nums => Ok(robj.is_number() && !is_scalar),
+        Type::t_char => Ok(robj.is_string() && is_scalar),
+        Type::t_chars => Ok(robj.is_string() && !is_scalar),
+        Type::t_bool => Ok(robj.is_logical() && is_scalar),
+        Type::t_bools => Ok(robj.is_logical() && !is_scalar),
+        Type::t_cplx => Ok(robj.is_complex() && is_scalar),
+        Type::t_cplxs => Ok(robj.is_complex() && !is_scalar),
+        Type::t_raw => Ok(robj.inherits("raw") && is_scalar),
+        Type::t_raws => Ok(robj.inherits("raw") && !is_scalar),
+        Type::t_factor => Ok(robj.is_factor() && is_scalar),
+        Type::t_factors => Ok(robj.is_factor() && !is_scalar),
 
         // COMPOUND TYPES
-        ClassType::t_array => Ok(robj.is_array()),
-        ClassType::t_list => Ok(robj.is_list()),
-        ClassType::t_vector => Ok(robj.is_vector_atomic()),
-        ClassType::t_matrix => Ok(robj.is_matrix()),
-        ClassType::t_dataframe => Ok(robj.is_frame()),
-        ClassType::t_hashtab => Ok(robj.inherits(&"hashtab")),
-        ClassType::t_environment => Ok(robj.is_environment()),
-        ClassType::t_pairlist => Ok(robj.is_pairlist()),
+        Type::t_array => Ok(robj.is_array()),
+        Type::t_list => Ok(robj.is_list()),
+        Type::t_vector => Ok(robj.is_vector_atomic()),
+        Type::t_matrix => Ok(robj.is_matrix()),
+        Type::t_dataframe => Ok(robj.is_frame()),
+        Type::t_hashtab => Ok(robj.inherits(&"hashtab")),
+        Type::t_environment => Ok(robj.is_environment()),
+        Type::t_pairlist => Ok(robj.is_pairlist()),
 
         // EXOTIC TYPES
-        ClassType::t_func => Ok(robj.is_function()),
-        ClassType::t_expr => Ok(robj.is_expressions()),
-        ClassType::t_call => Ok(robj.inherits(&"call")),
-        ClassType::t_sym => Ok(robj.is_symbol()),
-        ClassType::t_lang => Ok(robj.is_language()),
-        ClassType::t_obj => Ok(robj.is_object()),
-        ClassType::t_prim => Ok(robj.is_primitive()),
+        Type::t_func => Ok(robj.is_function()),
+        Type::t_expr => Ok(robj.is_expressions()),
+        Type::t_call => Ok(robj.inherits(&"call")),
+        Type::t_sym => Ok(robj.is_symbol()),
+        Type::t_lang => Ok(robj.is_language()),
+        Type::t_obj => Ok(robj.is_object()),
+        Type::t_prim => Ok(robj.is_primitive()),
     }
 }
 
-#[extendr]
-impl ClassType {
-    fn print(&self) {
-        rprintln!("ClassType: {:?} @ {:p}", &self, &self);
-    }
-
-    fn from_str(s: &str) -> Self {
-        Self::from(s)
-    }
-}
-
-impl From<&str> for ClassType {
+impl From<&str> for Type {
     fn from(s: &str) -> Self {
         match s {
             "t_any" => Self::t_any,
@@ -426,6 +450,47 @@ impl From<&str> for ClassType {
     }
 }
 
+impl Into<&'static str> for Type {
+    fn into(self) -> &'static str {
+        match self {
+            Type::t_any => "t_any",
+            Type::t_date => "t_date",
+            Type::t_dates => "t_dates",
+            Type::t_int => "t_int",
+            Type::t_ints => "t_ints",
+            Type::t_dbl => "t_dbl",
+            Type::t_dbls => "t_dbls",
+            Type::t_num => "t_num",
+            Type::t_nums => "t_nums",
+            Type::t_char => "t_char",
+            Type::t_chars => "t_chars",
+            Type::t_bool => "t_bool",
+            Type::t_bools => "t_bools",
+            Type::t_cplx => "t_cplx",
+            Type::t_cplxs => "t_cplxs",
+            Type::t_raw => "t_raw",
+            Type::t_raws => "t_raws",
+            Type::t_factor => "t_factor",
+            Type::t_factors => "t_factors",
+            Type::t_list => "t_list",
+            Type::t_array => "t_array",
+            Type::t_vector => "t_vector",
+            Type::t_matrix => "t_matrix",
+            Type::t_dataframe => "t_dataframe",
+            Type::t_hashtab => "t_hashtab",
+            Type::t_environment => "t_environment",
+            Type::t_pairlist => "t_pairlist",
+            Type::t_func => "t_func",
+            Type::t_expr => "t_expr",
+            Type::t_call => "t_call",
+            Type::t_sym => "t_sym",
+            Type::t_lang => "t_lang",
+            Type::t_obj => "t_obj",
+            Type::t_prim => "t_prim",
+        }
+    }
+}
+
 // ============================================================================
 // DECORATORS
 // ============================================================================
@@ -447,9 +512,11 @@ impl From<&str> for ClassType {
 /// @export
 #[extendr]
 fn private_(attribute: Robj) -> Result<Robj> {
-    let mut attribute = attribute.clone();
-    attribute.set_attrib(class_symbol(), "PrivateAttribute")?;
-    Ok(attribute)
+    structure_(
+        attribute,
+        Strings::from_values(["PrivateAttribute"]),
+        List::default(),
+    )
 }
 
 /// Check if an attribute is private.
@@ -476,12 +543,11 @@ fn is_private(attribute: Robj) -> bool {
 /// @export
 #[extendr]
 pub fn static_(attribute: Robj) -> Result<Robj> {
-    if !attribute.is_function() {
-        return Err(Error::Other("Attribute must be a function.".into()));
-    }
-    let mut attribute = attribute.clone();
-    attribute.set_attrib(class_symbol(), "StaticMethod")?;
-    Ok(attribute)
+    structure_(
+        attribute,
+        Strings::from_values(["StaticMethod"]),
+        List::default(),
+    )
 }
 
 /// Check if a method is static.
@@ -501,7 +567,7 @@ fn structure_(robj: Robj, class: Strings, attribs: List) -> Result<Robj> {
     let mut class_vec: Vec<&str> = obj.class().into_iter().flatten().collect();
     class_vec.extend(class.iter().map(Rstr::as_str));
     class_vec.push("RS"); // Ensure "RS" is always included
-    obj.set_class(&class_vec)?;
+    obj.set_attrib(class_symbol(), &class_vec)?;
 
     // Set attributes
     for (name, value) in attribs.iter() {

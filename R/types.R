@@ -57,15 +57,21 @@ NULL
 ## ============================================================================
 
 .new_type_generator <- function(name) {
+    # .Call(
+    #     "wrap__structure_",
+    #     function() .Call("wrap__Type__from_str", name, PACKAGE = "RS"),
+    #     .RS[[".typegen"]],
+    #     list()
+    # )
     .structure(
-        function() .Call(wrap__ClassType__from_str, name, PACKAGE = "RS"),
+        function() .Call(wrap__Type__from_str, name, PACKAGE = "RS"),
         .RS[[".typegen"]]
     )
 }
 
 #' @export
-print.ClassType <- function(x, ...) {
-    invisible(.Call(wrap__ClassType__print, x, PACKAGE = "RS"))
+print.Type <- function(x, ...) {
+    invisible(.Call(wrap__Type__print, x, PACKAGE = "RS"))
 }
 
 ## ============================================================================
@@ -83,8 +89,6 @@ t_any <- .new_type_generator("t_any")
 ## DATE TYPE
 ## This doesn't have an "is.*" method, but it is a common type.
 ## ============================================================================
-
-.is_date <- function(.) inherits(., c("Date", "POSIXt"))
 
 #' @export
 #' @rdname RSTypes

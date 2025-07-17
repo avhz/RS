@@ -16,9 +16,9 @@ supplied as pairs of names and types using the \link{:=} operator.}
 Note: setting this to \code{FALSE} gives a slight performance boost.}
 }
 \description{
-Create a new \link{ClassDefinition} in R.
+Create a new \code{ClassDefinition} in R.
 }
 \details{
-The Class function creates a new \link{ClassDefinition} in R.
+The Class function creates a new \code{ClassDefinition} in R.
 It allows you to define fields and methods for the class.
 }

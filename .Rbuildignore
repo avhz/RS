@@ -7,3 +7,4 @@
 .vscode/
 vignettes/.quarto
 ^README\.Rmd$
+R/bench.R

@@ -3,10 +3,10 @@
 
 # `RS` - Fast classes for R 🔥
 
-> [!IMPORTANT]
-> `RS` is in early development, and not quite ready for production use.
-> You may encounter bugs or missing features. Feel free to open an issue or PR if you do!
-> Contributions are definitely welcome! ✅
+> \[!IMPORTANT\] `RS` is in early development, and not quite ready for
+> production use. You may encounter bugs or missing features. Feel free
+> to open an issue or PR if you do! Contributions are definitely
+> welcome! ✅
 
 <!-- badges: start -->
 
@@ -107,8 +107,8 @@ rather than a list, dataframe, environment, R6 class, etc.
 The following shows the iterations per second for class instances for a
 number of R OOP libraries.
 
-You can see that `RS` offers around a 7x performance gain over the
-other offerings.
+You can see that `RS` offers around a 7x performance gain over the other
+offerings.
 
 [<img src="man/figures/bench.png">](https://github.com/avhz/RS/blob/main/man/figures/bench.png)
 
@@ -117,5 +117,5 @@ other offerings.
 
 > Note \#2: creating Python class instances via `reticulate` inside the
 > R interpreter is *significantly* slower than doing it directly in
-> Python. Python classes are still much, much faster than my `RS`
-> package (~8-10x faster than `RS` when I last checked).
+> Python. Python classes are still much faster than my `RS` package
+> (~8-10x faster than `RS` when I last checked).

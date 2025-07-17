@@ -78,25 +78,25 @@ ClassInstance$get <- function(key) .Call(wrap__ClassInstance__get, self, key)
 
 ClassInstance$set <- function(key, value) .Call(wrap__ClassInstance__set, self, key, value)
 
-ClassInstance$to_json_string <- function() .Call(wrap__ClassInstance__to_json_string, self)
-
 #' @export
 `$.ClassInstance` <- function (self, name) { func <- ClassInstance[[name]]; environment(func) <- environment(); func }
 
 #' @export
 `[[.ClassInstance` <- `$.ClassInstance`
 
-ClassType <- new.env(parent = emptyenv())
+Type <- new.env(parent = emptyenv())
 
-ClassType$print <- function() invisible(.Call(wrap__ClassType__print, self))
+Type$print <- function() invisible(.Call(wrap__Type__print, self))
 
-ClassType$from_str <- function(s) .Call(wrap__ClassType__from_str, s)
+Type$from_str <- function(s) .Call(wrap__Type__from_str, s)
+
+Type$as_str <- function() .Call(wrap__Type__as_str, self)
 
 #' @export
-`$.ClassType` <- function (self, name) { func <- ClassType[[name]]; environment(func) <- environment(); func }
+`$.Type` <- function (self, name) { func <- Type[[name]]; environment(func) <- environment(); func }
 
 #' @export
-`[[.ClassType` <- `$.ClassType`
+`[[.Type` <- `$.Type`
 
 
 # nolint end

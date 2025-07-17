@@ -6,10 +6,10 @@
 #' Define a new RS class.
 #'
 #' @description
-#' Create a new [ClassDefinition] in R.
+#' Create a new `ClassDefinition` in R.
 #'
 #' @details
-#' The Class function creates a new [ClassDefinition] in R.
+#' The Class function creates a new `ClassDefinition` in R.
 #' It allows you to define fields and methods for the class.
 #'
 #' @param .classname The name of the class.
@@ -20,6 +20,16 @@
 #'
 #' @export
 Class <- function(.classname, ..., .validate = TRUE) {
+    .assert_pairlist_arguments <- function(...) {
+        .valid_classes <- c(.RS[[".pairlist"]])
+        if (any(sapply(list(...), Negate(inherits), .valid_classes))) {
+            stop(
+                "Class attributes must be defined using `:=` operator.",
+                call. = FALSE
+            )
+        }
+    }
+
     .assert_pairlist_arguments(...)
     .attributes <- do.call(c, list(...))
 
@@ -64,40 +74,6 @@ Class <- function(.classname, ..., .validate = TRUE) {
 }
 
 
-#' @title
-#' Declare a new class attribute.
-#'
-#' @description
-#' Declare a new class attribute using the `:=` operator.
-#'
-#' @param lhs The name of the attribute.
-#' @param rhs The type of the attribute.
-#'
-#' @export
-`:=` <- function(lhs, rhs) {
-    .valid <- c(.RS[[".definition"]], .RS[[".typegen"]], "function")
-
-    if (!any(class(rhs) %in% .valid)) {
-        stop("`:=` can only be used with RS types.")
-    }
-
-    pl <- pairlist()
-    pl[[deparse(substitute(lhs))]] <- rhs
-    .structure(pl, .RS[[".pairlist"]])
-}
-
-.assert_pairlist_arguments <- function(...) {
-    .valid_classes <- c(.RS[[".pairlist"]])
-
-    if (any(sapply(list(...), Negate(inherits), .valid_classes))) {
-        stop(
-            "Class attributes must be defined using `:=` operator.",
-            call. = FALSE
-        )
-    }
-}
-
-
 ## ============================================================================
 ## PLAYGROUND
 ## ============================================================================
@@ -118,6 +94,21 @@ if (FALSE) {
     }
     .()
 
+    Class(
+        "Foo",
+
+        ## Private attribute
+        .a := t_int,
+
+        ## Static method
+        bar := static_(\(x) print(x))
+    )
+
+    foo <- Foo(a = 1L)
+    foo
+    foo@a
+    foo@bar(1)
+
     (bm <- .benchmark(1e4))
     .benchplot(bm)
     ggplot2::autoplot(bm)
@@ -125,24 +116,29 @@ if (FALSE) {
     .benchplot(bm)
     dev.off()
 
+    Class("Foo1", a := private_(t_int))
+    foo1 <- Foo1(a = 1L)
+
+    Class("Foo2", a := t_int, b := t_dbl)
+
+    foo2 <- Foo2(a = 1L, b = foo1)
+
     Class(
         "Foo",
 
         a := t_int,
         b := t_dbl,
-        c := t_char
+        c := t_char,
+        d := t_dataframe,
+
+        bar := function(self, new_x) {
+            self@a <- new_x
+        }
     )
 
-    foo <- Foo(a = 1L, b = 2.0, c = "hello")
-    print(foo)
-    foo@a
-    foo@b
-    foo@c
     devtools::load_all()
     bench::mark(
-        private(\(x) x),
         private_(\(x) x),
-        static(\(x) x),
         static_(\(x) x),
         is_private(\(x) x),
         is_static(\(x) x),
@@ -157,11 +153,9 @@ if (FALSE) {
         structure_(list(x = 1), "FooFoo", list()),
 
         iterations = 1e4,
-        # check = FALSE
+        check = FALSE
     )
-}
 
-if (F) {
     gc()
     remove(list = ls())
     rextendr::document()
@@ -185,4 +179,12 @@ if (F) {
     foo
     foo@bar(555L)
     foo
+    foo@xxx
+
+    `<<` <- function(x, value) {
+        x@x <- value
+        invisible(x)
+    }
+
+    foo@bar("sdf")
 }

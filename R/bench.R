@@ -87,6 +87,7 @@
     return(.out)
 }
 
+
 .benchplot <- function(benchmark) {
     # browser()
     baseline <- benchmark |>
@@ -138,4 +139,21 @@
             y = "Iterations per second",
             fill = "Package"
         )
+}
+
+if (FALSE) {
+    devtools::load_all()
+    .benchmem()
+
+    Foo <- Class(
+        "FooRS",
+        a := t_int,
+        b := t_dbl,
+        c := t_char
+    )
+
+    foo <- Foo(a = 1L, b = 2.0, c = "xxx")
+
+    str(foo)
+    as.list(foo)
 }

@@ -15,7 +15,10 @@ knitr::opts_chunk$set(
 
 # `RS` - Fast classes for R 🔥
 
-> Contributions are welcome! If you have a feature request, or find a bug, feel free to open an issue or PR ✅
+> [!IMPORTANT]
+> `RS` is in early development, and not quite ready for production use.
+> You may encounter bugs or missing features. Feel free to open an issue or PR if you do!
+> Contributions are definitely welcome! ✅
 
 <!-- badges: start -->
 ![](https://img.shields.io/github/r-package/v/avhz/RS)
@@ -27,12 +30,12 @@ with the underlying implementation written in Rust.
 It is centered around:
 
 1. **Performance**:
-    - ~700-800% faster than the next fastest R classes.
+    - ~700% faster than the next fastest R classes.
 2. **Type validation**:
     - Gives you confidence that your classes contain the right data.
 3. **Reference semantics**:
-    - The underlying storage is a reference counted hashmap, allowing in-place modification of classes.
-
+    - The underlying storage is a reference counted hashmap, allowing
+      in-place modification of classes.
 
 The name `RS` is a combination of:
 
@@ -92,7 +95,8 @@ fluffy@breed
 fluffy@bark()
 ```
 
-I used the slot operator `@` for accessing attributes in `RS`, because the common `$` operator
+I used the slot operator `@` for accessing attributes in `RS`, 
+because the common `$` operator
 is so pervasive in R code that I wanted an operator that made
 it more obvious that the object is an `RS` class,
 rather than a list, dataframe, environment, R6 class, etc.
@@ -105,13 +109,18 @@ rather than a list, dataframe, environment, R6 class, etc.
 
 > See the [Benchmarks vignette](https://avhz.github.io/RS/articles/Benchmarks.html) for benchmark code.
 
-The following shows the iterations per second for class instances for a number of R OOP libraries.
+The following shows the iterations per second for class instances for a
+number of R OOP libraries.
 
-You can see that `RS` offers at least a 7-8x performance gain over the other offerings. 
+You can see that `RS` offers around a 7x performance gain over the
+other offerings.
 
 [<img src="man/figures/bench.png">](https://github.com/avhz/RS/blob/main/man/figures/bench.png)
 
-> Note #1: the other libraries may provide more features and are currently more mature/complete offerings, in particular `R6`.
+> Note \#1: the other libraries may provide more features and are
+> currently more mature/complete offerings, in particular `R6`.
 
-> Note #2: creating Python class instances via `reticulate` inside the R interpreter is *significantly* slower than doing it directly in Python.
-> Python classes are still much, much faster than my `RS` package (~30-40x faster when I last checked).
+> Note \#2: creating Python class instances via `reticulate` inside the
+> R interpreter is *significantly* slower than doing it directly in
+> Python. Python classes are still much faster than my `RS`
+> package (~8-10x faster than `RS` when I last checked).
