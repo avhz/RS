@@ -3,6 +3,7 @@
 S3method("$",ClassDefinition)
 S3method("$",ClassInstance)
 S3method("$",Type)
+S3method("@",ClassDefinition)
 S3method("@",ClassInstance)
 S3method("@<-",ClassInstance)
 S3method("[[",ClassDefinition)

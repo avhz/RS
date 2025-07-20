@@ -102,6 +102,20 @@ impl ClassDefinition {
 
         ExternalPtr::new(RcClassDefinition(class_definition)).into()
     }
+
+    fn get(&self, key: &str) -> Result<Robj> {
+        // Check if the key exists in the methods map
+        if let Some(value) = self.methods.0.get(key) {
+            return Ok(value.clone());
+        }
+
+        // If not found, return an error
+        let msg = format!(
+            "Method '{}' not found in class definition '{:?}'.",
+            key, self.name
+        );
+        Err(Error::Other(msg.into()))
+    }
 }
 
 #[extendr]
@@ -147,6 +161,15 @@ impl ClassInstance {
 
         if def_ref.0.validate {
             for (key, value) in &map {
+                // CHECK IF INSTANCE KEY IS IN CLASS DEFINITION
+                if !def_map.contains_key(key) {
+                    let msg = format!(
+                        "Field '{}' not found in class definition '{:?}'.",
+                        key, def_ref.0.name
+                    );
+                    return Err(Error::Other(msg.into()));
+                }
+
                 // Class composition
                 if both_inherit(key, "ClassInstance") {
                     continue;
@@ -210,10 +233,14 @@ impl ClassInstance {
         // Private attributes start with a "."
         // Need to be careful here:
         //  - Should still be accessible from within the class itself
-        if key.starts_with('.') {
-            let msg = format!("Attribute '{}' is private, or does not exist.", key);
-            return Err(Error::Other(msg.into()));
-        }
+        // This is tricky to implement, since we also have to check the call site somehow,
+        // and also whether there is some other attribute that is
+        // incompatible with the private attribute,
+        // like a static method.
+        // if key.starts_with('.') {
+        //     let msg = format!("Attribute '{}' is private, or does not exist.", key);
+        //     return Err(Error::Other(msg.into()));
+        // }
 
         let definition = &self.definition.0.methods.0;
         let instance = &self.fields.0.borrow();

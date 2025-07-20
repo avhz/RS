@@ -27,7 +27,7 @@
 
 #' @export
 print.ClassInstance <- function(x, ...) {
-    cat(.Call(wrap__ClassInstance__print, x))
+    cat(.Call(wrap__ClassInstance__print, x, PACKAGE = "RS"))
 }
 
 #' @export
@@ -37,19 +37,18 @@ print.ClassInstance <- function(x, ...) {
 
 #' @export
 `@.ClassInstance` <- function(self, name) {
-    .attr <- .Call(wrap__ClassInstance__get, self, name)
-
+    .attr <- .Call(wrap__ClassInstance__get, self, name, PACKAGE = "RS")
     ## TODO: Move to Rust ClassInstance.get()
     if (is.function(.attr) && !inherits(.attr, .RS[[".static"]])) {
         return(function(...) .attr(self, ...))
     }
-
     return(.attr)
 }
 
+
 #' @export
 `@<-.ClassInstance` <- function(self, name, value) {
-    .Call(wrap__ClassInstance__set, self, name, value)
+    .Call(wrap__ClassInstance__set, self, name, value, PACKAGE = "RS")
     return(self)
 }
 

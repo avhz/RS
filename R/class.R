@@ -20,7 +20,7 @@
 #'
 #' @export
 Class <- function(.classname, ..., .validate = TRUE) {
-    .assert_pairlist_arguments <- function(...) {
+    assert_pairlist_arguments <- function(...) {
         .valid_classes <- c(.RS[[".pairlist"]])
         if (any(sapply(list(...), Negate(inherits), .valid_classes))) {
             stop(
@@ -30,27 +30,20 @@ Class <- function(.classname, ..., .validate = TRUE) {
         }
     }
 
-    .assert_pairlist_arguments(...)
-    .attributes <- do.call(c, list(...))
+    assert_pairlist_arguments(...)
+    attributes <- do.call(c, list(...))
 
-    .resolve_type_generators <- function(attr) {
+    resolve_type_generators <- function(attr) {
         if (inherits(attr, .RS[[".typegen"]])) {
             return(attr())
         }
         return(attr)
     }
 
-    .attributes <- lapply(.attributes, .resolve_type_generators)
-
-    # .is_method <- function(attr) TRUE ## PLACEHOLDER
-    # .is_field <- function(attr) TRUE ## PLACEHOLDER
-    # .fields <- Filter(.is_field, .attributes)
-    # .methods <- Filter(.is_method, .attributes)
-
-    .self <- .Call(
+    self <- .Call(
         wrap__ClassDefinition__new,
         name = .classname,
-        methods = .attributes,
+        methods = lapply(attributes, resolve_type_generators),
         validate = .validate,
         PACKAGE = "RS"
     )
@@ -59,7 +52,7 @@ Class <- function(.classname, ..., .validate = TRUE) {
         .Call(
             wrap__ClassInstance__new,
             fields = list(...),
-            def = .self,
+            def = self,
             PACKAGE = "RS"
         )
     }
@@ -97,17 +90,22 @@ if (FALSE) {
     Class(
         "Foo",
 
-        ## Private attribute
-        .a := t_int,
+        a := t_int,
 
         ## Static method
-        bar := static_(\(x) print(x))
+        bar := static_(function(x) print(x)),
+
+        ## Instance method
+        baz := function(self) print(self@a)
     )
 
     foo <- Foo(a = 1L)
     foo
+    foo@baz()
     foo@a
-    foo@bar(1)
+    foo@bar(12345)
+
+    Foo@bar(12345)
 
     (bm <- .benchmark(1e4))
     .benchplot(bm)
@@ -187,4 +185,16 @@ if (FALSE) {
     }
 
     foo@bar("sdf")
+
+    bench::mark(
+        local({})
+    )
+
+    x <- 1L
+    local({
+        print(x)
+    })
+    e <- new.env()
+    attr(e, "name") <- "test_env"
+    environmentName(e)
 }
