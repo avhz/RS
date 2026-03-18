@@ -197,4 +197,13 @@ if (FALSE) {
     e <- new.env()
     attr(e, "name") <- "test_env"
     environmentName(e)
+
+    lll <- list(x = 1L, y = 2L)
+    bench::mark(
+        lll$x,
+        lll[["x"]],
+        .subset2(lll, "x"),
+
+        iterations = 1e5,
+    )
 }
