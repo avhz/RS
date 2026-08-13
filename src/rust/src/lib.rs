@@ -149,10 +149,19 @@ impl ClassInstance {
             }
         }
 
-        Ok(Self {
+        let instance = Self {
             fields: RcRefMap::from_hashmap(map),
             definition: def_ref,
-        })
+        };
+
+        // Call .init if it exists
+        if let Some(init_method) = instance.definition.0.methods.0.get(".init") {
+            let init_robj = init_method.clone();
+            let instance_robj: Robj = ExternalPtr::new(instance.clone()).into();
+            call!(init_robj, instance_robj)?;
+        }
+
+        Ok(instance)
     }
 
     fn print(&self) {
